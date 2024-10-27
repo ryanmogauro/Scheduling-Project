@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Employee Sign-Up</title>
+</head>
+<body>
+    <h1>Welcome to Mary Low Scheduling!  Sign-up here:</h1>
+
+    <!-- Display flash messages -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flash-messages">
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+
+    <form method="POST">
+        <input type="text" placeholder="First name" name="firstName">
+        <input type="text" placeholder="Last Name" name="lastName">
+        <input type="text" placeholder="Email" name="email">
+        <input type="text" placeholder="Username" name="username">
+        <input type="password" placeholder="Password" name="password">s
+        
+        <input type="submit" value="Sign Up">
+    </form>
+</body>
+</html>
