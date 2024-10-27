@@ -41,9 +41,9 @@ def unavailability():
         #logic to add/update unavailability preferences
         pass
     
-    currentUnavailability = Unavailability.filter_by(employeeID = current_user.employeeID).all()
+    #currentUnavailability = Unavailability.filter_by(employeeID = current_user.employeeID).all()
     
-    return render_template('unavailability.html', unavailability = currentUnavailability)
+    return render_template('unavailability.html', unavailability = None)
 
 
 

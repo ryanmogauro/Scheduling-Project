@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='availability.css') }}">
+    <title>Employee Sign Up</title>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>User name to add later</h1>
+            <div class="header-right">
+                <span>Name to Add later</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+            <section class="availability-section">
+            <div class="availability-header">
+                <h2>My Schedule</h2>
+                <h3>My Availability | Events</h3>
+            </div>
+
+            <div class="toolbar">
+                <div class="tags">
+                    <button>Class +</button>
+                    <button>Exam +</button>
+                    <button>Busy +</button>
+                    <button>...</button>
+                </div>
+                <div class="options">
+                    <button>New</button>
+                    <button>Clear</button>
+                    <button>Notify Manager</button>
+                </div>
+            </div>
+
+            <div class="availability-grid">
+                <div class="time-labels">
+                    <span>12AM</span>
+                    <span>2AM</span>
+                    <span>4AM</span>
+                    <span>6AM</span>
+                    <span>8AM</span>
+                    <span>10AM</span>
+                    <span>12PM</span>
+                    <span>2PM</span>
+                    <span>4PM</span>
+                    <span>6PM</span>
+                    <span>8PM</span>
+                    <span>10PM</span>
+                </div>
+                <div class="day-labels">
+                <ol>
+                    <li id="Monday">Monday <button class="add-btn">Add +</button></li>
+                    <li id = "Tuesday">Tuesday<button class="add-btn">Add +</button></li>
+                    <li id = "Wednesday">Wednesday<button class="add-btn">Add +</button></li>
+                    <li id = "Thursday">Thursday<button class="add-btn">Add +</button></li>
+                    <li id = "Friday">Friday<button class="add-btn">Add +</button></li>
+                    <li id = "Saturday">Saturday<button class="add-btn">Add +</button></li>
+                    <li id = "Sunday">Sunday<button class="add-btn">Add +</button></li>
+                </ol>
+                </div>
+
+                <!-- Repeat this for each time slot -->
+                <div class="grid-row">
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <!-- Repeat for every time column -->
+                </div>
+                <!-- Repeat for each day of the week -->
+            </div>
+        </section>
+    </main>
+</body>
+</html>

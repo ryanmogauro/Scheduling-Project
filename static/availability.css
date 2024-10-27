@@ -6,7 +6,7 @@
 }
 
 body {
-    background-color: #f4f4f4;
+    background-color: black;
     color: #333;
 }
 
@@ -32,7 +32,7 @@ main {
 
 .availability-section {
     background-color: white;
-    padding: 20px;
+    padding: 10px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
@@ -93,7 +93,7 @@ main {
 
 .day-labels li{
     list-style-type: none;
-    padding: 50px
+    padding: 25px
 }
 
 .grid-row {
@@ -104,8 +104,9 @@ main {
 .cell {
     background-color: #fff;
     border: 1px solid #ddd;
-    padding: 15px;
+    padding: 75px;
     text-align: center;
+    
 }
 
 .add-btn {
