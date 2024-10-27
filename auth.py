@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, redirect, url_for
 from flask import request, request, flash
 from models import db, User, Employee, Unavailability, Shift, ShiftAssignment
 from flask_login import login_user, logout_user, login_required, current_user
-import random
 
 # Create a blueprint
 auth_blueprint = Blueprint('auth', __name__)
@@ -10,11 +9,11 @@ auth_blueprint = Blueprint('auth', __name__)
 @auth_blueprint.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
+        email = request.form['email']
         password = request.form['password']
         
         
-        user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
             login_user(user)
             return redirect(url_for('main.schedule'))
@@ -30,7 +29,6 @@ def signup():
         firstName = request.form.get('firstName')
         lastName = request.form.get('lastName')
         email = request.form.get('email')
-        username = request.form.get('username')
         password = request.form.get('password')
         
         existing_user = User.query.filter_by(email=email).first()
@@ -51,7 +49,6 @@ def signup():
         new_employeeID = new_employee.employeeID
         new_user = User(
             employeeID = new_employeeID,
-            username = username, 
             email = email
             )
         

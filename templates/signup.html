@@ -29,10 +29,11 @@
             <input type="text" name="email">
             <h2>Password</h2>
             <input type="password" name="password">
+            <div id="LogInContainer">
+            <button id="SignUpButton">Sign Up</button>
         </form>
     </div>
-    <button id="SignUpButton">Sign Up</button>
-    <div id="LogInContainer">
+
     <h2>Already have an account? <a href="{{ url_for('auth.login') }}">Log In</a></h2>
     </div>
 </body>
