@@ -24,7 +24,7 @@ def login():
 
 
 
-@auth_blueprint.route('/signup', methods=['GET', 'POST'])
+@auth_blueprint.route('/', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         firstName = request.form.get('firstName')

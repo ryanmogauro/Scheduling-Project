@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 # Create a blueprint
 main_blueprint = Blueprint('main', __name__)
 
-@main_blueprint.route('/', methods=['GET', 'POST'])
+@main_blueprint.route('/schedule', methods=['GET', 'POST'])
 @login_required
 def schedule():
     if request.method == 'POST':

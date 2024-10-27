@@ -2,21 +2,12 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <title>Employee Sign-Up</title>
+    <title>Employee Sign Up</title>
 </head>
 <body>
-    <h1>Welcome to Mary Low Scheduling!  Sign-up here:</h1>
-
-    <!-- Display flash messages -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul class="flash-messages">
-          {% for message in messages %}
-            <li>{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
+    <h1>Welcome to Mary Low Scheduling!</h1>
+    <br>
+    <h2> Sign up here:</h2>
 
 
     <form method="POST">
@@ -24,9 +15,12 @@
         <input type="text" placeholder="Last Name" name="lastName">
         <input type="text" placeholder="Email" name="email">
         <input type="text" placeholder="Username" name="username">
-        <input type="password" placeholder="Password" name="password">s
+        <input type="password" placeholder="Password" name="password">
         
         <input type="submit" value="Sign Up">
     </form>
+    <br>
+    <br>
+    <p>Already have an account? <a href="{{ url_for('auth.login') }}">Log in here</a>.</p>
 </body>
 </html>
