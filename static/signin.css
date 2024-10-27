@@ -74,7 +74,7 @@ h1 {
     font-size: 15px;
 }
 
-#SignUpContainer button {
+#SignUpContainer a {
     font-weight: 600;
     text-align: right;
     background-color: white;

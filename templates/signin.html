@@ -3,14 +3,13 @@
 
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='signin.css') }}">
-    <title>Employee Sign-Up</title>
+    <title>Log In</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sen:wght@400..800&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <script src="https://accounts.google.com/gsi/client" async></script>
     <div id="LogoContainer"> <img src="{{ url_for('static', filename='MaryLowLogo.webp') }}" alt="Mary Low Logo"
             id="logo"> </div>
     <h1>Log Into Mary Low Coffeehouse</h1>
@@ -21,7 +20,7 @@
         </form> <button>Forgot Password?</button>
     </div> <button id="LogInButton">Log In</button>
     <div id="SignUpContainer">
-        <h2>New to Mary Low Coffeehouse?</h2> <button>Sign Up</button>
+        <h2>New to Mary Low Coffeehouse? <a href="{{ url_for('auth.signup') }}">Sign Up</a></h2>
     </div>
     <div id="OR">
         <hr> <span>OR</span>
