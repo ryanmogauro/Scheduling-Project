@@ -15,10 +15,11 @@
     <h1>Log Into Mary Low Coffeehouse</h1>
     <div id="LogInContainer">
         <form method="POST">
-            <h2>Email</h2> <input type="text">
-            <h2>Password</h2> <input type="password">
+            <h2>Email</h2> <input type="text", name="email">
+            <h2>Password</h2> <input type="password", name="password">
+        </div> <button id="LogInButton">Log In</button>
         </form> <button>Forgot Password?</button>
-    </div> <button id="LogInButton">Log In</button>
+    
     <div id="SignUpContainer">
         <h2>New to Mary Low Coffeehouse? <a href="{{ url_for('auth.signup') }}">Sign Up</a></h2>
     </div>

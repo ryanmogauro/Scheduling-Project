@@ -32,7 +32,7 @@ h1 {
     display: flex;
     justify-content: space-between;
     width: 400px;
-    gap: 30px;
+    gap: 50px;
 }
 
 .name-container > div {
@@ -52,6 +52,14 @@ h1 {
     padding: 10px;
 }
 
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 400px; 
+    gap: 1px;
+}
+
 #SignUpButton {
     font-weight: 600;
     width: 100%;
@@ -61,6 +69,7 @@ h1 {
     border-radius: 3px;
     font-size: 24px; 
     cursor: pointer;
+    margin-top: 10px; 
 }
 
 #LogInContainer {
@@ -82,3 +91,4 @@ h1 {
     font-size: 15px; 
     cursor: pointer;
 }
+
