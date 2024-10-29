@@ -33,6 +33,19 @@
             <button id="SignUpButton">Sign Up</button>
         </form>
     </div>
+    <div class="flash-messages">
+        <!--For some reason messages are not perfectly aligning with other content-->
+        <!--I used text-align: center in css class, will look into fixes later-->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            </ul>
+            {% endif %}
+        {% endwith %}
+        </div>
 
     <h2>Already have an account? <a href="{{ url_for('auth.login') }}">Log In</a></h2>
     </div>

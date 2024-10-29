@@ -18,6 +18,15 @@ def login():
             login_user(user)
             return redirect(url_for('main.schedule'))
         
+        if not user:
+            flash("No existing accounts with this email", "error")
+            
+        else:
+            flash("Incorrect password", "error")
+            
+        return render_template('signin.html')
+    
+    
     return render_template('signin.html')
 
 
@@ -33,9 +42,16 @@ def signup():
         
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
-            flash("An account with that email already exists. Please log in.")
+            flash("An account with that email already exists. Please log in.", "error")
             return redirect(url_for('auth.login'))
         
+        #might also be good to add email validity check
+        
+        #arbitrary bounds, not sure if there's a standard
+        if len(password) > 20 or len(password) < 5: 
+            flash("Password must be between 5 and 20 characters")
+            return redirect(url_for('auth.signup'))
+
         new_employee = Employee(
             firstName = firstName, 
             lastName = lastName, 
@@ -56,13 +72,11 @@ def signup():
         db.session.add(new_user)
         try:
             db.session.commit()
-            flash("Account created successfully! Please log in.")
             return redirect(url_for('auth.login'))
         except Exception as e:
             db.session.rollback()  # Rollback in case of an error
-            flash("Error creating user: " + str(e))
+            flash("Error creating user: " + str(e), "error")
             return redirect(url_for('auth.signup'))
-    
 
     return render_template('signup.html')
 

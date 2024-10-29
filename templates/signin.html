@@ -7,6 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sen:wght@400..800&display=swap" rel="stylesheet">
+
+    
 </head>
 
 <body>
@@ -18,8 +20,25 @@
             <h2>Email</h2> <input type="text", name="email">
             <h2>Password</h2> <input type="password", name="password">
         </div> <button id="LogInButton">Log In</button>
-        </form> <button>Forgot Password?</button>
-    
+        </form> 
+        
+
+        <div class="flash-messages">
+            <!--For some reason messages are not perfectly aligning with other content-->
+            <!--I used text-align: center in css class, will look into fixes later-->
+            {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                <ul>
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+                </ul>
+                {% endif %}
+            {% endwith %}
+            </div>
+
+    <button>Forgot Password?</button>
+
     <div id="SignUpContainer">
         <h2>New to Mary Low Coffeehouse? <a href="{{ url_for('auth.signup') }}">Sign Up</a></h2>
     </div>
@@ -30,6 +49,7 @@
     <div id="GoogleContainer"> <button type="button" class="google-sign-in-button"> Sign in with Google </button> </div>
     <h2 id="Agreement"> By clicking Sign in, you agree to our <span class="underline">Terms and Conditions</span> and
         <span class="underline">Privacy Policy</span> </h2>
+
 </body>
 
 </html>

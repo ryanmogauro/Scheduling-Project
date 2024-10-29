@@ -92,3 +92,8 @@ form {
     cursor: pointer;
 }
 
+.flash-messages{
+    color: red; 
+    text-align: center;
+    margin: 10px 0;
+}
