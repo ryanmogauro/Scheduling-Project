@@ -3,6 +3,11 @@ body, button, input {
     font-family: 'Sen', sans-serif;
 }
 
+button{
+    margin: 0 auto;
+    display: block;
+}
+
 #LogoContainer {
     display: flex;
     justify-content: center;
@@ -10,7 +15,7 @@ body, button, input {
 
 #LogoContainer img {
     height: auto;
-    width: 700px;
+    width: 600px;
     margin-top: -75px;
     margin-bottom: -100px;
 }
@@ -164,3 +169,13 @@ h1 {
     box-shadow: 0 -1px 0 rgba(0, 0, 0, .04), 0 1px 1px rgba(0, 0, 0, .25);
     cursor: not-allowed;
 }
+
+.flash-messages{
+    color: red; 
+    text-align: center;
+    margin: 10px 0;
+}
+
+
+
+
