@@ -70,7 +70,7 @@ def unavailability():
         
     currentUnavailability = Unavailability.filter_by(employeeID = current_user.employeeID).all()
     
-    return render_template('unavailability.html', unavailability = currentUnavailability)
+    return render_template('unavailability.html', unavailability = None)
 
 
 
