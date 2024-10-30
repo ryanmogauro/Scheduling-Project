@@ -63,12 +63,12 @@ main {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     grid-template-rows: repeat(8, auto);
-    gap: 1px;
     background-color: #222;
 }
 
 .time-labels {
-    grid-column: 1 / -1;
+    grid-column: 1 / -1; 
+    grid-row: 1;
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     background-color: #eee;
@@ -96,17 +96,16 @@ main {
     padding: 25px
 }
 
-.grid-row {
+.schedule-grid {
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
+    grid-template-columns: 50px repeat(12, 1fr);
+    grid-template-rows: 100px repeat(7, 1fr);  
 }
 
 .cell {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    padding: 75px;
+    background-color: black;
+    border: 1px solid white;
     text-align: center;
-    
 }
 
 .add-btn {
