@@ -1,26 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <title>Employee Sign Up</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='signup.css') }}">
+    <title>Sign Up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sen:wght@400..800&display=swap" rel="stylesheet">
 </head>
+
 <body>
-    <h1>Welcome to Mary Low Scheduling!</h1>
-    <br>
-    <h2> Sign up here:</h2>
+    <div id="LogoContainer"><img src="{{ url_for('static', filename='MaryLowLogo.webp') }}" alt="Mary Low Logo" id="logo"></div>
+    <h1>New to Mary Low Coffeehouse?</h1>
 
+    <div id="SignUpContainer">
+        <form method="POST">
+            <div class="name-container">
+                <div>
+                    <h2>First Name</h2>
+                    <input type="text" name="firstName">
+                </div>
+                <div>
+                    <h2>Last Name</h2>
+                    <input type="text" name="lastName">
+                </div>
+            </div>
+            <h2>Email</h2>
+            <input type="text" name="email">
+            <h2>Password</h2>
+            <input type="password" name="password">
+            <div id="LogInContainer">
+            <button id="SignUpButton">Sign Up</button>
+        </form>
+    </div>
 
-    <form method="POST">
-        <input type="text" placeholder="First name" name="firstName">
-        <input type="text" placeholder="Last Name" name="lastName">
-        <input type="text" placeholder="Email" name="email">
-        <input type="text" placeholder="Username" name="username">
-        <input type="password" placeholder="Password" name="password">
-        
-        <input type="submit" value="Sign Up">
-    </form>
-    <br>
-    <br>
-    <p>Already have an account? <a href="{{ url_for('auth.login') }}">Log in here</a>.</p>
+    <h2>Already have an account? <a href="{{ url_for('auth.login') }}">Log In</a></h2>
+    </div>
 </body>
+
 </html>

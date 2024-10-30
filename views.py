@@ -11,8 +11,21 @@ main_blueprint = Blueprint('main', __name__)
 @login_required
 def schedule():
     if request.method == 'POST':
-        #logic for admin writing a new schedule
-        pass
+        schedule = None #get all new shifts from front-end
+        
+        for shift in schedule:
+            new_shift = Shift(
+                shiftStartTime = shift.start, 
+                shiftEndTime = shift.end
+            )
+            
+            new_shift_id = new_shift.shiftID
+            new_shift_assignment = ShiftAssignment(
+                shiftID = new_shift_id, 
+                employee = current_user.get_id()
+            )
+            
+        
     
     weekStartDay, weekEndDay = getWeekBounds(datetime.now()) #will need to change datetime.now for viewing different weeks
     
@@ -23,8 +36,6 @@ def schedule():
 
 
 #maybe make a method for route /myschedule too
-
-    
 def getWeekBounds(date):
      # Calculate date of Monday date week
     start_of_week = date - timedelta(days=(date.weekday()))
@@ -38,10 +49,26 @@ def getWeekBounds(date):
 @login_required
 def unavailability():
     if request.method == 'POST':
-        #logic to add/update unavailability preferences
-        pass
-    
-    #currentUnavailability = Unavailability.filter_by(employeeID = current_user.employeeID).all()
+        unavailability = None #get all unavailability from front-end
+        
+        #delete old user unavailability
+        Unavailability.delete().where(employeeID = current_user.employeeID).all()
+        #overwrite all employee avaialability
+        for unavailable in unavailability:
+            new_unavailable_span = Unavailability(
+                employeeID = current_user.employeeID,
+                unavailableStartTime = unavailable.start, 
+                unavailableEndTime = unavailable.end
+            )
+            
+            #add new unavailable span to db
+            db.session.add(new_unavailable_span)
+            db.session.commit(); 
+            
+        
+         
+        
+    currentUnavailability = Unavailability.filter_by(employeeID = current_user.employeeID).all()
     
     return render_template('unavailability.html', unavailability = None)
 

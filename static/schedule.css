@@ -96,12 +96,6 @@ main {
     padding: 25px
 }
 
-.schedule-grid {
-    display: grid;
-    grid-template-columns: 50px repeat(12, 1fr);
-    grid-template-rows: 100px repeat(7, 1fr);  
-}
-
 .cell {
     background-color: black;
     border: 1px solid white;

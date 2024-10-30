@@ -1,20 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='signin.css') }}">
-    <title>Employee Sign In</title>
+    <title>Log In</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sen:wght@400..800&display=swap" rel="stylesheet">
 </head>
+
 <body>
-    <h1>Welcome to Mary Low Scheduling!</h1>
-    <br>
-    <h2>Sign in here: </h2>
-
-
-    <form method="POST">
-        <input type="text" placeholder="Username" name="username">
-        <input type="password" placeholder="Password" name="password">
-        <input type="submit" value="Sign In">
-    </form>
+    <div id="LogoContainer"> <img src="{{ url_for('static', filename='MaryLowLogo.webp') }}" alt="Mary Low Logo"
+            id="logo"> </div>
+    <h1>Log Into Mary Low Coffeehouse</h1>
+    <div id="LogInContainer">
+        <form method="POST">
+            <h2>Email</h2> <input type="text", name="email">
+            <h2>Password</h2> <input type="password", name="password">
+        </div> <button id="LogInButton">Log In</button>
+        </form> <button>Forgot Password?</button>
     
+    <div id="SignUpContainer">
+        <h2>New to Mary Low Coffeehouse? <a href="{{ url_for('auth.signup') }}">Sign Up</a></h2>
+    </div>
+    <div id="OR">
+        <hr> <span>OR</span>
+        <hr>
+    </div>
+    <div id="GoogleContainer"> <button type="button" class="google-sign-in-button"> Sign in with Google </button> </div>
+    <h2 id="Agreement"> By clicking Sign in, you agree to our <span class="underline">Terms and Conditions</span> and
+        <span class="underline">Privacy Policy</span> </h2>
 </body>
+
 </html>

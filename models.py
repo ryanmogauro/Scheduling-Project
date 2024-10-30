@@ -8,7 +8,6 @@ db = SQLAlchemy()
 class User(db.Model, UserMixin):
     userID  = db.Column(db.Integer, primary_key=True)
     employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'))
-    username = db.Column(db.String(50), unique = True, nullable=False)
     passwordHash = db.Column(db.String(128), nullable= True) #nullable so we can create hash before storing
     email = db.Column(db.String(50), unique=True, nullable=False)
     isActive = db.Column(db.Boolean, default=True)
