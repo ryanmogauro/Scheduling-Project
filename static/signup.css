@@ -1,0 +1,94 @@
+body, button, input {
+    font-family: 'Sen', sans-serif;
+}
+
+#LogoContainer {
+    display: flex;
+    justify-content: center;
+}
+
+#LogoContainer img {
+    height: auto;
+    width: 700px;
+    margin-top: -75px;
+    margin-bottom: -100px;
+}
+
+h1 {
+    font-size: 32px;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+#SignUpContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.name-container {
+    display: flex;
+    justify-content: space-between;
+    width: 400px;
+    gap: 50px;
+}
+
+.name-container > div {
+    flex: 1;
+}
+
+#SignUpContainer h2 {
+    font-size: 15px; 
+    font-weight: 400;
+}
+
+#SignUpContainer input {
+    background-color: lightgray;
+    border: none;
+    border-radius: 3px;
+    width: 100%;
+    padding: 10px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 400px; 
+    gap: 1px;
+}
+
+#SignUpButton {
+    font-weight: 600;
+    width: 100%;
+    padding: 10px;
+    background-color: lightgray;
+    border: none;
+    border-radius: 3px;
+    font-size: 24px; 
+    cursor: pointer;
+    margin-top: 10px; 
+}
+
+#LogInContainer {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+#LogInContainer h2 {
+    font-weight: 400;
+    font-size: 15px;
+}
+
+#LogInContainer a {
+    font-weight: 600;
+    text-align: right;
+    background-color: white;
+    border: none;
+    font-size: 15px; 
+    cursor: pointer;
+}
+
