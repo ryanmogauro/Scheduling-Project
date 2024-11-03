@@ -30,6 +30,44 @@ main {
     padding: 20px;
 }
 
+.options {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown_btn {
+    background-color: #3498db;
+    color: white;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+
+.dropdown_content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.dropdown_content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown_content.show {
+    display: block;
+}
+
+.dropdown_btn:hover .dropdown_content {
+    display: block;
+}
+
 .schedule-section {
     background-color: white;
     padding: 10px;

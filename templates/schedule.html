@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='schedule.css') }}">
-    <title>Employee Schedule</title>
+    <title>Employee Sign Up</title>
 </head>
 <body>
     <header>
@@ -15,23 +15,26 @@
     </header>
 
     <main>
-        <section class="schedule-section">
+            <section class="schedule-section">
             <div class="schedule-header">
                 <h2>My Schedule</h2>
-                <h3>My Schedule | Events</h3>
+                <h3>My Availability | Events</h3>
             </div>
 
             <div class="toolbar">
                 <div class="tags">
-                    <button>Class +</button>
-                    <button>Exam +</button>
-                    <button>Busy +</button>
-                    <button>...</button>
+                    <button>Today</button>
                 </div>
                 <div class="options">
-                    <button>New</button>
-                    <button>Clear</button>
-                    <button>Notify Manager</button>
+                    <button class = "dropdown_btn">Filters</button>
+                        <div class="dropdown_content">
+                            <a href="option1">option1</a>
+                            <a href="option2">option2</a>
+                            <a href="option3">option3</a>
+                        </div>
+
+                    <button class = "dropdown_btn">Tools</button>
+                    <button>Request Change</button>
                 </div>
             </div>
 
@@ -50,9 +53,8 @@
                     <span>4PM</span>
                     <span>5PM</span>
                 </div>
-
-                <div class="day-labels">
-                    <div class="day-labels">Monday</div>
+                
+                <div class="day-labels">Monday</div>
                     <div class="cell"></div>
                     <div class="cell"></div>
                     <div class="cell"></div>
@@ -64,7 +66,7 @@
                     <div class="cell"></div>
                     <div class="cell"></div>
                     <div class="cell"></div>
-
+                    
 
                 <div class="day-labels">Tuesday</div>
                     <div class="cell"></div>
@@ -118,7 +120,7 @@
                     <div class="cell"></div>
                     <div class="cell"></div>
                 
-                <div class="day-labels">Saturday</div>
+                    <div class="day-labels">Saturday</div>
                     <div class="cell"></div>
                     <div class="cell"></div>
                     <div class="cell"></div>
@@ -143,8 +145,53 @@
                     <div class="cell"></div>
                     <div class="cell"></div>
                     <div class="cell"></div>
+
+
+                <!-- <div class="time-labels">
+                    <span>7AM</span>
+                    <span>8AM</span>
+                    <span>9AM</span>
+                    <span>10AM</span>
+                    <span>11AM</span>
+                    <span>12PM</span>
+                    <span>1PM</span>
+                    <span>2PM</span>
+                    <span>3PM</span>
+                    <span>4PM</span>
+                    <span>5PM</span>
+                    <span>6PM</span>
+                </div>
+                
+                <div class="day-labels">
+                    <ol>
+                    <li id="Monday">Monday <button class="add-btn">Add +</button></li>
+                    <li id = "Tuesday">Tuesday<button class="add-btn">Add +</button></li>
+                    <li id = "Wednesday">Wednesday<button class="add-btn">Add +</button></li>
+                    <li id = "Thursday">Thursday<button class="add-btn">Add +</button></li>
+                    <li id = "Friday">Friday<button class="add-btn">Add +</button></li>
+                    <li id = "Saturday">Saturday<button class="add-btn">Add +</button></li>
+                    <li id = "Sunday">Sunday<button class="add-btn">Add +</button></li>
+                    </ol>
+                </div>
+
+                <div class="schedule-grid">
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div> 
+                </div> -->
+                <!-- Repeat for each day of the week -->
             </div>
         </section>
     </main>
 </body>
 </html>
+
