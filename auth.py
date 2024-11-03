@@ -18,6 +18,7 @@ def login():
             login_user(user)
             return redirect(url_for('main.schedule'))
         
+    
     return render_template('signin.html')
 
 
