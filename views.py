@@ -31,7 +31,12 @@ def schedule():
     
     shifts = Shift.query.filter(Shift.shiftStartTime.between(weekStartDay, weekEndDay)).all()
     
-    return render_template('schedule.html', shifts=shifts) #need to make schedule.html interface
+    employee = Employee.query.filter(Employee.employeeID == current_user.employeeID).first()
+    
+    name = employee.firstName if employee else None
+    
+    
+    return render_template('schedule.html', shifts=shifts, name = name) #need to make schedule.html interface
 
 
 

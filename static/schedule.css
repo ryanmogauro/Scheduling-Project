@@ -136,6 +136,7 @@ main {
 
 .cell {
     background-color: black;
+    height: 90px;
     border: 1px solid white;
     text-align: center;
 }
