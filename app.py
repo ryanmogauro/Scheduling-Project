@@ -3,16 +3,16 @@ from models import db, User
 from flask_login import LoginManager
 from views import main_blueprint
 from auth import auth_blueprint
-import os
+import pymysql
 
-app = Flask(__name__)
 
 uri = os.getenv('JAWSDB_URL', 'sqlite:///mydatabase.db')
-
-# Adjust the URI if necessary
 if uri.startswith('mysql://'):
     uri = uri.replace('mysql://', 'mysql+pymysql://', 1)
 
+app = Flask(__name__)
+
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'secret keyyyyy')
 app.config['SQLALCHEMY_DATABASE_URI'] = uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
