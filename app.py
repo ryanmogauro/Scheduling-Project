@@ -4,6 +4,8 @@ from flask_login import LoginManager
 from views import main_blueprint
 from auth import auth_blueprint
 import pymysql
+from dotenv import load_dotenv
+load_dotenv()
 
 
 uri = os.getenv('JAWSDB_URL', 'sqlite:///mydatabase.db')
