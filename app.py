@@ -3,6 +3,7 @@ from models import db, User
 from flask_login import LoginManager
 from views import main_blueprint
 from auth import auth_blueprint
+import os
 from dotenv import load_dotenv
 load_dotenv()
 
