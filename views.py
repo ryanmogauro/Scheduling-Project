@@ -54,22 +54,18 @@ def getWeekBounds(date):
 @login_required
 def unavailability():
     if request.method == 'POST':
-        unavailability = None #get all unavailability from front-end
-        
-        #delete old user unavailability
-        Unavailability.delete().where(employeeID = current_user.employeeID).all()
-        
-        #overwrite all employee avaialability
-        for unavailable in unavailability:
-            new_unavailable_span = Unavailability(
+       
+        startTime = datetime.strptime(request.form['start-time-input'],'%Y-%m-%dT%H:%M')
+        endTime = datetime.strptime(request.form['end-time-input'],'%Y-%m-%dT%H:%M')
+        new_unavailable_span = Unavailability(
                 employeeID = current_user.employeeID,
-                unavailableStartTime = unavailable.start, 
-                unavailableEndTime = unavailable.end
+                unavailableStartTime = startTime, 
+                unavailableEndTime = endTime
             )
             
             #add new unavailable span to db
-            db.session.add(new_unavailable_span)
-            db.session.commit(); 
+        db.session.add(new_unavailable_span)
+        db.session.commit(); 
             
         
          
