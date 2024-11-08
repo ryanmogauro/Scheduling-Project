@@ -30,6 +30,17 @@ main {
     padding: 20px;
 }
 
+.button {
+    margin-right: 10px;
+    padding: 8px 12px;
+    background-color: #222;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
 .options {
     position: relative;
     display: inline-block;
