@@ -6,7 +6,7 @@ from auth import auth_blueprint
 
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', ‘secret keyyyyy’)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'secret keyyyyy')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('JAWSDB_URL', 'sqlite:///mydatabase.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
