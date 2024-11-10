@@ -29,11 +29,16 @@ def schedule():
     
     weekStartDay, weekEndDay = getWeekBounds(datetime.now()) #will need to change datetime.now for viewing different weeks
     
-    shifts = Shift.query.filter(Shift.shiftStartTime.between(weekStartDay, weekEndDay)).all()
+    #shifts = Shift.query.filter(Shift.shiftStartTime.between(weekStartDay, weekEndDay)).all()
     
     employee = Employee.query.filter(Employee.employeeID == current_user.employeeID).first()
     
     name = employee.firstName if employee else None
+    
+    shifts = [
+        {"day": "Monday", "start_hour": 9, "end_hour": 13},
+        {"day": "Wednesday", "start_hour": 11, "end_hour": 15}
+    ]
     
     
     return render_template('schedule.html', shifts=shifts, name = name) #need to make schedule.html interface
@@ -54,8 +59,9 @@ def getWeekBounds(date):
 @login_required
 def unavailability():
     if request.method == 'POST':
+        print("Receiving Availability: %s", str(request.get_json()))
        
-        startTime = datetime.strptime(request.form['start-time-input'],'%Y-%m-%dT%H:%M')
+        """         startTime = datetime.strptime(request.form['start-time-input'],'%Y-%m-%dT%H:%M')
         endTime = datetime.strptime(request.form['end-time-input'],'%Y-%m-%dT%H:%M')
         new_unavailable_span = Unavailability(
                 employeeID = current_user.employeeID,
@@ -65,7 +71,7 @@ def unavailability():
             
             #add new unavailable span to db
         db.session.add(new_unavailable_span)
-        db.session.commit(); 
+        db.session.commit();  """
             
         
          
