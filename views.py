@@ -24,6 +24,7 @@ def schedule():
                 shiftID = new_shift_id, 
                 employee = current_user.get_id()
             )
+    
             
         
     
@@ -38,9 +39,13 @@ def schedule():
     shifts = [
         {"day": "Monday", "start_hour": 9, "end_hour": 13},
         {"day": "Wednesday", "start_hour": 11, "end_hour": 15}
-    ]
+    ] 
     
+    """ shiftAssignments = ShiftAssignment.query.filter(ShiftAssignment.employeeID == current_user.employeeID).first()
     
+    shifts = Shift.query.filter(Shift.shiftID in shiftAssignments)
+    
+     """
     return render_template('schedule.html', shifts=shifts, name = name) #need to make schedule.html interface
 
 
@@ -58,35 +63,61 @@ def getWeekBounds(date):
 @main_blueprint.route('/unavailability', methods=['GET', 'POST'])
 @login_required
 def unavailability():
+    
+    #standardize day of week to date
+    #have to do this because used DATETIME instead of TIME
+    
+    dateToDay = {
+        'Monday' : datetime(2001, 1,1),
+        'Tuesday' : datetime(2001, 1, 2),
+        'Wednesday' : datetime(2001, 1, 3),
+        'Thursday' : datetime(2001, 1, 4),
+        'Friday' : datetime(2001, 1, 5),
+        'Saturday' : datetime(2001, 1, 6),
+        'Sunday' : datetime(2001, 1, 7),
+    }
+    
     if request.method == 'POST':
-        unavailability = request.get_json(); 
+        
+        unavailabilityJSON = request.get_json()
+        unavailability = unavailabilityJSON['slots']
+        
+        if unavailability:
+            prior_unavailability = Unavailability.query.filter(Unavailability.employeeID == current_user.employeeID).all()
+            for entry in prior_unavailability:
+                db.session.delete(entry)
+            db.session.commit()
 
         #response currently sends day of week instead of date
         #will need to figure this out on front-end
         for slot in unavailability: 
-            pass
-            
-            
-            
-       
-        """#startTime = datetime.strptime(request.form['start-time-input'],'%Y-%m-%dT%H:%M')
-        endTime = datetime.strptime(request.form['end-time-input'],'%Y-%m-%dT%H:%M')
-        new_unavailable_span = Unavailability(
-                employeeID = current_user.employeeID,
-                unavailableStartTime = startTime, 
-                unavailableEndTime = endTime
+            day = slot['day']
+            day_date = dateToDay[day]
+            start_time = datetime.combine(day_date, datetime.strptime(slot["startTime"], "%H:%M").time())
+            end_time = datetime.combine(day_date, datetime.strptime(slot["endTime"], "%H:%M").time())
+
+            new_unavailable_slot = Unavailability(
+                employeeID = current_user.employeeID, 
+                unavailableStartTime = start_time, 
+                unavailableEndTime = end_time
             )
-            
-            #add new unavailable span to db
-        db.session.add(new_unavailable_span)
-        db.session.commit(); 
-        """
+            print("About to add this object to unavailability! at: " + str(new_unavailable_slot.unavailableStartTime))
+            db.session.add(new_unavailable_slot)
+            db.session.commit(); 
         
          
-        
-    #currentUnavailability = Unavailability.filter_by(employeeID = current_user.employeeID).all()
+    #still need
+    current_unavailability = Unavailability.query.filter(Unavailability.employeeID == current_user.employeeID).all()
+    print(str(current_user.email) + " is unavail : " + str([slot.unavailableStartTime for slot in current_unavailability]))
+    unavailability_list = [
+        {
+            "day": entry.unavailableStartTime.strftime('%A'),  # Get the day name (e.g., Monday)
+            "startTime": entry.unavailableStartTime.strftime('%H:%M'),
+            "endTime": entry.unavailableEndTime.strftime('%H:%M')
+        } for entry in current_unavailability
+    ]
     
-    return render_template('unavailability.html', unavailability = None)
+    return render_template('unavailability.html', unavailability = unavailability_list)
 
 
 
