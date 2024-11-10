@@ -27,10 +27,6 @@ button[type="button1"]:hover {
     border-color: #6F4E37;
 }
 
-button[type="button1"]:focus,  button[type="button1"]:active{
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.5); /* Focus shadow */
-}
-
 button[type="button2"] {
     background-color: #6F4E37;
     border-color: #6F4E37;
@@ -80,20 +76,4 @@ form[action="/login"] {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
-
-#OR {
-    display: flex;
-    align-items: center;
-}
-
-#OR hr {
-    flex: 1;
-    border: none;
-    border-top: 1px solid #000; 
-    margin: 0 50px;
-}
-
-#OR span {
-    font-weight: 600;
-    font-size: 24px;
 }
