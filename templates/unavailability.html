@@ -87,7 +87,6 @@
 
         <div id="availabilityList" class="availability-list"></div>
     </main>
-
     <script>
         let availabilitySlots = [];
 
@@ -98,28 +97,53 @@
         function closeModal() {
             document.getElementById("availabilityModal").style.display = "none";
         }
+    
+        document.addEventListener("DOMContentLoaded", () => {
+            loadAvailability();
+        });
 
+
+    
+        function loadAvailability() {
+            fetch('/get_availability/1')  // Replace `1` with the actual employee ID
+                .then(response => response.json())
+                .then(data => {
+                    availabilitySlots = data.availability;
+    
+                    // Display each availability slot
+                    const list = document.getElementById("availabilityList");
+                    list.innerHTML = "";  // Clear previous entries
+                    availabilitySlots.forEach(slot => {
+                        const listItem = document.createElement("div");
+                        listItem.className = "availability-item";
+                        listItem.textContent = `${slot.day}: ${slot.startTime} - ${slot.endTime}`;
+                        list.appendChild(listItem);
+                    });
+                })
+                .catch(error => console.error("Error loading availability:", error));
+        }
+    
         function addAvailability() {
             const day = document.getElementById("day-select").value;
             const startTime = document.getElementById("start-time").value;
             const endTime = document.getElementById("end-time").value;
-
+    
             if (startTime && endTime) {
                 const slot = { day, startTime, endTime };
                 availabilitySlots.push(slot);
-
+    
                 const list = document.getElementById("availabilityList");
                 const listItem = document.createElement("div");
                 listItem.className = "availability-item";
                 listItem.textContent = `${day}: ${startTime} - ${endTime}`;
                 list.appendChild(listItem);
-
+    
                 closeModal();
             } else {
                 alert("Please select both start and end times.");
             }
         }
-
+    
         function submitAllAvailability() {
             fetch('/unavailability', {
                 method: 'POST',
@@ -131,13 +155,14 @@
               .then(data => {
                   if (data.success) {
                       alert("Availability submitted successfully!");
-                      availabilitySlots = [];  
-                      document.getElementById("availabilityList").innerHTML = ""; 
+                      loadAvailability();  // Reload availability from the server
+                      availabilitySlots = [];
+                      document.getElementById("availabilityList").innerHTML = "";
                   } else {
                       alert("Failed to submit availability.");
                   }
               });
         }
-    </script>
+    </script>    
 </body>
 </html>

@@ -18,8 +18,24 @@
             <h2>Email</h2> <input type="text", name="email">
             <h2>Password</h2> <input type="password", name="password">
         </div> <button id="LogInButton">Log In</button>
-        </form> <button>Forgot Password?</button>
-    
+        </form> 
+
+        <div class="flash-messages">
+            <!--For some reason messages are not perfectly aligning with other content-->
+            <!--I used text-align: center in css class, will look into fixes later-->
+            {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                <ul>
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+                </ul>
+                {% endif %}
+            {% endwith %}
+            </div>
+
+    <button>Forgot Password?</button>
+        
     <div id="SignUpContainer">
         <h2>New to Mary Low Coffeehouse? <a href="{{ url_for('auth.signup') }}">Sign Up</a></h2>
     </div>
