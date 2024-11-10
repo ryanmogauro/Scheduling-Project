@@ -22,10 +22,6 @@ header h1 {
     font-size: 1.5rem;
 }
 
-header .header-right {
-    font-size: 1rem;
-}
-
 main {
     padding: 20px;
 }
@@ -75,10 +71,6 @@ main {
     display: block;
 }
 
-.dropdown_btn:hover .dropdown_content {
-    display: block;
-}
-
 .schedule-section {
     background-color: white;
     padding: 10px;
@@ -97,52 +89,30 @@ main {
     margin-bottom: 20px;
 }
 
-.toolbar .tags button,
-.toolbar .options button {
-    margin-right: 10px;
-    padding: 8px 12px;
-    background-color: #222;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
 .schedule-grid {
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    grid-template-rows: repeat(8, auto);
+    grid-template-columns: 100px repeat(11, 1fr);
+    gap: 1px;
     background-color: #222;
 }
 
-.time-labels {
-    grid-column: 1 / -1; 
-    grid-row: 1;
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
+.empty-cell {
     background-color: #eee;
-    text-align: center;
-    padding: 10px 0;
 }
 
-.time-labels span {
+.time-label {
+    text-align: center;
     padding: 10px;
     background-color: #f4f4f4;
     border: 1px solid #ddd;
 }
 
-.day-labels {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    color: #ddd;
-    margin: 20px;
-    
-}
-
-.day-labels li{
-    list-style-type: none;
-    padding: 25px
+.day-label {
+    text-align: center;
+    padding: 10px;
+    background-color: #ddd;
+    color: #444;
+    font-weight: bold;
 }
 
 .cell {
@@ -152,15 +122,6 @@ main {
     text-align: center;
 }
 
-.add-btn {
-    background-color: #000;
-    color: white;
-    border: none;
-    padding: 8px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.add-btn:hover {
-    background-color: #45a049;
+.shift-cell {
+    background-color: white;
 }

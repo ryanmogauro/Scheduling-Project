@@ -2,151 +2,54 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='schedule.css') }}">
-    <title>Employee Sign Up</title>
+    <title>Employee Schedule</title>
 </head>
 <body>
     <header>
         <div class="header-content">
             <div class="header-right">
-                <h1>Welcome, {{name}}</h1>
+                <h1>Welcome, {{ name }}</h1>
             </div>
         </div>
     </header>
 
     <main>
-            <section class="schedule-section">
+        <section class="schedule-section">
             <div class="schedule-header">
                 <h2>My Schedule</h2>
             </div>
 
             <div class="toolbar">
                 <div class="tags">
-                    <a class = button href = 'unavailability'>Availability</a>
+                    <a class="button" href="unavailability">Availability</a>
                     <button>Today</button>
                 </div>
                 <div class="options">
-                    <button class = "dropdown_btn">Filters</button>
-                        <div class="dropdown_content">
-                            <a href="option1">option1</a>
-                            <a href="option2">option2</a>
-                            <a href="option3">option3</a>
-                        </div>
-
-                    <button class = "dropdown_btn">Tools</button>
+                    <button class="dropdown_btn">Filters</button>
+                    <div class="dropdown_content">
+                        <a href="option1">option1</a>
+                        <a href="option2">option2</a>
+                        <a href="option3">option3</a>
+                    </div>
+                    <button class="dropdown_btn">Tools</button>
                     <button>Request Change</button>
                 </div>
             </div>
 
             <div class="schedule-grid">
-                <div class="time-labels">
-                    <span></span>
-                    <span>7AM</span>
-                    <span>8AM</span>
-                    <span>9AM</span>
-                    <span>10AM</span>
-                    <span>11AM</span>
-                    <span>12PM</span>
-                    <span>1PM</span>
-                    <span>2PM</span>
-                    <span>3PM</span>
-                    <span>4PM</span>
-                    <span>5PM</span>
-                </div>
-                
-                <div class="day-labels">Monday</div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    
+                <div class="empty-cell"></div>
+                {% for hour in range(7, 18) %}
+                    <div class="time-label">{{ hour }}{{ 'AM' if hour < 12 else 'PM' }}</div>
+                {% endfor %}
 
-                <div class="day-labels">Tuesday</div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-
-                <div class="day-labels">Wednesday</div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-
-                <div class="day-labels">Thursday</div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                
-                <div class="day-labels">Friday</div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                
-                    <div class="day-labels">Saturday</div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-
-                    <div class="day-labels">Sunday</div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
+                {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
+                    <div class="day-label">{{ day }}</div>
+                    {% for hour in range(7, 18) %}
+                        <div class="cell {% for shift in shifts if shift.day == day and shift.start_hour <= hour < shift.end_hour %}shift-cell{% endfor %}"></div>
+                    {% endfor %}
+                {% endfor %}
             </div>
         </section>
     </main>
 </body>
 </html>
-

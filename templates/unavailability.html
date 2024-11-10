@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='availability.css') }}">
-    <title>Employee Sign Up</title>
+    <title>Employee Availability</title>
 </head>
 <body>
     <header>
@@ -15,7 +15,7 @@
     </header>
 
     <main>
-            <section class="availability-section">
+        <section class="availability-section">
             <div class="availability-header">
                 <h2>My Schedule</h2>
                 <h3>My Availability | Events</h3>
@@ -23,15 +23,11 @@
 
             <div class="toolbar">
                 <div class="tags">
-                    <form method = "POST">
-                        <a class="button" href="schedule">Schedule</a>
-                        <button class="add-btn" type = "submit">Add +</button>
-                        <input type = "datetime-local" name = "start-time-input" placeholder="start time"/>
-                        <input type = "datetime-local" name = "end-time-input" placeholder="end time"/>
-                    </form>
+                    <a class="button" href="schedule">Schedule</a>
+                    <button class="add-btn" onclick="openModal()">Add +</button>
                 </div>
                 <div class="options">
-                    <button>New</button>
+                    <button onclick="submitAllAvailability()">Submit All Availability</button>
                     <button>Clear</button>
                     <button>Notify Manager</button>
                 </div>
@@ -52,103 +48,96 @@
                     <span>4PM</span>
                     <span>5PM</span>
                 </div>
-                
-                <div class="day-labels">Monday 
-                    
-                </div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    
 
-                <div class="day-labels">Tuesday</div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-
-                <div class="day-labels">Wednesday </div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-
-                <div class="day-labels">Thursday </div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                
-                <div class="day-labels">Friday </div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                
-                    <div class="day-labels">Saturday </div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-
-                <div class="day-labels">Sunday </div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-                    <div class="cell"></div>
-
+                {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
+                    <div class="day-labels">{{ day }}</div>
+                    {% for hour in range(7, 18) %}
+                        <div class="cell"></div>
+                    {% endfor %}
+                {% endfor %}
             </div>
         </section>
+
+
+
+        <div id="availabilityModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2>Add Availability</h2>
+                <label for="day-select">Day:</label>
+                <select id="day-select">
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                    <option value="Sunday">Sunday</option>
+                </select>
+
+                <label for="start-time">Start Time:</label>
+                <input type="time" id="start-time">
+
+                <label for="end-time">End Time:</label>
+                <input type="time" id="end-time">
+
+                <button onclick="addAvailability()">Add Availability</button>
+            </div>
+        </div>
+
+        <div id="availabilityList" class="availability-list"></div>
     </main>
+
+    <script>
+        let availabilitySlots = [];
+
+        function openModal() {
+            document.getElementById("availabilityModal").style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById("availabilityModal").style.display = "none";
+        }
+
+        function addAvailability() {
+            const day = document.getElementById("day-select").value;
+            const startTime = document.getElementById("start-time").value;
+            const endTime = document.getElementById("end-time").value;
+
+            if (startTime && endTime) {
+                const slot = { day, startTime, endTime };
+                availabilitySlots.push(slot);
+
+                const list = document.getElementById("availabilityList");
+                const listItem = document.createElement("div");
+                listItem.className = "availability-item";
+                listItem.textContent = `${day}: ${startTime} - ${endTime}`;
+                list.appendChild(listItem);
+
+                closeModal();
+            } else {
+                alert("Please select both start and end times.");
+            }
+        }
+
+        function submitAllAvailability() {
+            fetch('/unavailability', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ slots: availabilitySlots })
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      alert("Availability submitted successfully!");
+                      availabilitySlots = [];  
+                      document.getElementById("availabilityList").innerHTML = ""; 
+                  } else {
+                      alert("Failed to submit availability.");
+                  }
+              });
+        }
+    </script>
 </body>
 </html>
