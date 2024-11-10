@@ -82,3 +82,9 @@ form[action="/"] {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
+
+.flash-messages{
+    color: red; 
+    text-align: center;
+    margin: 10px 0;
+}
