@@ -37,13 +37,11 @@
             </div>
 
             <div class="schedule-grid">
-                <!-- Time Labels at the Top -->
                 <div class="empty-cell"></div>
                 {% for hour in range(7, 18) %}
                     <div class="time-label">{{ hour }}{{ 'AM' if hour < 12 else 'PM' }}</div>
                 {% endfor %}
 
-                <!-- Days and Cells -->
                 {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
                     <div class="day-label">{{ day }}</div>
                     {% for hour in range(7, 18) %}

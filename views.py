@@ -59,9 +59,17 @@ def getWeekBounds(date):
 @login_required
 def unavailability():
     if request.method == 'POST':
-        print("Receiving Availability: %s", str(request.get_json()))
+        unavailability = request.get_json(); 
+
+        #response currently sends day of week instead of date
+        #will need to figure this out on front-end
+        for slot in unavailability: 
+            pass
+            
+            
+            
        
-        """         startTime = datetime.strptime(request.form['start-time-input'],'%Y-%m-%dT%H:%M')
+        """#startTime = datetime.strptime(request.form['start-time-input'],'%Y-%m-%dT%H:%M')
         endTime = datetime.strptime(request.form['end-time-input'],'%Y-%m-%dT%H:%M')
         new_unavailable_span = Unavailability(
                 employeeID = current_user.employeeID,
@@ -71,8 +79,8 @@ def unavailability():
             
             #add new unavailable span to db
         db.session.add(new_unavailable_span)
-        db.session.commit();  """
-            
+        db.session.commit(); 
+        """
         
          
         
