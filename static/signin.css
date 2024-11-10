@@ -76,19 +76,3 @@ form[action="/login"] {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
-
-#OR {
-    display: flex;
-    align-items: center;
-}
-
-#OR hr {
-    flex: 1;
-    border: none;
-    border-top: 1px solid #000; 
-    margin: 0 50px;
-}
-
-#OR span {
-    font-weight: 600;
-    font-size: 24px;
