@@ -105,6 +105,7 @@ main {
     height: 90px;
     border: 0.5px black;
     text-align: center;
+    transition: background-color 0.3s;
 }
 
 .empty-cell {
@@ -113,6 +114,7 @@ main {
 
 .cell:hover{
     background-color: lightgray;
+    
 }
 
 .shift-cell {
@@ -172,3 +174,25 @@ main {
     border-radius: 4px;
 }
 
+.availability-item {
+    background-color: #ddd;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.minus-button {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.minus-button:hover {
+    background-color: darkred;
+}
