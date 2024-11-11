@@ -27,6 +27,8 @@ main {
 }
 
 .button {
+    /* display: inline-block; */
+    font-size: 14px;
     margin-right: 10px;
     padding: 8px 12px;
     background-color: #222;
@@ -35,37 +37,23 @@ main {
     border-radius: 4px;
     cursor: pointer;
     text-decoration: none;
+    width: max-content;
+    height: auto;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);   
 }
+
+.button:hover {
+    background-color: rgb(59, 59, 59);
+    box-shadow: none;
+}
+
 
 .options {
     position: relative;
     display: inline-block;
 }
 
-.dropdown_btn {
-    background-color: #3498db;
-    color: white;
-    padding: 10px;
-    font-size: 16px;
-    border: none;
-    cursor: pointer;
-}
-
-.dropdown_content {
-    display: none;
-    position: absolute;
-    background-color: #f9f9f9;
-    min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
-}
-
-.dropdown_content a {
-    color: black;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
-}
 
 .dropdown_content.show {
     display: block;
@@ -96,9 +84,6 @@ main {
     background-color: #222;
 }
 
-.empty-cell {
-    background-color: #eee;
-}
 
 .time-label {
     text-align: center;
@@ -116,12 +101,74 @@ main {
 }
 
 .cell {
-    background-color: black;
+    background-color: white;
     height: 90px;
-    border: 1px solid white;
+    border: 0.5px black;
     text-align: center;
 }
 
-.shift-cell {
-    background-color: white;
+.empty-cell {
+    background-color: #eee;
 }
+
+.cell:hover{
+    background-color: lightgray;
+}
+
+.shift-cell {
+    background-color: black;
+}
+
+.shift-cell:hover{
+    background-color: rgb(54, 54, 54);
+}
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 300px;
+    border-radius: 8px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.availability-list {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f4f4f4;
+    border-radius: 8px;
+}
+
+.availability-item {
+    background-color: #ddd;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 4px;
+}
+

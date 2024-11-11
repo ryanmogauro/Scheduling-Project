@@ -1,22 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='availability.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='schedule.css') }}">
     <title>Employee Availability</title>
 </head>
 <body>
     <header>
         <div class="header-content">
-            <h1>User name to add later</h1>
-            <div class="header-right">
-                <span>Name to Add later</span>
-            </div>
+            <h1>{{ name }}'s Availability</h1>
         </div>
     </header>
 
     <main>
-        <section class="availability-section">
-            <div class="availability-header">
+        <section class="schedule-section">
+            <div class="schedule-header">
                 <h2>My Schedule</h2>
                 <h3>My Availability | Events</h3>
             </div>
@@ -24,33 +21,23 @@
             <div class="toolbar">
                 <div class="tags">
                     <a class="button" href="schedule">Schedule</a>
-                    <button class="add-btn" onclick="openModal()">Add +</button>
+                    <button class="button" onclick="openModal()">Add +</button>
                 </div>
                 <div class="options">
-                    <button onclick="submitAllAvailability()">Submit All Availability</button>
-                    <button>Clear</button>
-                    <button>Notify Manager</button>
+                    <button class="button" onclick="submitAllAvailability()">Submit All Availability</button>
+                    <button class="button" >Clear</button>
+                    <button class="button" >Notify Manager</button>
                 </div>
             </div>
 
-            <div class="availability-grid">
-                <div class="time-labels">
-                    <span></span>
-                    <span>7AM</span>
-                    <span>8AM</span>
-                    <span>9AM</span>
-                    <span>10AM</span>
-                    <span>11AM</span>
-                    <span>12PM</span>
-                    <span>1PM</span>
-                    <span>2PM</span>
-                    <span>3PM</span>
-                    <span>4PM</span>
-                    <span>5PM</span>
-                </div>
+            <div class="schedule-grid">
+                <div class="empty-cell"></div>
+                {% for hour in range(7, 18) %}
+                    <div class="time-label"> {{ hour }}{{ 'AM' if hour < 12 else 'PM'}}</div>
+                {% endfor %}
 
                 {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
-                    <div class="day-labels">{{ day }}</div>
+                    <div class="day-label">{{ day }}</div>
                     {% for hour in range(7, 18) %}
                         <div class="cell"></div>
                     {% endfor %}
