@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for
-from flask import request
+from flask import request, jsonify
 from models import db, User, Employee, Unavailability, Shift, ShiftAssignment
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
@@ -119,10 +119,117 @@ def unavailability():
     
     return render_template('unavailability.html', unavailability = unavailability_list)
 
+@main_blueprint.route('/get_unavailability', methods=['GET', 'POST'])
+@login_required
+def get_availability(): 
+    print("getting unavail")
+
+    current_unavailability = Unavailability.query.filter(Unavailability.employeeID == current_user.employeeID).all()
+    
+    unavailability_list = [
+        {
+            "day": entry.unavailableStartTime.strftime('%A'),  # Day name (e.g., Monday)
+            "startTime": entry.unavailableStartTime.strftime('%H:%M'),
+            "endTime": entry.unavailableEndTime.strftime('%H:%M')
+        } for entry in current_unavailability
+    ]
+    
+    print("Fetching availability for " + str(current_user.email) + " : " + str(unavailability_list))
+    
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    return jsonify({'availability': unavailability_list, 'name': curr_employee.firstName})
 
 
+@main_blueprint.route('/add_availability', methods=['POST'])
+@login_required
+def add_availability():
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'error': 'Invalid data'}), 400
 
+    day = data.get('day')
+    start_time_str = data.get('startTime')
+    end_time_str = data.get('endTime')
 
+    if not all([day, start_time_str, end_time_str]):
+        return jsonify({'success': False, 'error': 'Missing data fields'}), 400
 
+    dateToDay = {
+        'Monday': datetime(2001, 1, 1),
+        'Tuesday': datetime(2001, 1, 2),
+        'Wednesday': datetime(2001, 1, 3),
+        'Thursday': datetime(2001, 1, 4),
+        'Friday': datetime(2001, 1, 5),
+        'Saturday': datetime(2001, 1, 6),
+        'Sunday': datetime(2001, 1, 7),
+    }
 
+    try:
+        day_date = dateToDay[day]
+        start_time = datetime.combine(day_date, datetime.strptime(start_time_str, "%H:%M").time())
+        end_time = datetime.combine(day_date, datetime.strptime(end_time_str, "%H:%M").time())
 
+        new_unavailable_slot = Unavailability(
+            employeeID=current_user.employeeID,
+            unavailableStartTime=start_time,
+            unavailableEndTime=end_time
+        )
+        db.session.add(new_unavailable_slot)
+        db.session.commit()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error adding availability: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+    
+
+@main_blueprint.route('/delete_availability', methods=['POST'])
+@login_required
+def delete_availability():
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'error': 'Invalid data'}), 400
+
+    day = data.get('day')
+    start_time_str = data.get('startTime')
+    end_time_str = data.get('endTime')
+
+    if not all([day, start_time_str, end_time_str]):
+        return jsonify({'success': False, 'error': 'Missing data fields'}), 400
+
+    dateToDay = {
+        'Monday': datetime(2001, 1, 1),
+        'Tuesday': datetime(2001, 1, 2),
+        'Wednesday': datetime(2001, 1, 3),
+        'Thursday': datetime(2001, 1, 4),
+        'Friday': datetime(2001, 1, 5),
+        'Saturday': datetime(2001, 1, 6),
+        'Sunday': datetime(2001, 1, 7),
+    }
+
+    try:
+        day_date = dateToDay[day]
+        start_time = datetime.combine(day_date, datetime.strptime(start_time_str, "%H:%M").time())
+        end_time = datetime.combine(day_date, datetime.strptime(end_time_str, "%H:%M").time())
+
+        # Find the unavailability slot to delete
+        slot_to_delete = Unavailability.query.filter_by(
+            employeeID=current_user.employeeID,
+            unavailableStartTime=start_time,
+            unavailableEndTime=end_time
+        ).first()
+
+        if slot_to_delete:
+            db.session.delete(slot_to_delete)
+            db.session.commit()
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error': 'Slot not found'}), 404
+    except Exception as e:
+        print(f"Error deleting availability: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+@main_blueprint.route('/unavailability', methods=['GET'])
+@login_required
+def unavailability_page():
+    return render_template('unavailability.html')
