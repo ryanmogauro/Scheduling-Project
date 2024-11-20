@@ -1,229 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='schedule.css') }}">
-    <title>Employee Availability</title>
+    <title>Availability - Coffeehouse</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Sen:wght@400..800&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="{{ url_for('static', filename='availability.js') }}"></script>
 </head>
+
 <body>
-    <header>
-        <div class="header-content">
-            <h1>{{ name }}'s Availability</h1>
-        </div>
-    </header>
-
-    <main>
-        <section class="schedule-section">
-            <div class="schedule-header">
-                <h2>My Schedule</h2>
-                <h3>My Availability | Events</h3>
+    <!-- Header -->
+    <div class="container">
+        <header class="d-flex align-items-center justify-content-between py-2 mb-2 border-bottom">
+            <div class="d-flex align-items-center col-md-6">
+                <a href="/" class="d-flex align-items-center text-dark text-decoration-none me-3">
+                    <img src="{{ url_for('static', filename='SmallLogo.png') }}" alt="Logo" width="50" height="50">
+                </a>
+                <!-- Navigation Buttons -->
+                <ul class="nav">
+                    <li><a href="{{ url_for('main.unavailability_page') }}"
+                            class="nav-link px-2 text-dark">Availability</a></li>
+                    <li><a href="{{ url_for('main.schedule') }}" class="nav-link px-2 text-secondary">Schedule</a></li>
+                </ul>
             </div>
+            <!-- Welcome w/ Name -->
+            <div class="text-center">
+                <p class="mb-0">Welcome, {{ name }}</p>
+            </div>
+    </div>
 
-            <div class="toolbar">
-                <div class="tags">
-                    <a class="button" href="schedule">Schedule</a>
-                    <button class="button" onclick="openModal()">Add +</button>
+    <div class="container">
+        <div class="row" style="min-height: 100vh;">
+            <aside class="col-md-2 d-flex flex-column">
+                <div class="p-3 bg-light border rounded flex-grow-1">
+                    <h4>Menu</h4>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li><a href="#" class="nav-link" onclick="openModal()">Add +</a></li>
+                        <li><a href="#" class="nav-link" onclick="clearAvailability()">Clear</a></li>
+                        <li><a href="#" class="nav-link">Notify Manager</a></li>
+                    </ul>
                 </div>
-                <div class="options">
-                    <button class="button" onclick="clearAvailability()">Clear</button>
-                    <button class="button" >Notify Manager</button>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="col-md-10">
+                <div class="p-3 bg-light border rounded">
+                    <div class="schedule-header">
+                        <h4>My Availability</h4>
+                    </div>
+
+                    <div class="schedule-grid">
+                        <div class="empty-cell"></div>
+                        {% for hour in range(7, 18) %}
+                        <div class="time-label"> {{ hour if hour < 13 else (hour%12) }}{{ 'AM' if hour < 12 else 'PM'
+                                }}</div>
+                                {% endfor %}
+
+                                {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+                                "Sunday"] %}
+                                <div class="day-label">{{ day }}</div>
+                                {% for hour in range(7, 18) %}
+                                <div class="cell" id="cell-{{ day }}-{{ hour }}"></div>
+                                {% endfor %}
+                                {% endfor %}
+                        </div>
+                        </section>
+
+                        <div id="availabilityModal" class="modal">
+                            <div class="modal-content">
+                                <span class="close" onclick="closeModal()">&times;</span>
+                                <h2>Add Availability</h2>
+                                <label for="day-select">Day:</label>
+                                <select id="day-select">
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                    <option value="Sunday">Sunday</option>
+                                </select>
+
+                                <label for="start-time">Start Time:</label>
+                                <input type="time" id="start-time">
+
+                                <label for="end-time">End Time:</label>
+                                <input type="time" id="end-time">
+
+                                <button onclick="addAvailability()">Add Availability</button>
+                            </div>
+                        </div>
+                        <div id="availabilityList" class="availability-list"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="schedule-grid">
-                <div class="empty-cell"></div>
-                {% for hour in range(7, 18) %}
-                    <div class="time-label"> {{ hour if hour < 13 else (hour%12) }}{{ 'AM' if hour < 12 else 'PM'}}</div>
-                {% endfor %}
-            
-                {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
-                    <div class="day-label">{{ day }}</div>
-                    {% for hour in range(7, 18) %}
-                        <div class="cell" id="cell-{{ day }}-{{ hour }}"></div>
-                    {% endfor %}
-                {% endfor %}
-            </div>
-        </section>
-
-        <div id="availabilityModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeModal()">&times;</span>
-                <h2>Add Availability</h2>
-                <label for="day-select">Day:</label>
-                <select id="day-select">
-                    <option value="Monday">Monday</option>
-                    <option value="Tuesday">Tuesday</option>
-                    <option value="Wednesday">Wednesday</option>
-                    <option value="Thursday">Thursday</option>
-                    <option value="Friday">Friday</option>
-                    <option value="Saturday">Saturday</option>
-                    <option value="Sunday">Sunday</option>
-                </select>
-
-                <label for="start-time">Start Time:</label>
-                <input type="time" id="start-time">
-
-                <label for="end-time">End Time:</label>
-                <input type="time" id="end-time">
-
-                <button onclick="addAvailability()">Add Availability</button>
-            </div>
+            </main>
         </div>
-
-        <div id="availabilityList" class="availability-list"></div>
-    </main>
-    <script>
-        let availabilitySlots = [];
-    
-        function openModal() {
-            document.getElementById("availabilityModal").style.display = "block";
-        }
-    
-        function closeModal() {
-            document.getElementById("availabilityModal").style.display = "none";
-        }
-    
-        document.addEventListener("DOMContentLoaded", () => {
-            loadAvailability();
-        });
-    
-        function loadAvailability() {
-            fetch('/get_unavailability')
-                .then(response => response.json())
-                .then(data => {
-                    availabilitySlots = data.availability;
-    
-                    const list = document.getElementById("availabilityList");
-                    list.innerHTML = "";
-    
-                    availabilitySlots.forEach(slot => {
-                        const listItem = document.createElement("div");
-                        listItem.className = "availability-item";
-                        listItem.textContent = `${slot.day}: ${slot.startTime} - ${slot.endTime}`;
-    
-                        const minusButton = document.createElement("button");
-                        minusButton.textContent = "-";
-                        minusButton.className = "minus-button";
-                        minusButton.onclick = function() {
-                            deleteAvailability(slot, listItem);
-                        };
-                        listItem.appendChild(minusButton);
-    
-                        list.appendChild(listItem);
-                    });
-    
-                    updateScheduleGrid();
-                })
-                .catch(error => console.error("Error loading availability:", error));
-        }
-    
-        function addAvailability() {
-            const day = document.getElementById("day-select").value;
-            const startTime = document.getElementById("start-time").value;
-            const endTime = document.getElementById("end-time").value;
-    
-            if (startTime && endTime) {
-                const slot = { day, startTime, endTime };
-    
-                fetch('/add_availability', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(slot)
-                }).then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        availabilitySlots.push(slot);
-    
-                        const list = document.getElementById("availabilityList");
-                        const listItem = document.createElement("div");
-                        listItem.className = "availability-item";
-                        listItem.textContent = `${day}: ${startTime} - ${endTime}`;
-
-                        const minusButton = document.createElement("button");
-                        minusButton.textContent = "-";
-                        minusButton.className = "minus-button";
-                        minusButton.onclick = function() {
-                            deleteAvailability(slot, listItem);
-                        };
-                        listItem.appendChild(minusButton);
-    
-                        list.appendChild(listItem);
-    
-                        updateScheduleGrid();
-    
-                        closeModal();
-                    } else {
-                        alert("Failed to add availability.");
-                    }
-                })
-                .catch(error => console.error("Error adding availability:", error));
-            } else {
-                alert("Please select both start and end times.");
-            }
-        }
-    
-        function deleteAvailability(slot, listItem) {
-            fetch('/delete_availability', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(slot)
-            }).then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    availabilitySlots = availabilitySlots.filter(s => !(s.day === slot.day && s.startTime === slot.startTime && s.endTime === slot.endTime));
-                    listItem.remove();
-                    updateScheduleGrid();
-                } else {
-                    alert("Failed to delete availability.");
-                }
-            })
-            .catch(error => console.error("Error deleting availability:", error));
-        }
-    
-        function updateScheduleGrid() {
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(cell => {
-                cell.style.backgroundColor = 'white';
-            });
-    
-            availabilitySlots.forEach(slot => {
-                const day = slot.day;
-                const startHour = parseInt(slot.startTime.split(":")[0]);
-                const endHour = parseInt(slot.endTime.split(":")[0]);
-    
-                for (let hour = startHour; hour < endHour; hour++) {
-                    if (hour >= 7 && hour <= 18) {
-                        const cellId = `cell-${day}-${hour}`;
-                        const cell = document.getElementById(cellId);
-                        if (cell) {
-                            cell.style.backgroundColor = 'black';
-                        }
-                    }
-                }
-            });
-        }
-    
-        function clearAvailability() {
-            fetch('/clear_availability', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({})
-            }).then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    availabilitySlots = [];
-                    document.getElementById("availabilityList").innerHTML = "";
-                    updateScheduleGrid();
-                } else {
-                    alert("Failed to clear availability.");
-                }
-            })
-            .catch(error => console.error("Error clearing availability:", error));
-        }
-    </script>
+    </div>
 </body>
+
 </html>
