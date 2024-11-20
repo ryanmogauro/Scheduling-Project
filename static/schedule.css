@@ -1,59 +1,7 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
+    font-family: "Bodoni Moda", serif;
+    font-weight: 300;
 }
-
-body {
-    background-color: black;
-    color: #333;
-}
-
-header {
-    background-color: #222;
-    color: white;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-}
-
-header h1 {
-    font-size: 1.5rem;
-}
-
-main {
-    padding: 20px;
-}
-
-.button {
-    /* display: inline-block; */
-    font-size: 14px;
-    margin-right: 10px;
-    padding: 8px 12px;
-    background-color: #222;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    text-decoration: none;
-    width: max-content;
-    height: auto;
-    font-weight: bold;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);   
-}
-
-.button:hover {
-    background-color: rgb(59, 59, 59);
-    box-shadow: none;
-}
-
-
-.options {
-    position: relative;
-    display: inline-block;
-}
-
 
 .dropdown_content.show {
     display: block;
