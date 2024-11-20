@@ -43,7 +43,7 @@
             </div>
             <!-- Welcome w/ Name -->
             <div class="text-center">
-                
+
                 <p class="mb-0"><i class="bi bi-bell-fill"></i>
                     Welcome, {{ name }}</p>
             </div>
@@ -60,41 +60,59 @@
                     <hr>
                     <ul class="nav nav-pills flex-column mb-auto">
                         <li>
-                            <a href="#" class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none" onclick="openModal()">
+                            <a href="#"
+                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none"
+                                onclick="openModal()">
                                 <i class="bi bi-plus-circle me-2"></i>
                                 Add
                             </a>
                         </li>
                         <li>
-                            <a href="#" class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none" onclick="clearAvailability()">
+                            <a href="#"
+                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none"
+                                onclick="clearAvailability()">
                                 <i class="bi bi-x-circle me-2"></i>
                                 Clear
                             </a>
                         </li>
                         <li>
-                            <a href="#" class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none">
+                            <a href="#"
+                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none">
                                 <i class="bi bi-bell me-2"></i>
                                 Notify Manager
                             </a>
                         </li>
                     </ul>
                 </div>
-                    <div class="p-3 bg-light border rounded">
-                        <h4><i class="bi bi-card-checklist me-1"></i>
-                            Selections
-                        </h4>
-                        <hr>
-                        <div id="availabilityList" class="availability-list"> </div>
-                    </div>
+                <div class="p-3 bg-light border rounded">
+                    <h4><i class="bi bi-card-checklist me-1"></i>
+                        Selections
+                    </h4>
+                    <hr>
+                    <div id="availabilityList" class="availability-list"> </div>
+                </div>
             </aside>
 
             <!-- Main Content -->
             <main class="col-md-10">
                 <div class="p-3 bg-light border rounded">
-                    <h4 class="text-center">
-                        <i class="bi bi-check2-circle"></i>
-                        My Availability
-                    </h4>
+                    <header class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center ms-2">
+                            <button type="button" id="prevWeek" class="btn p-0 me-2">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <input type="week" id="availabilityDate" name="availabilityDate" class="ms-2 me-2">
+                            <button type="button" id="nextWeek" class="btn p-0 ms-2">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                        <h4 class="text-center m-0">
+                            <i class="bi bi-check2-circle me-2"></i>
+                            My Availability
+                        </h4>
+                        <i class="bi bi-three-dots me-2">
+                        </i>
+                    </header>
                     <hr>
                     <div class="schedule-grid">
                         <div class="empty-cell"></div>
