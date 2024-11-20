@@ -120,7 +120,14 @@ function updateScheduleGrid() {
                 const cellId = `cell-${day}-${hour}`;
                 const cell = document.getElementById(cellId);
                 if (cell) {
-                    cell.style.backgroundColor = '#6F4E37';
+                    cell.style.backgroundColor = '#6F4E37';  
+                    cell.style.color = 'white';
+                    
+                    cell.style.textAlign = 'center';
+                    cell.style.display = 'flex'; 
+                    cell.style.alignItems = 'center';
+                    cell.style.justifyContent = 'center';
+                    cell.innerText = `${slot.startTime} - ${slot.endTime}`;
                 }
             }
         }
