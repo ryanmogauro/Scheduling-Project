@@ -3,6 +3,7 @@ from flask import request, jsonify
 from models import db, User, Employee, Unavailability, Shift, ShiftAssignment
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
+from scheduleGenerator import getEmployees, getAvailabilityDict, generateSchedule
 
 # Create a blueprint
 main_blueprint = Blueprint('main', __name__)
@@ -233,3 +234,35 @@ def delete_availability():
 @login_required
 def unavailability_page():
     return render_template('unavailability.html')
+
+
+
+@main_blueprint.route('/test_generate_schedule', methods=['GET'])
+@login_required
+def test_generate_schedule():
+    try:
+        employees = getEmployees()
+        if not employees:
+            print("No active employees found.")
+            return "No active employees found.", 404
+        availability = getAvailabilityDict(employees)
+
+
+        newSchedule = generateSchedule(availability)
+
+        print("Generated Schedule:")
+        for day_index, day_schedule in enumerate(newSchedule):
+            print(f"Day {day_index}:")
+            for slot_index, employees_in_slot in enumerate(day_schedule):
+                if employees_in_slot:
+                    hour = slot_index // 2
+                    minute = "30" if slot_index % 2 else "00"
+                    time_str = f"{hour:02d}:{minute}"
+                    print(f"  {time_str} - Employees: {employees_in_slot}")
+            print("\n")
+
+        return "Schedule generated and printed to the terminal.", 200
+
+    except Exception as e:
+        print(f"Error generating schedule: {e}")
+        return f"An error occurred: {e}", 500
