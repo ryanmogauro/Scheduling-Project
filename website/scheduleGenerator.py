@@ -1,4 +1,5 @@
-from models import db, User, Employee, Unavailability, Shift, ShiftAssignment
+from models import User, Employee, Unavailability, Shift, ShiftAssignment
+from website import db
 
 #0 -> Monday
 #6 -> Sunday
