@@ -12,7 +12,7 @@ main_blueprint = Blueprint('main', __name__)
 @login_required
 def schedule():
     if request.method == 'POST':
-        schedule = None #get all new shifts from front-end
+        schedule = None 
         
         for shift in schedule:
             new_shift = Shift(
@@ -47,16 +47,13 @@ def schedule():
     shifts = Shift.query.filter(Shift.shiftID in shiftAssignments)
     
      """
-    return render_template('schedule.html', shifts=shifts, name = name) #need to make schedule.html interface
+    return render_template('schedule.html', shifts=shifts, name = name)
 
 
 
-#maybe make a method for route /myschedule too
 def getWeekBounds(date):
-     # Calculate date of Monday date week
     start_of_week = date - timedelta(days=(date.weekday()))
     
-    # Calculate date of Sunday of date week
     end_of_week = start_of_week + timedelta(days=6)
     
     return start_of_week, end_of_week
@@ -65,8 +62,6 @@ def getWeekBounds(date):
 @login_required
 def unavailability():
     
-    #standardize day of week to date
-    #have to do this because used DATETIME instead of TIME
     
     dateToDay = {
         'Monday' : datetime(2001, 1,1),
@@ -89,8 +84,6 @@ def unavailability():
                 db.session.delete(entry)
             db.session.commit()
 
-        #response currently sends day of week instead of date
-        #will need to figure this out on front-end
         for slot in unavailability: 
             day = slot['day']
             day_date = dateToDay[day]
@@ -106,13 +99,11 @@ def unavailability():
             db.session.add(new_unavailable_slot)
             db.session.commit(); 
         
-         
-    #still need
     current_unavailability = Unavailability.query.filter(Unavailability.employeeID == current_user.employeeID).all()
     print(str(current_user.email) + " is unavail : " + str([slot.unavailableStartTime for slot in current_unavailability]))
     unavailability_list = [
         {
-            "day": entry.unavailableStartTime.strftime('%A'),  # Get the day name (e.g., Monday)
+            "day": entry.unavailableStartTime.strftime('%A'),
             "startTime": entry.unavailableStartTime.strftime('%H:%M'),
             "endTime": entry.unavailableEndTime.strftime('%H:%M')
         } for entry in current_unavailability
@@ -129,7 +120,7 @@ def get_availability():
     
     unavailability_list = [
         {
-            "day": entry.unavailableStartTime.strftime('%A'),  # Day name (e.g., Monday)
+            "day": entry.unavailableStartTime.strftime('%A'), 
             "startTime": entry.unavailableStartTime.strftime('%H:%M'),
             "endTime": entry.unavailableEndTime.strftime('%H:%M')
         } for entry in current_unavailability
@@ -213,7 +204,6 @@ def delete_availability():
         start_time = datetime.combine(day_date, datetime.strptime(start_time_str, "%H:%M").time())
         end_time = datetime.combine(day_date, datetime.strptime(end_time_str, "%H:%M").time())
 
-        # Find the unavailability slot to delete
         slot_to_delete = Unavailability.query.filter_by(
             employeeID=current_user.employeeID,
             unavailableStartTime=start_time,
@@ -230,39 +220,130 @@ def delete_availability():
         print(f"Error deleting availability: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
 
+
 @main_blueprint.route('/unavailability', methods=['GET'])
 @login_required
 def unavailability_page():
     return render_template('unavailability.html')
 
 
+@main_blueprint.route('/generate_schedule_page', methods=['GET'])
+def create_schedule_page():
+    return render_template('generateSchedule.html')
 
-@main_blueprint.route('/test_generate_schedule', methods=['GET'])
+
+@main_blueprint.route('/generate_schedule', methods=['GET'])
 @login_required
-def test_generate_schedule():
+def generate_schedule():
+    """
+    Test endpoint to generate the schedule and return it as JSON.
+    """
     try:
         employees = getEmployees()
         if not employees:
             print("No active employees found.")
-            return "No active employees found.", 404
+            return jsonify({"success": False, "message": "No active employees found."}), 404
+
         availability = getAvailabilityDict(employees)
-
-
+        
         newSchedule = generateSchedule(availability)
 
-        print("Generated Schedule:")
+        formatted_schedule = {}
+        day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
         for day_index, day_schedule in enumerate(newSchedule):
-            print(f"Day {day_index}:")
+            formatted_schedule[day_names[day_index]] = []
             for slot_index, employees_in_slot in enumerate(day_schedule):
                 if employees_in_slot:
                     hour = slot_index // 2
                     minute = "30" if slot_index % 2 else "00"
                     time_str = f"{hour:02d}:{minute}"
-                    print(f"  {time_str} - Employees: {employees_in_slot}")
+                    formatted_schedule[day_names[day_index]].append({
+                        'time': time_str,
+                        'employees': employees_in_slot
+                    })
+
+        print("Generated Schedule:")
+        for day, slots in formatted_schedule.items():
+            print(f"{day}:")
+            for slot in slots:
+                print(f"  {slot['time']} - Employees: {slot['employees']}")
             print("\n")
 
-        return "Schedule generated and printed to the terminal.", 200
-
+        return jsonify({"success": True, "schedule": formatted_schedule}), 200
     except Exception as e:
         print(f"Error generating schedule: {e}")
-        return f"An error occurred: {e}", 500
+        return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
+
+    
+    
+    
+@main_blueprint.route('/approve_schedule', methods=['POST'])
+@login_required
+def approve_schedule():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "message": "Invalid data."}), 400
+        
+        next_monday = (datetime.today() + timedelta(days=7 - datetime.today().weekday())).date()
+        day_dates = days_to_dates(next_monday)
+        
+        schedule = data['schedule'] if data['schedule'] else None
+        print("This is the approved schedule " + str(schedule))
+        for day, slots in schedule.items():
+            day_date = day_dates[day]
+            for slot in slots: 
+                time = slot['time']
+                employees = slot['employees']
+                
+                shift_start_time = datetime.strptime(time, "%H:%M").time()
+                shift_end_time = (datetime.combine(datetime.today(), shift_start_time) + timedelta(minutes=30)).time()
+                
+                
+                new_shift = Shift(
+                    shiftStartTime=datetime.combine(datetime(2001, 1, 1), shift_start_time), 
+                    shiftEndTime=datetime.combine(datetime(2001, 1, 1), shift_end_time)
+                )
+                db.session.add(new_shift)
+                db.session.flush() 
+
+                for employee_id in employees:
+                    print("Writing a new shift for " + str(employee_id))
+                    new_shift_assignment = ShiftAssignment(
+                        shiftID=new_shift.shiftID,
+                        employeeID=employee_id
+                    )
+                    db.session.add(new_shift_assignment)
+
+        db.session.commit()
+        return ({"success": True, "message": f"Successfully generated new schedule!"}), 500
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error approving schedule: {e}")
+        return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
+
+
+def getWeekBounds(date):
+    start_of_week = date - timedelta(days=(date.weekday()))
+    end_of_week = start_of_week + timedelta(days=6)
+    
+    return start_of_week, end_of_week
+    
+    
+    
+def next_week_start_date():
+    return (datetime.today() + timedelta(days=7 - datetime.today().weekday())).date()
+
+    
+def days_to_dates(target_monday):
+    day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    day_name_to_date = {}
+    
+    for i, day_name in enumerate(day_names):
+        day_date = target_monday + timedelta(days=i)
+        day_name_to_date[day_name] = day_date
+    
+    return day_name_to_date
+    
