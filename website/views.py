@@ -1,10 +1,9 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask import request, jsonify
-from .models import User, Employee, Unavailability, Shift, ShiftAssignment
+from website.models import User, Employee, Unavailability, Shift, ShiftAssignment
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 from website import db
-from .models import User
 
 # Create a blueprint
 main_blueprint = Blueprint('main', __name__)
