@@ -1,5 +1,6 @@
-from app import app, db
+from app import app
 from sqlalchemy import text
+from website import db
 
 with app.app_context():
     try:

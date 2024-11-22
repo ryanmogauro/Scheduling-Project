@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask import request, request, flash
-from models import db, User, Employee, Unavailability, Shift, ShiftAssignment
+from website.models import User, Employee, Unavailability, Shift, ShiftAssignment
 from flask_login import login_user, logout_user, login_required, current_user
+from website import db
+from .models import User
 
 # Create a blueprint
 auth_blueprint = Blueprint('auth', __name__)
