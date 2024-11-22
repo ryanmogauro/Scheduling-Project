@@ -1,102 +1,64 @@
-from models import User, Employee, Unavailability, Shift, ShiftAssignment
+from website.models import User, Employee, Unavailability, Shift, ShiftAssignment
+from datetime import datetime
 from website import db
 
-#0 -> Monday
-#6 -> Sunday
+
+# 0 -> Monday
+# 6 -> Sunday
 dailyOperatingHours = {
-    0 : (7.5, 17.5),
+    0: (7.5, 17.5),
     1: (7.5, 17.5), 
     2: (7.5, 17.5), 
     3: (7.5, 17.5),
     4: (7.5, 17.5),
     5: (0, 0),
-    6: (9.5, 4.5)
+    6: (9.5, 16.5)
 }
 
 def getEmployees():
-    # SQL statement to select all employee ids, where isActive
-    return ['Ryan', 'Eli', 'Henry', 'Trey']
+    currentEmployees = User.query.filter(User.isActive == True).all()
+    currentEmployeeIDs = [emp.employeeID for emp in currentEmployees]
+    print("Current Employee IDs:", currentEmployeeIDs)
+    return currentEmployeeIDs
     
     
-def getUnavailability(employee):
-    #something like Unavailability.where(employeeID = id).all()
-    dummy = {
-        
+def getUnavailability(employeeID):
+    unavailability = Unavailability.query.filter(Unavailability.employeeID == employeeID).all()
+    return unavailability
 
-        'Ryan' :  [
-            [[7.5, 11], [13, 17]], 
-            [[11,13]], 
-            [[7,9], [16, 17]], 
-            [[7,8], [1,3]],
-            [[7,10], [13, 15]], 
-            [[]], 
-            [[7, 11]]
-            ], 
-        'Eli' : [
-            [[13, 17]], 
-            [[9, 10], [11,13]], 
-            [[7,9]], 
-            [],
-            [[10, 12]], 
-            [[]], 
-            [[7, 15]]
-            ], 
-        'Henry' : [
-            [[10, 11.5]], 
-            [[11,16.5]], 
-            [[9, 12], [13, 17]], 
-            [[11, 15]],
-            [[12, 14.5]], 
-            [[]], 
-            [[14, 15]]
-            ], 
-        'Trey' : [
-            [[12.5, 15.5]], 
-            [[7, 9.5]], 
-            [[]], 
-            [[11, 15]],
-            [[]], 
-            [[]], 
-            [[]]
-            ]
-    }
-    
-    return dummy[employee]
 
-    
 def getAvailabilityDict(employees):
     availability = {}
-    for id in employees:
+    for employee_id in employees:
+        # 48 time slots in a day, 7 days
+        # 1 -> available, 0 -> unavailable
+        employeeAvailability = [[1 for _ in range(48)] for _ in range(7)]
         
-        #48 time slots in a day, for 7 days
-        #1 -> available, 0 -> unavailable
-        employeeAvailability = [[1 for i in range(48)] for j in range(7)]
+        unavailability = getUnavailability(employee_id)
         
-        
-        unavailability = getUnavailability(id)
-        
-        
-        for dayIndex, dayUnvailability in enumerate(unavailability): 
-            for block in dayUnvailability: 
-                #if employee free all day
-                if not block: 
-                    pass
+        for entry in unavailability:
+            day_index = entry.unavailableStartTime.weekday()
             
-                start = int(block[0]) if block else 0
-                end = int(block[1]) if block else 0
-                
-                for shift in range(start, end): 
-                    employeeAvailability[dayIndex][shift] = 0
+            start_hour = entry.unavailableStartTime.hour + entry.unavailableStartTime.minute / 60
+            end_hour = entry.unavailableEndTime.hour + entry.unavailableEndTime.minute / 60
+
+            start_block = int(start_hour * 2)
+            end_block = int(end_hour * 2)
             
+            if end_block < start_block:
+                end_block += 48  
             
+            for block in range(start_block, end_block):
+                current_block = block % 48  # Ensure block is within 0-47
+                employeeAvailability[day_index][current_block] = 0
         
-        
-        availability[id] = employeeAvailability
+        availability[employee_id] = employeeAvailability
         
     return availability
 
-def isAvailable(employee, availability, shiftSlot):
-    return availability[shiftSlot] == 1
+
+def isAvailable(employee, availability, day, shiftSlot):
+    return availability[employee][day][shiftSlot] == 1
 
 
 def validRolloverShift(schedule, day, shiftSlot, employee):
@@ -104,70 +66,68 @@ def validRolloverShift(schedule, day, shiftSlot, employee):
     shift = shiftSlot - 1 
     opening = int(dailyOperatingHours[day][0] * 2)
     while shift >= opening and employee in schedule[day][shift]:
-        consecutiveTime += .5
-        shift-=1
+        consecutiveTime += 0.5
+        shift -= 1
     
-    return consecutiveTime <  2.5
-        
-    
-        
-    
-    
+    return consecutiveTime < 2.5
 
 
 def generateSchedule(availability):
-    
-    schedule = [[[] for i in range(48)] for j in range(7)]
-    
+    schedule = [[[] for _ in range(48)] for _ in range(7)]
     issues = []
 
     for day in dailyOperatingHours:
-        open = int(dailyOperatingHours[day][0]*2)
-        close = int(dailyOperatingHours[day][1]*2)
+        open_block = int(dailyOperatingHours[day][0] * 2)
+        close_block = int(dailyOperatingHours[day][1] * 2)
         
-        for shiftSlot in range(open, close):
-            
-            #try past employees
-            pastShiftEmployees = schedule[day][shiftSlot-1] if shiftSlot > open else None
+        for shiftSlot in range(open_block, close_block):
+            #try rollover
+            pastShiftEmployees = schedule[day][shiftSlot-1] if shiftSlot > open_block else []
             if pastShiftEmployees:
                 for employee in pastShiftEmployees:
-                    employeeAvailability = availability[employee][day] #because 0 indexing
-                    if isAvailable(employee, employeeAvailability, shiftSlot) and validRolloverShift(schedule, day, shiftSlot, employee):
+                    if isAvailable(employee, availability, day, shiftSlot) and validRolloverShift(schedule, day, shiftSlot, employee):
                         schedule[day][shiftSlot].append(employee)
             
-            #if both employees can rollover
+            # if both employees can rollover
             if len(schedule[day][shiftSlot]) > 1:
-                pass
+                pass  # Implement any specific logic if needed
             
-            
-            availableEmployees = [id for id in availability if availability[id][day][shiftSlot] == 1] #and under max hours?
-            
-            #would sort here, maybe by distance from hours limit
+            availableEmployees = [emp_id for emp_id in availability if availability[emp_id][day][shiftSlot] == 1]
             
             if len(availableEmployees) == 0: 
-                issues.append("No employees available at " + str(day) + " : " + str(shiftSlot))
-                pass
-        
+                issues.append(f"No employees available at Day {day} Slot {shiftSlot}")
+                pass  
+
             if len(availableEmployees) == 1: 
-                issues.append("Only one available employee at " + str(day) + " : " + str(shiftSlot))
-                pass
+                issues.append(f"Only one available employee at Day {day} Slot {shiftSlot}")
+                pass 
              
             k = 0
             while k < len(availableEmployees) and len(schedule[day][shiftSlot]) < 2:
-                schedule[day][shiftSlot].append(availableEmployees[k])
-                k+=1
-            
+                employee_to_assign = availableEmployees[k]
+                if employee_to_assign not in schedule[day][shiftSlot]:
+                    schedule[day][shiftSlot].append(employee_to_assign)
+                k += 1
                 
+    for issue in issues:
+        print(f"Issue: {issue}")
+    
     return schedule
 
 
-        
-            
-employees = getEmployees()
-availability = getAvailabilityDict(employees)
-newSchedule = generateSchedule(availability)
-for day in newSchedule: 
-    print(day)
-    print("\n")
-
+def main():
+    employees = getEmployees()
+    availability = getAvailabilityDict(employees)
+    newSchedule = generateSchedule(availability)
     
+    for day_index, day_schedule in enumerate(newSchedule):
+        print(f"Day {day_index}:")
+        for slot, employees in enumerate(day_schedule):
+            if employees:
+                hour = slot // 2
+                minute = "30" if slot % 2 else "00"
+                print(f"  {hour}:{minute} - Employees: {employees}")
+        print("\n")
+
+if __name__ == "__main__":
+    main()

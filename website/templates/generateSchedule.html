@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Schedule Management</title>
+</head>
+<body>
+    <h1>Schedule Management</h1>
+
+    <button id="generate-schedule-button">Generate Schedule</button>
+
+    <button id="approve-schedule-button" style="display: none;">Approve Schedule</button>
+
+    <div id="schedule-container"></div>
+
+    <script>
+        document.getElementById('generate-schedule-button').addEventListener('click', function() {
+        fetch('/generate_schedule', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if(data.success) {
+                displaySchedule(data.schedule);  
+                document.getElementById('approve-schedule-button').style.display = 'inline-block';
+            } else {
+                alert(data.message || 'Failed to generate schedule.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while generating the schedule.');
+            });
+        });
+
+
+        document.getElementById('approve-schedule-button').addEventListener('click', function() {
+            const schedule = getCurrentSchedule(); 
+
+            if(schedule) {
+                fetch('/approve_schedule', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ schedule: schedule })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        alert('Schedule saved successfully!');
+                        document.getElementById('approve-schedule-button').style.display = 'none';
+                        document.getElementById('generate-schedule-button').disabled = true;
+                    } else {
+                        alert(data.message || 'Failed to approve schedule.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while approving the schedule.');
+                });
+            } else {
+                alert('No schedule data available to approve.');
+            }
+        });
+
+
+        function displaySchedule(schedule) {
+            const container = document.getElementById('schedule-container');
+            container.innerHTML = '';  
+
+            for(const day in schedule) {
+                const dayHeader = document.createElement('h2');
+                dayHeader.textContent = day;
+                container.appendChild(dayHeader);
+
+                const table = document.createElement('table');
+
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+
+                const timeHeader = document.createElement('th');
+                timeHeader.textContent = 'Time';
+                const employeesHeader = document.createElement('th');
+                employeesHeader.textContent = 'Employees';
+
+                headerRow.appendChild(timeHeader);
+                headerRow.appendChild(employeesHeader);
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+
+                schedule[day].forEach(slot => {
+                    const row = document.createElement('tr');
+
+                    const timeCell = document.createElement('td');
+                    timeCell.textContent = slot.time;
+                    row.appendChild(timeCell);
+
+                    const employeesCell = document.createElement('td');
+                    employeesCell.textContent = slot.employees.join(', ');
+                    row.appendChild(employeesCell);
+
+                    tbody.appendChild(row);
+                });
+
+                table.appendChild(tbody);
+                container.appendChild(table);
+            }
+        }
+        
+
+        function getCurrentSchedule() {
+            const container = document.getElementById('schedule-container');
+            const schedule = {};
+        
+            const dayHeaders = container.querySelectorAll('h2');
+            dayHeaders.forEach(dayHeader => {
+                const day = dayHeader.textContent;
+                const table = dayHeader.nextElementSibling;  
+                const rows = table.querySelectorAll('tbody tr');
+        
+                schedule[day] = [];
+        
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const time = cells[0].textContent;
+                    const employeesText = cells[1].textContent;
+                    const employees = employeesText.split(',').map(emp => parseInt(emp.trim()));
+        
+                    schedule[day].push({
+                        time: time,
+                        employees: employees
+                    });
+                });
+            });
+        
+            return schedule;
+        }
+        
+
+    </script>
+</body>
+</html>

@@ -22,17 +22,15 @@ function loadAvailability() {
             list.innerHTML = "";
 
             availabilitySlots.forEach(slot => {
-                const listItem = document.createElement("div");
-                listItem.className = "availability-item";
-                listItem.textContent = `${slot.day}: ${slot.startTime} - ${slot.endTime}`;
-
-                const minusButton = document.createElement("button");
-                minusButton.textContent = "-";
-                minusButton.className = "minus-button";
-                minusButton.onclick = function () {
+                const list = document.getElementById("availabilityList");
+                const listItem = document.createElement("a");
+                listItem.className = "d-flex align-items-center justify-content-between p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
+                listItem.href = "#";
+                listItem.onclick = function (e) {
+                    e.preventDefault();
                     deleteAvailability(slot, listItem);
                 };
-                listItem.appendChild(minusButton);
+                listItem.innerHTML = `<i class="bi bi-trash3-fill me-2"></i> ${slot.day}: ${slot.startTime} - ${slot.endTime}`;
 
                 list.appendChild(listItem);
             });
@@ -62,17 +60,14 @@ function addAvailability() {
                     availabilitySlots.push(slot);
 
                     const list = document.getElementById("availabilityList");
-                    const listItem = document.createElement("div");
-                    listItem.className = "availability-item";
-                    listItem.textContent = `${day}: ${startTime} - ${endTime}`;
-
-                    const minusButton = document.createElement("button");
-                    minusButton.textContent = "-";
-                    minusButton.className = "minus-button";
-                    minusButton.onclick = function () {
+                    const listItem = document.createElement("a");
+                    listItem.href = "#";
+                    listItem.className = "d-flex align-items-center justify-content-between p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
+                    listItem.onclick = function (e) {
+                        e.preventDefault();
                         deleteAvailability(slot, listItem);
                     };
-                    listItem.appendChild(minusButton);
+                    listItem.innerHTML = `<i class="bi bi-trash3-fill me-2"></i> ${slot.day}: ${slot.startTime} - ${slot.endTime}`;
 
                     list.appendChild(listItem);
 
@@ -125,7 +120,14 @@ function updateScheduleGrid() {
                 const cellId = `cell-${day}-${hour}`;
                 const cell = document.getElementById(cellId);
                 if (cell) {
-                    cell.style.backgroundColor = 'black';
+                    cell.style.backgroundColor = '#6F4E37';  
+                    cell.style.color = 'white';
+                    
+                    cell.style.textAlign = 'center';
+                    cell.style.display = 'flex'; 
+                    cell.style.alignItems = 'center';
+                    cell.style.justifyContent = 'center';
+                    cell.innerText = `${slot.startTime} - ${slot.endTime}`;
                 }
             }
         }
