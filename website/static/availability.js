@@ -1,3 +1,7 @@
+function printPage() {
+    window.print();
+  }
+
 let availabilitySlots = [];
 
 function openModal() {
