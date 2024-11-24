@@ -47,14 +47,48 @@
                 </ul>
             </div>
             <!-- Welcome w/ Name -->
-            <div class="text-center">
-
-                <p class="mb-0">
-                    <i class="bi bi-bell-fill me-5"></i>
-                    Welcome, {{ name }}
-                    <i class="bi bi-person-fill"></i>
-                </p>
+           <div class="text-center d-flex align-items-center justify-content-center">
+            <!-- Dropdown -->
+            <div class="dropdown">
+                <button class="btn p-0 border-0 bg-transparent shadow-none" type="button" id="dropdownMenuButton"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="position-relative">
+                        <i class="bi bi-bell-fill"></i>
+                        <!-- Notification Dot -->
+                        <span class="notification-dot"></span>
+                    </span>
+                </button>
+                <div class="dropdown dropdown-hover">
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownMenuButton">
+                        <li class="dropdown-header d-flex align-items-center">
+                            <i class="bi bi-bell-fill me-2"></i> Notifications
+                        </li>
+                        <li style="max-height: 150px; min-width: 200px; overflow-y: auto;">
+                            <ul id="notification-list" class="list-unstyled px-2 mb-0">
+                                <!-- Notifications will be added dynamically here -->
+                                <li>Notification 1</li>
+                                <li>Notification 2</li>
+                                <li>Notification 3</li>
+                                <li>Notification 4</li>
+                                <li>Notification 5</li>
+                                <li>Notification 6</li>
+                                <li>Notification 6</li>
+                                <li>Notification 7</li>
+                                <li>Notification 8</li>
+                            </ul>
+                        </li>
+                        <li class="dropdown-divider"></li>
+                        <li class="d-flex justify-content-end px-2">
+                            <button class="btn btn-sm btn-light border" id="clear-notifications">Clear</button>
+                        </li>
+                    </ul>
+                </div>
             </div>
+            <p class="ms-5 mb-0">
+                Welcome, {{ name }}
+                <i class="bi bi-person-fill"></i>
+            </p>
+        </div>
     </div>
 
     <div class="container">
@@ -120,8 +154,8 @@
                         </h4>
                          <!-- Dropdown -->
                          <div class="dropdown">
-                            <button class="btn p-0 border-0 bg-transparent" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                              <i class="bi bi-three-dots"></i>
+                            <button class="btn p-0 border-0 bg-transparent shadow-none" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                              <i class="bi bi-three-dots me-2"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownMenuButton">
                               <li>
