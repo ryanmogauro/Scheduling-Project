@@ -18,7 +18,8 @@
 <body>
     <!-- Header -->
     <div class="container">
-        <header class="d-flex align-items-center justify-content-between py-2 mb-3 border-bottom">
+        <header class="d-flex align-items-center justify-content-between py-2 mb-3 border-bottom"
+            style="box-shadow: 0 .125rem .25rem rgba(0, 0, 0, 0.075); clip-path: inset(0 0 -.5rem 0);">
             <div class="d-flex align-items-center col-md-6">
                 <a href="/" class="d-flex align-items-center text-dark text-decoration-none me-3">
                     <img src="{{ url_for('static', filename='SmallLogo.png') }}" alt="Logo" width="50" height="50">
@@ -55,6 +56,7 @@
                     <i class="bi bi-person-fill"></i>
                 </p>
             </div>
+        </header>
     </div>
 
 
@@ -62,7 +64,7 @@
     <div class="container">
         <div class="row" style="min-height: 100vh;">
             <aside class="col-md-2 d-flex flex-column">
-                <div class="p-3 bg-light border rounded mb-2">
+                <div class="p-3 bg-light border rounded shadow-sm mb-2">
                     <h4>
                         <i class="bi bi-list"></i>
                         Menu
@@ -89,7 +91,7 @@
                         </li>
                     </ul>
                 </div>
-                <div class="p-3 bg-light border rounded">
+                <div class="p-3 bg-light border rounded shadow-sm">
                     <h4>
                         <i class="bi bi-graph-up-arrow me-1"></i>
                         Summary
@@ -117,7 +119,7 @@
 
             <!-- Main Content -->
             <main class="col-md-10">
-                <div class="p-3 bg-light border rounded">
+                <div class="p-3 bg-light border rounded shadow-sm">
                     <header class="d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center ms-2">
                             <button type="button" id="prevWeek" class="btn p-0 me-2">
