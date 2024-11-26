@@ -9,48 +9,37 @@ from website.scheduleGenerator import getEmployees, getAvailabilityDict, generat
 # Create a blueprint
 main_blueprint = Blueprint('main', __name__)
 
-@main_blueprint.route('/schedule', methods=['GET', 'POST'])
+@main_blueprint.route('/schedule', methods=['GET'])
 @login_required
 def schedule():
-    if request.method == 'POST':
-        schedule = None 
-        
-        for shift in schedule:
-            new_shift = Shift(
-                shiftStartTime = shift.start, 
-                shiftEndTime = shift.end
-            )
-            
-            new_shift_id = new_shift.shiftID
-            new_shift_assignment = ShiftAssignment(
-                shiftID = new_shift_id, 
-                employee = current_user.get_id()
-            )
-    
-            
-        
-    
-    weekStartDay, weekEndDay = getWeekBounds(datetime.now()) #will need to change datetime.now for viewing different weeks
-    
-    #shifts = Shift.query.filter(Shift.shiftStartTime.between(weekStartDay, weekEndDay)).all()
-    
-    employee = Employee.query.filter(Employee.employeeID == current_user.employeeID).first()
-    
-    name = employee.firstName if employee else None
-    
-    shifts = [
-        {"day": "Monday", "start_hour": 9, "end_hour": 13},
-        {"day": "Wednesday", "start_hour": 11, "end_hour": 15}
-    ] 
-    
-    """ shiftAssignments = ShiftAssignment.query.filter(ShiftAssignment.employeeID == current_user.employeeID).first()
-    
-    shifts = Shift.query.filter(Shift.shiftID in shiftAssignments)
-    
-     """
-    return render_template('schedule.html', shifts=shifts, name = name)
+    return render_template('schedule.html')
 
+@main_blueprint.route('/get_schedule', methods=['POST'])
+@login_required
+def get_schedule():
+    # Get the week input from the form -- ISO Format!
+    schedule_date = request.form.get('scheduleDate')
+    year, week = map(int, schedule_date.split('-W'))
+    week_start_date = datetime.strptime(f'{year} {week} 1', '%G %V %u')
+    print(week_start_date)
+    week_end_date = week_start_date + timedelta(days=6)
 
+    print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
+
+    shifts_for_week = (
+        db.session.query(Shift)
+        .join(ShiftAssignment, Shift.shiftID == ShiftAssignment.shiftID)
+        .filter(ShiftAssignment.employeeID == current_user.employeeID)
+        .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
+        .all()
+    )
+    
+    return jsonify({
+        "shifts": [
+            {"shiftID": shift.shiftID, "start": shift.shiftStartTime.isoformat(), "end": shift.shiftEndTime.isoformat()}
+            for shift in shifts_for_week
+        ]
+    })
 
 def getWeekBounds(date):
     start_of_week = date - timedelta(days=(date.weekday()))
