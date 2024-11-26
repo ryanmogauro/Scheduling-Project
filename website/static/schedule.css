@@ -3,6 +3,26 @@
     font-weight: 300;
 }
 
+.position-relative {
+    position: relative;
+}
+
+.notification-dot {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 8px;
+    background-color: red;
+    border-radius: 50%;
+    border: 1px solid white; /* Optional: Adds a white border to the dot */
+    display: none; /* Initially hidden */
+}
+
+.notification-dot.active {
+    display: block; /* Visible only when the list has items */
+}
+
 .nav-link {
     position: relative;
 }
