@@ -1,7 +1,10 @@
 #credit to Naser Al Madi
+import sys, os
+#couldn't find website module before adding this line
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import pytest
-from website import create_app
-import os
+from website.__init__ import create_app
+
 
 @pytest.fixture()
 def test_client():
@@ -12,3 +15,5 @@ def test_client():
     # Create a test client using the Flask application configured for testing
     with flask_app.test_client() as test_client:
         yield test_client # this is where the testing happens!
+        
+        
