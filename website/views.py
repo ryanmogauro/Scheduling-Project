@@ -109,8 +109,8 @@ def unavailability():
             "endTime": entry.unavailableEndTime.strftime('%H:%M')
         } for entry in current_unavailability
     ]
-    
-    return render_template('unavailability.html', unavailability = unavailability_list)
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    return render_template('unavailability.html', unavailability = unavailability_list, name=curr_employee.firstName)
 
 @main_blueprint.route('/get_unavailability', methods=['GET', 'POST'])
 @login_required
