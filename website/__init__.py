@@ -2,6 +2,7 @@ from flask import Flask
 from flask_login import LoginManager
 import os
 from flask_sqlalchemy import SQLAlchemy
+from datetime import timedelta
 
 # from sqlalchemy.exc import OperationalError
 # from sqlalchemy.sql import text
@@ -16,6 +17,7 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'secret keyyyyy'
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('JAWSDB_URL') or 'sqlite:///mydatabase.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)
     db.init_app(app)
 
     login_manager = LoginManager(app)
