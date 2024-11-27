@@ -12,7 +12,8 @@ main_blueprint = Blueprint('main', __name__)
 @main_blueprint.route('/schedule', methods=['GET'])
 @login_required
 def schedule():
-    return render_template('schedule.html')
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    return render_template('schedule.html', name=curr_employee.firstName)
 
 @main_blueprint.route('/get_schedule', methods=['POST'])
 @login_required
