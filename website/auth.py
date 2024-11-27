@@ -13,18 +13,18 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        
+        remember = 'remember' in request.form
         
         user = User.query.filter_by(email=email).first()
 
         if user and user.check_password(password):
-            login_user(user)
+            login_user(user, remember=remember)
             return redirect(url_for('main.schedule'))
 
         if not user:
-            flash("No existing user with provided email")
+            flash("We couldn't find an account with that email address.", "danger")
         else:
-            flash("Incorrect Password")
+            flash("The password you entered is incorrect.", "danger")
         
     
     return render_template('signin.html')
@@ -39,14 +39,22 @@ def signup():
         lastName = request.form.get('lastName')
         email = request.form.get('email')
         password = request.form.get('password')
+
+        if not firstName or not lastName:
+            flash("First name and last name are required.")
+            return redirect(url_for('auth.signup'))
+
+        if not email.endswith('@colby.edu'):
+            flash("Email must be from the domain @colby.edu.")
+            return redirect(url_for('auth.signup'))
         
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
-            flash("An account with that email already exists. Please log in.")
-            return redirect(url_for('auth.login'))
+            flash("An account with that email already exists.")
+            return redirect(url_for('auth.signup'))
         
         if len(password) > 20 or len(password) < 5: 
-            flash("Password must be between 5 and 20 characters")
+            flash("Password must be between 5 and 20 characters.")
             return redirect(url_for('auth.signup'))
         
         new_employee = Employee(

@@ -17,22 +17,22 @@ h1, form, main {
     font-weight: 300;
 }
 
-button[type="button1"] {
+button[type="button2"] {
     color: #6F4E37;
     border-color: #6F4E37;
 }
 
-button[type="button1"]:hover {
-    background-color: #6F4E37;
-    border-color: #6F4E37;
-}
-
-button[type="button2"] {
-    background-color: #6F4E37;
-    border-color: #6F4E37;
-}
-
 button[type="button2"]:hover {
+    background-color: #6F4E37;
+    border-color: #6F4E37;
+}
+
+button[type="button1"] {
+    background-color: #6F4E37;
+    border-color: #6F4E37;
+}
+
+button[type="button1"]:hover {
     background-color: #593E2C;
     border-color: #6F4E37;
 }
@@ -65,13 +65,31 @@ form[action="/"] {
   z-index: 2;
 }
 
-.form-signup input[type="name"] {
+.form-signup input[type="fname"] {
     margin-bottom: -1px;
     border-bottom-right-radius: 0;
     border-bottom-left-radius: 0;
   }
 
+  .form-signup input[type="lname"] {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-bottom: -1px;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  .form-signup input[type="email"] {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
 .form-signup input[type="email"] {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
   margin-bottom: -1px;
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
