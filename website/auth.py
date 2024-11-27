@@ -13,12 +13,12 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        
+        remember = 'remember' in request.form
         
         user = User.query.filter_by(email=email).first()
 
         if user and user.check_password(password):
-            login_user(user)
+            login_user(user, remember=remember)
             return redirect(url_for('main.schedule'))
 
         if not user:
