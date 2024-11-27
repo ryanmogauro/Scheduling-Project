@@ -9,6 +9,45 @@ from website.scheduleGenerator import getEmployees, getAvailabilityDict, generat
 # Create a blueprint
 main_blueprint = Blueprint('main', __name__)
 
+@main_blueprint.route('/events', methods=['GET', 'POST'])
+@login_required
+def events():
+    if request.method == 'POST':
+        schedule = None 
+        
+        for shift in schedule:
+            new_shift = Shift(
+                shiftStartTime = shift.start, 
+                shiftEndTime = shift.end
+            )
+            
+            new_shift_id = new_shift.shiftID
+            new_shift_assignment = ShiftAssignment(
+                shiftID = new_shift_id, 
+                employee = current_user.get_id()
+            )
+    
+             
+    
+    weekStartDay, weekEndDay = getWeekBounds(datetime.now()) #will need to change datetime.now for viewing different weeks
+    
+    #shifts = Shift.query.filter(Shift.shiftStartTime.between(weekStartDay, weekEndDay)).all()
+    
+    employee = Employee.query.filter(Employee.employeeID == current_user.employeeID).first()
+    
+    name = employee.firstName if employee else None
+    
+    shifts = [
+        
+    ] 
+    
+    """ shiftAssignments = ShiftAssignment.query.filter(ShiftAssignment.employeeID == current_user.employeeID).first()
+    
+    shifts = Shift.query.filter(Shift.shiftID in shiftAssignments)
+    
+     """
+    return render_template('events.html', shifts=shifts, name = name)
+
 @main_blueprint.route('/schedule', methods=['GET'])
 @login_required
 def schedule():
