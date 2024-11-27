@@ -36,29 +36,8 @@ def create_app():
 
     # if __name__ == '__main__':
     with app.app_context():
-        # check_database_connection()
+
         db.create_all()  # Create tables (if not created)
-        # app.run(debug=True)
+
     
     return app
-
-# def check_database_connection():
-#     """
-#     Attempts to connect to the database and prints the result.
-#     """
-#     try:
-#         # Execute a simple query to test the connection
-#         db.session.execute(text('SELECT 1'))
-#         print("Database connection successful.")
-
-#         from .models import User
-#         from .views import main_blueprint
-#         from .auth import auth_blueprint
-#         users = User.query.all()
-
-#         for user in users:
-#             print(user.query.get(id))
-
-#     except OperationalError as e:
-#         print("Database connection failed.")
-#         print(f"Error details: {e}")
