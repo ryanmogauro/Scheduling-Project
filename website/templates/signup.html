@@ -47,7 +47,15 @@
             <label for="floatingPassword">Password</label>
           </div>
     
-          <button class="w-100 btn btn-lg btn-primary" type="submit">Sign up</button>
+          <button class="w-100 btn btn-lg btn-primary mb-3" type="submit">Sign up</button>
+                  <!-- Flash Message Section -->
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-danger w-100" role="alert">
+                <strong>{{ messages[0] }}</strong> <!-- Show only the first message -->
+            </div>
+        {% endif %}
+         {% endwith %}
           <p class="mt-5 mb-3 text-muted">&copy; 2024–2025</p>
         </form>  
       </main>
