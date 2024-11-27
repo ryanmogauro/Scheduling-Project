@@ -27,6 +27,14 @@ document.getElementById('clear-notifications').addEventListener('click', () => {
 });
 
 
+function getISOWeek(date) {
+    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+    const daysInYear = (date - firstDayOfYear) / (1000 * 60 * 60 * 24);
+    return Math.ceil((daysInYear + firstDayOfYear.getDay() + 1) / 7);
+}
+
+
+
 updateNotificationDot();
 
 let availabilitySlots = [];
@@ -40,13 +48,76 @@ function closeModal() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    const availabilityDateInput = document.getElementById('availabilityDate');
+    const savedWeek = localStorage.getItem('selectedWeek');
+    
+    if (savedWeek) {
+        availabilityDateInput.value = savedWeek;
+    } else {
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentWeek = getISOWeek(today);
+        availabilityDateInput.value = `${currentYear}-W${currentWeek}`;
+    }
+
     loadAvailability();
+
+    availabilityDateInput.addEventListener('change', () => {
+        const weekInput = availabilityDateInput.value;
+        localStorage.setItem('selectedWeek', weekInput); 
+        loadAvailability(); 
+    });
 });
 
+
+
+
+function day_week_to_date(year, week, day) {
+    const dayMap = {
+        Monday: 0,
+        Tuesday: 1,
+        Wednesday: 2,
+        Thursday: 3,
+        Friday: 4,
+        Saturday: 5,
+        Sunday: 6
+    };
+
+    const jan4 = new Date(Date.UTC(year, 0, 4));
+
+    const jan4DayOfWeek = jan4.getUTCDay();
+
+    const isoWeekStart = new Date(jan4);
+    isoWeekStart.setUTCDate(jan4.getUTCDate() - ((jan4DayOfWeek + 6) % 7));
+
+    const desiredWeekStart = new Date(isoWeekStart);
+    desiredWeekStart.setUTCDate(isoWeekStart.getUTCDate() + (week - 1) * 7);
+
+    const desiredDate = new Date(desiredWeekStart);
+    desiredDate.setUTCDate(desiredWeekStart.getUTCDate() + dayMap[day]);
+
+    return desiredDate;
+}
+
+
+
+
+
 function loadAvailability() {
-    fetch('/get_unavailability')
+    const weekInput = document.getElementById('availabilityDate').value;
+    const [year, week] = weekInput.split("-W").map(Number);
+    const startOfWeek = day_week_to_date(year, week, "Monday")
+    console.log("loading avail for : ", startOfWeek)
+    fetch('/get_unavailability', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ startOfWeek : startOfWeek})
+    })
         .then(response => response.json())
         .then(data => {
+            console.log("Loaded availability slots:", data.availability);
             availabilitySlots = data.availability;
 
             const list = document.getElementById("availabilityList");
@@ -69,15 +140,20 @@ function loadAvailability() {
             updateScheduleGrid();
         })
         .catch(error => console.error("Error loading availability:", error));
-}
+    }
+
+
 
 function addAvailability() {
+    const weekInput = document.getElementById('availabilityDate').value;
+    const [year, week] = weekInput.split("-W").map(Number);
     const day = document.getElementById("day-select").value;
+    const date = day_week_to_date(year, week, day)
     const startTime = document.getElementById("start-time").value;
     const endTime = document.getElementById("end-time").value;
 
     if (startTime && endTime) {
-        const slot = { day, startTime, endTime };
+        const slot = { day, date, startTime, endTime };
 
         fetch('/add_availability', {
             method: 'POST',
@@ -88,6 +164,9 @@ function addAvailability() {
         }).then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    if (!Array.isArray(availabilitySlots)) {
+                        availabilitySlots = []; 
+                    }
                     availabilitySlots.push(slot);
 
                     const list = document.getElementById("availabilityList");
@@ -116,16 +195,24 @@ function addAvailability() {
 }
 
 function deleteAvailability(slot, listItem) {
+
+    console.log("Deleting this slot ", slot)
+    const dataToDelete = {
+        date: slot.date,  
+        startTime: slot.startTime,
+        endTime: slot.endTime  
+    };
+
     fetch('/delete_availability', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(slot)
+        body: JSON.stringify(dataToDelete)
     }).then(response => response.json())
         .then(data => {
             if (data.success) {
-                availabilitySlots = availabilitySlots.filter(s => !(s.day === slot.day && s.startTime === slot.startTime && s.endTime === slot.endTime));
+                availabilitySlots = availabilitySlots.filter(s => !(s.date === slot.date && s.startTime === slot.startTime && s.endTime === slot.endTime));
                 listItem.remove();
                 updateScheduleGrid();
             } else {
@@ -166,12 +253,17 @@ function updateScheduleGrid() {
 }
 
 function clearAvailability() {
+    const weekInput = document.getElementById('availabilityDate').value;
+    const [year, week] = weekInput.split("-W").map(Number);
+    const startOfWeek = day_week_to_date(year, week, "Monday")
+    console.log("sending start of week ", startOfWeek)
+    const formattedStartOfWeek = startOfWeek.toISOString().split('T')[0]
     fetch('/clear_availability', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({})
+        body: JSON.stringify({startOfWeek: formattedStartOfWeek})
     }).then(response => response.json())
         .then(data => {
             if (data.success) {
