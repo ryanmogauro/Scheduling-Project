@@ -13,7 +13,7 @@ main_blueprint = Blueprint('main', __name__)
 @login_required
 def schedule():
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
-    return render_template('schedule.html', fname=curr_employee.firstName, lname=curr_employee.lastName)
+    return render_template('schedule.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
 
 @main_blueprint.route('/get_schedule', methods=['POST'])
 @login_required
@@ -99,7 +99,7 @@ def unavailability():
         } for entry in current_unavailability
     ]
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
-    return render_template('unavailability.html', unavailability = unavailability_list, fname=curr_employee.firstName, lname=curr_employee.lastName)
+    return render_template('unavailability.html', unavailability = unavailability_list, fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
 
 
 @main_blueprint.route('/get_unavailability', methods=['POST'])

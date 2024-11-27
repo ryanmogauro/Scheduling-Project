@@ -69,6 +69,11 @@ function loadSchedule() {
     .then(data => {
         const shifts = data.shifts;
         updateScheduleGrid(shifts);
+        const totalHoursWorked = calculateTotalHours(shifts);
+        document.getElementById('totalHours').innerText = totalHoursWorked
+        const hourlyWage = parseFloat(document.getElementById('totalWage').innerText);
+        const totalWage = totalHoursWorked * hourlyWage;
+        document.getElementById('totalWage').innerText = '$' + totalWage.toFixed(2);
     })
     .catch(error => console.error("Error loading schedule:", error));
 }
@@ -109,6 +114,43 @@ function updateScheduleGrid(scheduleSlots) {
             }
         }
     });
+}
+
+/// Get Hours Worked
+function calculateTotalHours(shifts) {
+    // Sort the shifts by start time
+    const sortedShifts = shifts.map(shift => ({
+        start: new Date(shift.start),
+        end: new Date(shift.end)
+    })).sort((a, b) => a.start - b.start);
+
+    let totalHours = 0;
+    let currentShift = null;
+
+    // Loop through each shift and calculate total hours
+    sortedShifts.forEach(shift => {
+        if (!currentShift) {
+            // If no current shift, just set the first one
+            currentShift = shift;
+        } else {
+            // If there's an overlap, merge the shifts
+            if (shift.start < currentShift.end) {
+                // There is overlap, so we extend the current shift's end time
+                currentShift.end = new Date(Math.max(currentShift.end, shift.end));
+            } else {
+                // No overlap, so add the previous shift's hours and start a new shift
+                totalHours += (currentShift.end - currentShift.start) / (1000 * 60 * 60);  // Convert ms to hours
+                currentShift = shift;  // Update to the current shift
+            }
+        }
+    });
+
+    // Add the last shift's hours
+    if (currentShift) {
+        totalHours += (currentShift.end - currentShift.start) / (1000 * 60 * 60);  // Convert ms to hours
+    }
+
+    return totalHours.toFixed(2); // Round to 2 decimal places for total hours
 }
 
 /// Increment / Decrement Week
