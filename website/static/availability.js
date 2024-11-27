@@ -276,3 +276,25 @@ function clearAvailability() {
         })
         .catch(error => console.error("Error clearing availability:", error));
 }
+
+/// Increment / Decrement Week
+function updateWeek(offset) {
+    const scheduleDateInput = document.getElementById('availabilityDate');
+    const [year, weekString] = scheduleDateInput.value.split('-W');
+    let yearNumber = parseInt(year, 10);
+    let weekNumber = parseInt(weekString, 10) + offset;
+
+    // Handle week/year rollover
+    if (weekNumber < 1) {
+        yearNumber -= 1;
+        weekNumber = 52; // Last week of previous year
+    } else if (weekNumber > 52) {
+        yearNumber += 1;
+        weekNumber = 1;
+    }
+
+    const formattedWeek = `${yearNumber}-W${weekNumber.toString().padStart(2, '0')}`;
+    scheduleDateInput.value = formattedWeek;
+    console.log(scheduleDateInput)
+    loadAvailability();
+}
