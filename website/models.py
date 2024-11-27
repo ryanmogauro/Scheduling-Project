@@ -40,6 +40,7 @@ class Employee(db.Model):
     minHours = db.Column(db.Integer, nullable=False)
     maxHours = db.Column(db.Integer, nullable=False)
     gradYear = db.Column(db.Integer)
+    wage = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     unavailabilities = db.relationship('Unavailability', backref = 'employee')
    
 
