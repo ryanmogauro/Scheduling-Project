@@ -17,22 +17,22 @@ h1, form, main {
     font-weight: 300;
 }
 
-button[type="button1"] {
+button[type="button2"] {
     color: #6F4E37;
     border-color: #6F4E37;
 }
 
-button[type="button1"]:hover {
-    background-color: #6F4E37;
-    border-color: #6F4E37;
-}
-
-button[type="button2"] {
-    background-color: #6F4E37;
-    border-color: #6F4E37;
-}
-
 button[type="button2"]:hover {
+    background-color: #6F4E37;
+    border-color: #6F4E37;
+}
+
+button[type="button1"] {
+    background-color: #6F4E37;
+    border-color: #6F4E37;
+}
+
+button[type="button1"]:hover {
     background-color: #593E2C;
     border-color: #6F4E37;
 }
