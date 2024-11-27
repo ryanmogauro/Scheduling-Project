@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-from website.models import User, Shift, ShiftAssignment, Unavailability, Employee
-
-def check_user_get_id():
-    user = User()
-    assert True
-=======
 from website.models import User, Employee, Shift, ShiftAssignment, Unavailability
 from website import db
 from datetime import datetime
@@ -86,4 +79,3 @@ def test_unavailability_creation():
     assert unavailability.employee == employee
     assert unavailability.unavailableStartTime == datetime(2024, 11, 26, 12, 0)
     assert unavailability.unavailableEndTime == datetime(2024, 11, 26, 16, 0)
->>>>>>> main
