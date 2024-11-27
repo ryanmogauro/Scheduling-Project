@@ -47,35 +47,29 @@
                     </li>
                 </ul>
             </div>
-            <!-- Welcome w/ Name -->
-           <div class="text-center d-flex align-items-center justify-content-center">
-            <!-- Dropdown -->
-            <div class="dropdown">
-                <button class="btn p-0 border-0 bg-transparent shadow-none" type="button" id="dropdownMenuButton"
-                    data-bs-toggle="dropdown" aria-expanded="false">
-                    <span class="position-relative">
-                        <i class="bi bi-bell-fill"></i>
-                        <!-- Notification Dot -->
-                        <span class="notification-dot"></span>
-                    </span>
-                </button>
-                <div class="dropdown dropdown-hover">
-                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownMenuButton">
+            <!-- Dropdown Section -->
+            <ul class="nav d-flex align-items-center">
+                <!-- Notifications Dropdown -->
+                <li class="nav-item dropdown me-5">
+                    <button class="btn p-0 border-0 bg-transparent shadow-none" type="button" id="notificationsDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="position-relative">
+                            <i class="bi bi-bell-fill"></i>
+                            <!-- Notification Dot -->
+                            <span class="notification-dot"></span>
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="notificationsDropdown">
                         <li class="dropdown-header d-flex align-items-center">
                             <i class="bi bi-bell-fill me-2"></i> Notifications
                         </li>
+                        <li class="dropdown-divider mt-0"></li>
                         <li style="max-height: 150px; min-width: 200px; overflow-y: auto;">
                             <ul id="notification-list" class="list-unstyled px-2 mb-0">
                                 <!-- Notifications will be added dynamically here -->
                                 <li>Notification 1</li>
                                 <li>Notification 2</li>
                                 <li>Notification 3</li>
-                                <li>Notification 4</li>
-                                <li>Notification 5</li>
-                                <li>Notification 6</li>
-                                <li>Notification 6</li>
-                                <li>Notification 7</li>
-                                <li>Notification 8</li>
                             </ul>
                         </li>
                         <li class="dropdown-divider"></li>
@@ -83,12 +77,36 @@
                             <button class="btn btn-sm btn-light border" id="clear-notifications">Clear</button>
                         </li>
                     </ul>
-                </div>
-            </div>
-            <p class="ms-5 mb-0">
-                Welcome, {{ name }}
-                <i class="bi bi-person-fill"></i>
-            </p>
+                </li>
+                <!-- Profile Dropdown -->
+                <li class="nav-item dropdown">
+                    <button class="btn p-0 border-0 bg-transparent shadow-none" type="button" id="profileDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <span>
+                            Welcome, {{ fname }}
+                            <i class="bi bi-person-fill"></i>
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profileDropdown" style="min-width: 200px;">
+                        <li class="dropdown-header d-flex align-items-center">
+                            <i class="bi bi-person-fill me-2"></i> Profile Info
+                        </li>
+                        <li class="dropdown-divider mt-0"></li>
+                        <!-- Employee Info Section -->
+                        <li class="px-3">
+                            <p class="mb-1"><strong>Name:</strong> {{fname}} {{lname}} </p>
+                            <p class="mb-1"><strong>Hourly:</strong> </p>
+                        </li>
+                        <li class="dropdown-divider"></li>
+                        <!-- Logout Button -->
+                        <li class="d-flex justify-content-end px-2">
+                            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-light border text-danger" id="logout-link">
+                                Sign out
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </header>
     </div>
 
