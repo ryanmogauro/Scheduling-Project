@@ -2,6 +2,7 @@ from flask import Flask
 from flask_login import LoginManager
 import os
 from flask_sqlalchemy import SQLAlchemy
+from datetime import timedelta
 
 # from sqlalchemy.exc import OperationalError
 # from sqlalchemy.sql import text
