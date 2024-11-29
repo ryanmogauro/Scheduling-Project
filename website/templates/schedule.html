@@ -211,7 +211,7 @@
                         <!-- Header Row for Time Labels -->
                         <div class="empty-cell"></div>
                         {% for hour in range(7, 18) %}
-                        <div class="time-label">{{ hour if hour < 13 else (hour % 12) }} {{ 'AM' if hour < 12 else 'PM' }}</div>
+                        <div class="time-label">{{ hour if hour < 13 else (hour % 12) }}{{ 'AM' if hour < 12 else 'PM' }}</div>
                         {% endfor %}
                         
                         <!-- Rows for Days -->
