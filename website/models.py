@@ -32,6 +32,13 @@ class ShiftAssignment(db.Model):
     employee = db.relationship('Employee', backref='assignments')
     shift = db.relationship('Shift', backref='assignments')
 
+class Notification(db.Model):
+    notificationID = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.String(255), nullable=False)
+    hasRead = db.Column(db.Boolean, default=False)
+    employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'), nullable=False)
+    employee = db.relationship('Employee', backref='notifications')
+
 
 class Employee(db.Model):
     employeeID = db.Column(db.Integer, primary_key=True)
@@ -42,6 +49,7 @@ class Employee(db.Model):
     gradYear = db.Column(db.Integer)
     wage = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     unavailabilities = db.relationship('Unavailability', backref = 'employee')
+    notifications = db.relationship('Notification', backref='employee', lazy=True)
    
 
 class Shift(db.Model):
