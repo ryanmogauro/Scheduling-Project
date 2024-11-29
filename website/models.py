@@ -24,22 +24,6 @@ class User(db.Model, UserMixin):
         """Check hashed password."""
         return check_password_hash(self.passwordHash, password)
 
-
-class ShiftAssignment(db.Model):
-    assignmentID = db.Column(db.Integer, primary_key=True)
-    shiftID = db.Column(db.Integer, db.ForeignKey('shift.shiftID'))
-    employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'))
-    employee = db.relationship('Employee', backref='assignments')
-    shift = db.relationship('Shift', backref='assignments')
-
-class Notification(db.Model):
-    notificationID = db.Column(db.Integer, primary_key=True)
-    message = db.Column(db.String(255), nullable=False)
-    hasRead = db.Column(db.Boolean, default=False)
-    employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'), nullable=False)
-    employee = db.relationship('Employee', backref='notifications')
-
-
 class Employee(db.Model):
     employeeID = db.Column(db.Integer, primary_key=True)
     firstName = db.Column(db.String(50), nullable=False)
@@ -49,18 +33,28 @@ class Employee(db.Model):
     gradYear = db.Column(db.Integer)
     wage = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     unavailabilities = db.relationship('Unavailability', backref = 'employee')
-    notifications = db.relationship('Notification', backref='employee', lazy=True)
-   
+    notifications = db.relationship('Notification', backref='employee')
+
+class ShiftAssignment(db.Model):
+    assignmentID = db.Column(db.Integer, primary_key=True)
+    shiftID = db.Column(db.Integer, db.ForeignKey('shift.shiftID'))
+    employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'))
+    employee = db.relationship('Employee', backref='assignments')
+    shift = db.relationship('Shift', backref='assignments')
 
 class Shift(db.Model):
     shiftID = db.Column(db.Integer, primary_key=True)
     shiftStartTime = db.Column(db.DateTime, nullable=False)
     shiftEndTime = db.Column(db.DateTime, nullable=False)
-    
-    
-
+      
 class Unavailability(db.Model):
     unavailabilityID = db.Column(db.Integer, primary_key=True)
-    employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'))
+    employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'), nullable=False)
     unavailableStartTime = db.Column(db.DateTime)
     unavailableEndTime = db.Column(db.DateTime)
+
+class Notification(db.Model):
+    notificationID = db.Column(db.Integer, primary_key=True)
+    employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'), nullable=False)
+    message = db.Column(db.String(255), nullable=False)
+    hasRead = db.Column(db.Boolean, default=False)
