@@ -48,6 +48,9 @@ body h5 {
     width: 100%;
     overflow-x: auto; 
     overflow-y: hidden;
+    grid-gap: 1px;
+    background-color: #bbb;
+    border: 1px solid #bbb;
 }
 
 .insight-text {
@@ -64,14 +67,12 @@ body h5 {
     background-color: #f4f4f4;
     font-weight: bold;
     font-size: 0.75rem;
-    border: 1px solid #bbb;
     text-transform: uppercase;
 }
 
 .cell {
     background-color: white;
     height: 80px;
-    border: 1px solid #bbb;
     text-align: center;
     vertical-align: middle;
     font-size: 0.65rem;
