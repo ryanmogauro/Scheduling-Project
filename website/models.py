@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from website import db
+from datetime import datetime
 
 
 class User(db.Model, UserMixin):
@@ -58,3 +59,4 @@ class Notification(db.Model):
     employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'), nullable=False)
     message = db.Column(db.String(255), nullable=False)
     hasRead = db.Column(db.Boolean, default=False)
+    send_date = db.Column(db.DateTime, default=datetime.utcnow)
