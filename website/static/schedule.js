@@ -73,7 +73,7 @@ function loadSchedule() {
         document.getElementById('totalHours').innerText = totalHoursWorked
         const hourlyWage = parseFloat(document.getElementById('totalWage').innerText);
         const totalWage = totalHoursWorked * hourlyWage;
-        document.getElementById('totalWage').innerText = '$' + totalWage.toFixed(2);
+        document.getElementById('totalWage').innerText = totalWage.toFixed(2);
     })
     .catch(error => console.error("Error loading schedule:", error));
 }

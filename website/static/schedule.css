@@ -3,6 +3,14 @@
     font-weight: 300;
 }
 
+body h5 {
+    font-size: 1.2rem;
+}
+
+.container {
+    min-width: 950px;
+}
+
 .position-relative {
     position: relative;
 }
@@ -34,75 +42,95 @@
     transform: translateX(-50%);
 }
 
-.dropdown_content.show {
-    display: block;
-}
-
-.schedule-section {
-    background-color: white;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.schedule-header {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.toolbar {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
 .schedule-grid {
     display: grid;
-    grid-template-columns: 100px repeat(11, 1fr);
-    gap: 1px;
-    background-color: #222;
+    grid-template-columns: 120px repeat(11, 1fr);
+    width: 100%;
+    overflow-x: auto; 
+    overflow-y: hidden;
+    grid-gap: 1px;
+    background-color: #bbb;
+    border: 1px solid #bbb;
 }
 
-
-.time-label {
-    text-align: center;
-    padding: 10px;
-    background-color: #f4f4f4;
-    border: 1px solid #ddd;
+.insight-text {
+    font-size: 0.95rem;
 }
 
+.time-label,
 .day-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    padding: 10px;
-    background-color: #ddd;
-    color: #444;
+    padding: 15px 10px;
+    background-color: #f4f4f4;
     font-weight: bold;
+    font-size: 0.75rem;
+    text-transform: uppercase;
 }
 
 .cell {
     background-color: white;
-    height: 90px;
-    border: 0.5px black;
+    height: 80px;
     text-align: center;
-    transition: background-color 0.3s;
+    vertical-align: middle;
+    font-size: 0.65rem;
+    padding: 2px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    box-sizing: border-box;
 }
 
-.empty-cell {
-    background-color: #eee;
+.cell:hover {
+    background-color: #f0f0f0;
+    color: #333;
 }
 
-.cell:hover{
-    background-color: lightgray;
-    
+
+/* Responsive Layout */
+@media (max-width: 1200px) {
+    body h5 {
+        font-size: 1rem;
+    }
+    .small-font {
+        font-size: 0.7rem !important;
+    }
+    .insight-text {
+        font-size: 0.85rem;
+    }
 }
 
-.shift-cell {
-    background-color: #6F4E37;
+@media (max-width: 950px) {
+    aside.col-md-2 {
+        display: none !important; 
+    }
+
+    main.col-md-10 {
+        width: 100% !important;
+    }
 }
 
-.shift-cell:hover{
-    background-color: rgb(54, 54, 54);
+@media (max-width: 768px) {
+    .schedule-grid {
+        grid-template-columns: 80px repeat(11, 1fr);
+    }
+
+    .time-label,
+    .day-label {
+        font-size: 0.5rem;
+        padding: 10px 5px;
+    }
+
+    .cell {
+        height: 60px;
+        font-size: 0.5rem; 
+    }
+
+    .shift-cell {
+        font-size: 0.5rem;
+    }
 }
+
 .modal {
     display: none;
     position: fixed;
@@ -140,7 +168,7 @@
 }
 
 .small-font {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 .bg-brown {

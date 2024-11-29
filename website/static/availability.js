@@ -1,3 +1,20 @@
+/// On Page Load
+window.onload = function() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const startOfYear = new Date(year, 0, 1);
+    const days = Math.floor((today - startOfYear) / (24 * 60 * 60 * 1000));
+    const weekNumber = Math.ceil((days + 1) / 7);
+
+    // Format the value in YYYY-Www format
+    const formattedWeek = `${year}-W${weekNumber.toString().padStart(2, '0')}`;
+
+    // Set the value of the input field to the current week
+    document.getElementById('availabilityDate').value = formattedWeek;
+    loadAvailability();
+    updateNotificationDot();
+};
+
 function printPage() {
     window.print();
   }
@@ -32,10 +49,6 @@ function getISOWeek(date) {
     const daysInYear = (date - firstDayOfYear) / (1000 * 60 * 60 * 24);
     return Math.ceil((daysInYear + firstDayOfYear.getDay() + 1) / 7);
 }
-
-
-
-updateNotificationDot();
 
 let availabilitySlots = [];
 
@@ -132,7 +145,7 @@ function loadAvailability() {
                     e.preventDefault();
                     deleteAvailability(slot, listItem);
                 };
-                listItem.innerHTML = `<i class="bi bi-trash3-fill me-2"></i> ${slot.day}: ${slot.startTime} - ${slot.endTime}`;
+                listItem.innerHTML = `<i class="bi bi-trash3-fill me-2"></i> ${slot.day}: &nbsp;&nbsp;${slot.startTime} - ${slot.endTime}`;
 
                 list.appendChild(listItem);
             });
@@ -177,7 +190,7 @@ function addAvailability() {
                         e.preventDefault();
                         deleteAvailability(slot, listItem);
                     };
-                    listItem.innerHTML = `<i class="bi bi-trash3-fill me-2"></i> ${slot.day}: ${slot.startTime} - ${slot.endTime}`;
+                    listItem.innerHTML = `<i class="bi bi-trash3-fill me-2"></i> ${slot.day}: &nbsp;&nbsp;${slot.startTime} - ${slot.endTime}`;
 
                     list.appendChild(listItem);
 
