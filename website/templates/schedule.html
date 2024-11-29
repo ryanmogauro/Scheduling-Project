@@ -113,13 +113,13 @@
 
     <!-- Options Sidebar -->
     <div class="container">
-        <div class="row" style="min-height: 100vh;">
+        <div class="row">
             <aside class="col-md-2 d-flex flex-column">
                 <div class="p-3 bg-light border rounded shadow-sm mb-2">
-                    <h4>
+                    <h5>
                         <i class="bi bi-list"></i>
                         Menu
-                    </h4>
+                    </h5>
                     <hr>
                     <ul class="nav nav-pills flex-column mb-auto">
                         <li>
@@ -146,25 +146,25 @@
                     </ul>
                 </div>
                 <div class="p-3 bg-light border rounded shadow-sm">
-                    <h4>
+                    <h5>
                         <i class="bi bi-graph-up-arrow me-1"></i>
-                        Summary
-                    </h4>
+                        Insights
+                    </h5>
                     <hr>
                     <ul class="list-unstyled mb-0">
                         <li class="d-flex justify-content-between align-items-center py-2">
-                            <span>
+                            <span class="insight-text px-1">
                                 <i class="bi bi-coin"></i>
                                 Wages:
                             </span>
-                            <span class="fw-bold" id="totalWage">{{ wage }}</span>
+                            <span class="fw-bold insight-text" id="totalWage">{{ wage }}</span>
                         </li>
                         <li class="d-flex justify-content-between align-items-center py-2">
-                            <span>
+                            <span class="insight-text px-1">
                                 <i class="bi bi-clock me-1"></i>
                                 Hours:
                             </span>
-                            <span class="fw-bold" id="totalHours"></span>
+                            <span class="fw-bold insight-text" id="totalHours"></span>
                         </li>
                     </ul>
                 </div>
@@ -208,20 +208,19 @@
                     </header>
                     <hr>
                     <div class="schedule-grid">
+                        <!-- Header Row for Time Labels -->
                         <div class="empty-cell"></div>
                         {% for hour in range(7, 18) %}
-                        <div class="time-label">{{ hour if hour < 13 else (hour%12) }}{{ 'AM' if hour < 12 else 'PM'
-                                }}</div>
-                                {% endfor %}
-                                {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
-                                "Sunday"]
-                                %}
-                                <div class="day-label">{{ day }}</div>
-                                {% for hour in range(7, 18) %}
-                                <div class="cell" id="cell-{{ day }}-{{ hour }}"></div>
-                                {% endfor %}
-                                {% endfor %}
-                        </div>
+                        <div class="time-label">{{ hour if hour < 13 else (hour % 12) }}{{ 'AM' if hour < 12 else 'PM' }}</div>
+                        {% endfor %}
+                        
+                        <!-- Rows for Days -->
+                        {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
+                        <div class="day-label">{{ day }}</div>
+                        {% for hour in range(7, 18) %}
+                        <div class="cell" id="cell-{{ day }}-{{ hour }}"></div>
+                        {% endfor %}
+                        {% endfor %}
                     </div>
                 </div>
             </main>
