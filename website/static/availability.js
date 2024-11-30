@@ -12,36 +12,146 @@ window.onload = function() {
     // Set the value of the input field to the current week
     document.getElementById('availabilityDate').value = formattedWeek;
     loadAvailability();
-    updateNotificationDot();
+    loadNotifications()
 };
 
 function printPage() {
     window.print();
-  }
+}
+
+/// Notifications
+function loadNotifications() {
+    fetch('/get_notifications', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const notifications = data.notifications;
+        const notificationList = document.getElementById('notification-list');
+        notificationList.innerHTML = ''; // Clear existing notifications
+        notifications.forEach(notification => {
+            addNotification(notification.message, notification.hasRead, notification.sendDate);
+            updateNotificationDot();
+        });
+    })
+    .catch(error => console.error("Error loading notifications:", error));
+}
+
+function addNotification(text, hasRead = false, timestamp = null) {
+    const notificationList = document.getElementById('notification-list');
+
+    const listItem = document.createElement('li');
+    listItem.classList.add('d-flex', 'align-items-start', 'align-items-center', 'gap-2', 'py-2', 'border-bottom');
+
+    if (!hasRead) {
+        listItem.classList.add('unread'); // Add the 'unread' class for unread notifications
+    }
+
+    const icon = document.createElement('i');
+    icon.classList.add('m-2', 'bi', hasRead ? 'bi-envelope-open' : 'bi-envelope-fill');
+    icon.style.color = '#6F4E37';
+    listItem.appendChild(icon);
+
+    const content = document.createElement('div');
+    content.classList.add('d-flex', 'flex-column', 'w-100', 'small');
+
+    const message = document.createElement('span');
+    message.textContent = text;
+    message.classList.add('text-wrap', 'text-truncate');
+    if (!hasRead) {
+        message.classList.add('fw-bold'); // Bold for unread notifications
+    }
+    content.appendChild(message);
+
+    if (timestamp) {
+        const time = document.createElement('span');
+        time.textContent = new Date(timestamp).toLocaleString();
+        time.classList.add('text-muted', 'mt-1','timestamp');
+        content.appendChild(time);
+    }
+
+    listItem.appendChild(content);
+    notificationList.appendChild(listItem);
+
+    updateNotificationDot();
+}
+
+function clearNotifications() {
+    fetch('/clear_notifications', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const notificationList = document.getElementById('notification-list');
+            notificationList.innerHTML = ''; // Clear notifications from the UI
+            console.log(data.message); // Log success message
+        } else {
+            console.error("Error clearing notifications:", data.error);
+        }
+    })
+    .catch(error => console.error("Error clearing notifications:", error));
+}
+
+// Mark notifications as read
+document.getElementById('notificationsDropdown').addEventListener('show.bs.dropdown', function () {
+    fetch('/mark_notifications_read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log(data.message);
+
+            // Remove 'unread' class from all notifications in the dropdown
+            const unreadItems = document.querySelectorAll('#notification-list .unread');
+            unreadItems.forEach(item => item.classList.remove('unread'));
+            updateNotificationDot();
+        } else {
+            console.error("Error marking notifications as read:", data.error);
+        }
+    })
+    .catch(error => console.error("Error marking notifications as read:", error));
+});
+
+// Change envelope icons to "open" and unbold text after the dropdown is closed
+document.getElementById('notificationsDropdown').addEventListener('hide.bs.dropdown', function () {
+    // Change the envelope icons to "open"
+    const envelopeIcons = document.querySelectorAll('#notification-list .bi-envelope-fill');
+    envelopeIcons.forEach(icon => {
+        icon.classList.remove('bi-envelope-fill');
+        icon.classList.add('bi-envelope-open'); // Change icon to "open"
+    });
+
+    // Remove the bold style from the message text (unbold unread notifications)
+    const boldNotifications = document.querySelectorAll('#notification-list .fw-bold');
+    boldNotifications.forEach(notification => {
+        const message = notification;
+        if (message) {
+            message.classList.remove('fw-bold'); // Remove the bold style
+        }
+    });
+});
+
 
 function updateNotificationDot() {
-    const notificationList = document.getElementById('notification-list');
     const notificationDot = document.querySelector('.notification-dot');
-    if (notificationList.children.length > 0) {
+    const unreadNotifications = document.querySelectorAll('#notification-list .unread'); // Select unread notifications
+    if (unreadNotifications.length > 0) {
         notificationDot.classList.add('active'); // Show the red dot
     } else {
         notificationDot.classList.remove('active'); // Hide the red dot
     }
 }
-
-function addNotification(text) {
-    const notificationList = document.getElementById('notification-list');
-    const listItem = document.createElement('li');
-    listItem.textContent = text;
-    notificationList.appendChild(listItem);
-    updateNotificationDot();
-}
-
-document.getElementById('clear-notifications').addEventListener('click', () => {
-    const notificationList = document.getElementById('notification-list');
-    notificationList.innerHTML = '';
-    updateNotificationDot();
-});
 
 
 function getISOWeek(date) {

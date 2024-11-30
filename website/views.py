@@ -9,6 +9,102 @@ from website.scheduleGenerator import getEmployees, getAvailabilityDict, generat
 # Create a blueprint
 main_blueprint = Blueprint('main', __name__)
 
+@main_blueprint.route('/schedule', methods=['GET'])
+@login_required
+def schedule():
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    return render_template('schedule.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
+
+@main_blueprint.route('/get_schedule', methods=['POST'])
+@login_required
+def get_schedule():
+    # Get the week input from the form -- ISO Format!
+    schedule_date = request.form.get('scheduleDate')
+    year, week = map(int, schedule_date.split('-W'))
+    week_start_date = datetime.strptime(f'{year} {week} 1', '%G %V %u')
+    week_end_date = week_start_date + timedelta(days=6)
+    print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
+
+    shifts_for_week = (
+        db.session.query(Shift)
+        .join(ShiftAssignment, Shift.shiftID == ShiftAssignment.shiftID)
+        .filter(ShiftAssignment.employeeID == current_user.employeeID)
+        .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
+        .all()
+    )
+    
+    return jsonify({
+        "shifts": [
+            {"shiftID": shift.shiftID, "start": shift.shiftStartTime.isoformat(), "end": shift.shiftEndTime.isoformat()}
+            for shift in shifts_for_week
+        ]
+    })
+
+@main_blueprint.route('/get_notifications', methods=['GET'])
+@login_required
+def get_notifications():
+    # Fetch all notifications for the logged-in user
+    notifications = (
+        db.session.query(Notification)
+        .filter(Notification.employeeID == current_user.employeeID)
+        .order_by(Notification.sendDate.desc())  # Sort by most recent
+        .all()
+    )
+
+    return jsonify({
+        "notifications": [
+            {
+                "notificationID": notification.notificationID,
+                "message": notification.message,
+                "hasRead": notification.hasRead,
+                "sendDate": notification.sendDate.isoformat()
+            }
+            for notification in notifications
+        ]
+    })
+
+@main_blueprint.route('/clear_notifications', methods=['POST'])
+@login_required
+def clear_notifications():
+    # Clear all notifications for the currently logged-in user.
+    try:
+        # Delete all notifications for the current user
+        Notification.query.filter_by(employeeID=current_user.employeeID).delete()
+        db.session.commit()
+        return jsonify({"success": True, "message": "All notifications cleared."})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@main_blueprint.route('/mark_notifications_read', methods=['POST'])
+@login_required
+def mark_notifications_read():
+    try:
+        # Fetch all unread notifications for the current user
+        unread_notifications = (
+            Notification.query
+            .filter_by(employeeID=current_user.employeeID, hasRead=False)
+            .all()
+        )
+
+        # Mark all notifications as read
+        for notification in unread_notifications:
+            notification.hasRead = True
+        
+        # Commit the changes to the database
+        db.session.commit()
+
+        return jsonify({"success": True, "message": "All notifications marked as read."})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# NEEDS HEAVY REVISAL BELOW (HARD TO READ AND ALLOWS UNAUTHORIZED DATABASE CHANGES) 
+def getWeekBounds(date):
+    start_of_week = date - timedelta(days=(date.weekday()))
+    end_of_week = start_of_week + timedelta(days=6)
+    return start_of_week, end_of_week
+
 @main_blueprint.route('/events', methods=['GET', 'POST'])
 @login_required
 def events():
@@ -47,46 +143,6 @@ def events():
     
      """
     return render_template('events.html', shifts=shifts, name = name)
-
-@main_blueprint.route('/schedule', methods=['GET'])
-@login_required
-def schedule():
-    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
-    return render_template('schedule.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
-
-@main_blueprint.route('/get_schedule', methods=['POST'])
-@login_required
-def get_schedule():
-    # Get the week input from the form -- ISO Format!
-    schedule_date = request.form.get('scheduleDate')
-    year, week = map(int, schedule_date.split('-W'))
-    week_start_date = datetime.strptime(f'{year} {week} 1', '%G %V %u')
-    print(week_start_date)
-    week_end_date = week_start_date + timedelta(days=6)
-
-    print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
-
-    shifts_for_week = (
-        db.session.query(Shift)
-        .join(ShiftAssignment, Shift.shiftID == ShiftAssignment.shiftID)
-        .filter(ShiftAssignment.employeeID == current_user.employeeID)
-        .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
-        .all()
-    )
-    
-    return jsonify({
-        "shifts": [
-            {"shiftID": shift.shiftID, "start": shift.shiftStartTime.isoformat(), "end": shift.shiftEndTime.isoformat()}
-            for shift in shifts_for_week
-        ]
-    })
-
-def getWeekBounds(date):
-    start_of_week = date - timedelta(days=(date.weekday()))
-    
-    end_of_week = start_of_week + timedelta(days=6)
-    
-    return start_of_week, end_of_week
 
 @main_blueprint.route('/unavailability', methods=['GET', 'POST'])
 @login_required
@@ -412,31 +468,6 @@ def approve_schedule():
         db.session.rollback()
         print(f"Error approving schedule: {e}")
         return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
-
-
-
-
-@main_blueprint.route('/test_notifications', methods=['GET'])
-def test_notifications():
-    return render_template('notifications.html')
-
-
-@main_blueprint.route('/notifications', methods=['GET'])
-def get_notifications():
-
-    notifications = Notification.query.filter(Notification.employeeID.in_([1,2])).all()
-
-    notification_list = [
-        {
-            "notificationID": n.notificationID,
-            "employeeID": n.employeeID,
-            "message": n.message,
-            "hasRead": n.hasRead,
-            "sendDate": n.sendDate.strftime("%Y-%m-%d %H:%M:%S")
-        }
-        for n in notifications
-    ]
-    return jsonify(notification_list)
 
     
 def next_week_start_date():

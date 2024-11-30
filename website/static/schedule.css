@@ -31,6 +31,10 @@ body h5 {
     display: block; /* Visible only when the list has items */
 }
 
+.timestamp {
+    font-size: 0.6rem;
+}
+
 .nav-link {
     position: relative;
 }
