@@ -10,6 +10,9 @@ auth_blueprint = Blueprint('auth', __name__)
 
 @auth_blueprint.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.schedule'))
+        
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
@@ -26,7 +29,6 @@ def login():
         else:
             flash("The password you entered is incorrect.", "danger")
         
-    
     return render_template('signin.html')
 
 
@@ -34,6 +36,9 @@ def login():
 
 @auth_blueprint.route('/', methods=['GET', 'POST'])
 def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.schedule'))
+
     if request.method == 'POST':
         firstName = request.form.get('firstName')
         lastName = request.form.get('lastName')
@@ -83,7 +88,6 @@ def signup():
             flash("Error creating user: " + str(e))
             return redirect(url_for('auth.signup'))
     
-
     return render_template('signup.html')
 
 
