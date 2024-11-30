@@ -1,0 +1,48 @@
+//file only intended to ensure notifications are being written to db    
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+</head>
+<body>
+    <h1>Notifications</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Employee ID</th>
+                <th>Message</th>
+                <th>Has Read</th>
+                <th>Send Date</th>
+            </tr>
+        </thead>
+        <tbody id="notificationTable">
+        </tbody>
+    </table>
+
+    <script>
+        fetch('/notifications')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('notificationTable');
+                tableBody.innerHTML = ''; 
+                data.forEach(notification => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${notification.notificationID}</td>
+                        <td>${notification.employeeID}</td>
+                        <td>${notification.message}</td>
+                        <td>${notification.hasRead ? 'Yes' : 'No'}</td>
+                        <td>${notification.sendDate}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error fetching notifications:', error));
+    </script>
+</body>
+</html>

@@ -414,6 +414,30 @@ def approve_schedule():
         return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
 
 
+
+
+@main_blueprint.route('/test_notifications', methods=['GET'])
+def test_notifications():
+    return render_template('notifications.html')
+
+
+@main_blueprint.route('/notifications', methods=['GET'])
+def get_notifications():
+
+    notifications = Notification.query.filter(Notification.employeeID.in_([1,2])).all()
+
+    notification_list = [
+        {
+            "notificationID": n.notificationID,
+            "employeeID": n.employeeID,
+            "message": n.message,
+            "hasRead": n.hasRead,
+            "sendDate": n.sendDate.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        for n in notifications
+    ]
+    return jsonify(notification_list)
+
     
 def next_week_start_date():
     return (datetime.today() + timedelta(days=7 - datetime.today().weekday())).date()
