@@ -64,17 +64,14 @@
                             <i class="bi bi-bell-fill me-2"></i> Notifications
                         </li>
                         <li class="dropdown-divider mt-0"></li>
-                        <li style="max-height: 150px; min-width: 200px; overflow-y: auto;">
+                        <li style="max-height: 250px; min-width: 300px; overflow-y: auto;">
                             <ul id="notification-list" class="list-unstyled px-2 mb-0">
                                 <!-- Notifications will be added dynamically here -->
-                                <li>Notification 1</li>
-                                <li>Notification 2</li>
-                                <li>Notification 3</li>
                             </ul>
                         </li>
                         <li class="dropdown-divider"></li>
                         <li class="d-flex justify-content-end px-2">
-                            <button class="btn btn-sm btn-light border" id="clear-notifications">Clear</button>
+                            <button class="btn btn-sm btn-light border" id="clear-notifications" onclick=clearNotifications()>Clear</button>
                         </li>
                     </ul>
                 </li>
