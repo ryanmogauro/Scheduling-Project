@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask import request, jsonify
-from website.models import User, Employee, Unavailability, Shift, ShiftAssignment
+from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, date
 from website import db
@@ -353,6 +353,7 @@ def generate_schedule():
 @login_required
 def approve_schedule():
     try:
+        scheduled_workers = set()
         data = request.get_json()
         if not data:
             return jsonify({"success": False, "message": "Invalid data."}), 400
@@ -380,13 +381,31 @@ def approve_schedule():
                 db.session.flush() 
 
                 for employee_id in employees:
+                    scheduled_workers.add(employee_id)
                     new_shift_assignment = ShiftAssignment(
                         shiftID=new_shift.shiftID,
                         employeeID=employee_id
                     )
                     db.session.add(new_shift_assignment)
 
+                    #it had a problem with db commit here with the added notification commits
+                    #leaving comment here in case of future issues with this
+                    
+        for employee in scheduled_workers: 
+            
+            new_notification = Notification(
+                message = f"A new schedule has been published for the week of {next_monday}", #this will change when date is selectable
+                hasRead = False,
+                employeeID= employee
+            )
+            db.session.add(new_notification)
         db.session.commit()
+        
+            
+        
+        
+        
+        
         return ({"success": True, "message": f"Successfully generated new schedule!"}), 500
         
     except Exception as e:
@@ -394,6 +413,30 @@ def approve_schedule():
         print(f"Error approving schedule: {e}")
         return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
 
+
+
+
+@main_blueprint.route('/test_notifications', methods=['GET'])
+def test_notifications():
+    return render_template('notifications.html')
+
+
+@main_blueprint.route('/notifications', methods=['GET'])
+def get_notifications():
+
+    notifications = Notification.query.filter(Notification.employeeID.in_([1,2])).all()
+
+    notification_list = [
+        {
+            "notificationID": n.notificationID,
+            "employeeID": n.employeeID,
+            "message": n.message,
+            "hasRead": n.hasRead,
+            "sendDate": n.sendDate.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        for n in notifications
+    ]
+    return jsonify(notification_list)
 
     
 def next_week_start_date():
