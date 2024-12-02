@@ -33,10 +33,18 @@ function loadNotifications() {
         const notifications = data.notifications;
         const notificationList = document.getElementById('notification-list');
         notificationList.innerHTML = ''; // Clear existing notifications
-        notifications.forEach(notification => {
-            addNotification(notification.message, notification.hasRead, notification.sendTime);
-            updateNotificationDot();
-        });
+        if (notifications.length == 0) {
+            // Display a message when no notifications are available
+            const noNotifications = document.createElement('li');
+            noNotifications.textContent = "Nothing to see here...";
+            noNotifications.classList.add('text-muted', 'text-center', 'py-2');
+            notificationList.appendChild(noNotifications);
+        } else {
+            notifications.forEach(notification => {
+                addNotification(notification.message, notification.hasRead, notification.sendTime);
+                updateNotificationDot();
+            });
+        }
     })
     .catch(error => console.error("Error loading notifications:", error));
 }
