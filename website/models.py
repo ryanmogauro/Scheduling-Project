@@ -54,6 +54,19 @@ class Unavailability(db.Model):
     unavailableStartTime = db.Column(db.DateTime)
     unavailableEndTime = db.Column(db.DateTime)
 
+
+class Event(db.Model):
+    eventID = db.Column(db.Integer, primary_key=True)
+    eventHost = db.Column(db.String(100), nullable = False)
+    eventName = db.Column(db.String(100), nullable=False)
+    eventStartDate = db.Column(db.DateTime, nullable=False)
+    eventEndDate = db.Column(db.DateTime, nullable=False)
+    eventDescription = db.Column(db.String(255), nullable=True)
+    createdBy = db.Column(db.Integer, db.ForeignKey('user.userID'), nullable=False)
+
+    # Relationship to the User who created the event
+    creator = db.relationship('User', backref='events')
+
 class Notification(db.Model):
     notificationID = db.Column(db.Integer, primary_key=True)
     employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'), nullable=False)
