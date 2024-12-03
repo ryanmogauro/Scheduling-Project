@@ -27,7 +27,7 @@
                 <!-- Navigation Buttons -->
                 <ul class="nav">
                     <li>
-                        <a href="{{ url_for('main.unavailability_page') }}" class="nav-link px-2 text-dark">
+                        <a href="{{ url_for('main.unavailability') }}" class="nav-link px-2 text-dark">
                             <i class="bi bi-check2-circle"></i>
                             Availability
                             <i class="bi bi-dot dot-icon"></i>
@@ -128,7 +128,7 @@
                         <li>
                             <a href="#"
                                 class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none"
-                                onclick="clearAvailability()">
+                                onclick="clearUnavailability()">
                                 <i class="bi bi-x-circle me-2"></i>
                                 Clear
                             </a>
@@ -147,7 +147,7 @@
                         Selections
                     </h5>
                     <hr>
-                    <div id="availabilityList" class="availability-list"> </div>
+                    <div id="unavailabilityList" class="unavailability-list"> </div>
                 </div>
             </aside>
 
@@ -159,7 +159,7 @@
                             <button type="button" id="prevWeek" class="btn p-0 me-2 shadow-none" onclick=updateWeek(-1)>
                                 <i class="bi bi-chevron-left"></i>
                             </button>
-                            <input type="week" id="availabilityDate" name="availabilityDate" class="ms-2 me-2">
+                            <input type="week" id="unavailabilityDate" name="unavailabilityDate" class="ms-2 me-2">
                             <button type="button" id="nextWeek" class="btn p-0 ms-2 shadow-none" onclick=updateWeek(1)>
                                 <i class="bi bi-chevron-right"></i>
                             </button>
@@ -201,30 +201,20 @@
                         </div>
                         </section>
 
-                        <div id="availabilityModal" class="modal">
+                        <div id="unavailabilityModal" class="modal">
                             <div class="modal-content">
                                 <span class="close" onclick="closeModal()">&times;</span>
-                                <h2>Add Availability</h2>
-                                <label for="day-select">Day:</label>
-                                <select id="day-select">
-                                    <option value="Monday">Monday</option>
-                                    <option value="Tuesday">Tuesday</option>
-                                    <option value="Wednesday">Wednesday</option>
-                                    <option value="Thursday">Thursday</option>
-                                    <option value="Friday">Friday</option>
-                                    <option value="Saturday">Saturday</option>
-                                    <option value="Sunday">Sunday</option>
-                                </select>
-
-                                <label for="start-time">Start Time:</label>
-                                <input type="time" id="start-time">
-
-                                <label for="end-time">End Time:</label>
-                                <input type="time" id="end-time">
-
-                                <button onclick="addAvailability()">Add Availability</button>
+                                <h2>Add Unavailability</h2>
+                                
+                                <label for="start-datetime">Start Date & Time:</label>
+                                <input type="datetime-local" id="start-datetime">
+                                
+                                <label for="end-datetime">End Date & Time:</label>
+                                <input type="datetime-local" id="end-datetime">
+                                
+                                <button onclick="addUnavailability()">Add Unavailability</button>
                             </div>
-                        </div>
+                        </div>                                            
                     </div>
                 </div>
             </main>
