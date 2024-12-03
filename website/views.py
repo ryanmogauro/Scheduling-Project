@@ -47,7 +47,7 @@ def get_notifications():
     notifications = (
         db.session.query(Notification)
         .filter(Notification.employeeID == current_user.employeeID)
-        .order_by(Notification.sendDate.desc())  # Sort by most recent
+        .order_by(Notification.sendTime.desc())  # Sort by most recent
         .all()
     )
 
@@ -57,7 +57,7 @@ def get_notifications():
                 "notificationID": notification.notificationID,
                 "message": notification.message,
                 "hasRead": notification.hasRead,
-                "sendDate": notification.sendDate.isoformat()
+                "sendTime": notification.sendTime.isoformat()
             }
             for notification in notifications
         ]

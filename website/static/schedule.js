@@ -34,7 +34,7 @@ function loadNotifications() {
         const notificationList = document.getElementById('notification-list');
         notificationList.innerHTML = ''; // Clear existing notifications
         notifications.forEach(notification => {
-            addNotification(notification.message, notification.hasRead, notification.sendDate);
+            addNotification(notification.message, notification.hasRead, notification.sendTime);
             updateNotificationDot();
         });
     })
