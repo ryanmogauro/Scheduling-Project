@@ -1,5 +1,5 @@
 /// On Page Load
-window.onload = function() {
+window.onload = function () {
     const today = new Date();
     const year = today.getFullYear();
     const startOfYear = new Date(year, 0, 1);
@@ -27,17 +27,25 @@ function loadNotifications() {
             'Content-Type': 'application/json',
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        const notifications = data.notifications;
-        const notificationList = document.getElementById('notification-list');
-        notificationList.innerHTML = ''; // Clear existing notifications
-        notifications.forEach(notification => {
-            addNotification(notification.message, notification.hasRead, notification.sendDate);
-            updateNotificationDot();
-        });
-    })
-    .catch(error => console.error("Error loading notifications:", error));
+        .then(response => response.json())
+        .then(data => {
+            const notifications = data.notifications;
+            const notificationList = document.getElementById('notification-list');
+            notificationList.innerHTML = ''; // Clear existing notifications
+            if (notifications.length == 0) {
+                // Display a message when no notifications are available
+                const noNotifications = document.createElement('li');
+                noNotifications.textContent = "Nothing to see here...";
+                noNotifications.classList.add('text-muted', 'text-center', 'py-2');
+                notificationList.appendChild(noNotifications);
+            } else {
+                notifications.forEach(notification => {
+                    addNotification(notification.message, notification.hasRead, notification.sendTime);
+                    updateNotificationDot();
+                });
+            }
+        })
+        .catch(error => console.error("Error loading notifications:", error));
 }
 
 function addNotification(text, hasRead = false, timestamp = null) {
@@ -69,7 +77,7 @@ function addNotification(text, hasRead = false, timestamp = null) {
     if (timestamp) {
         const time = document.createElement('span');
         time.textContent = new Date(timestamp).toLocaleString();
-        time.classList.add('text-muted', 'mt-1','timestamp');
+        time.classList.add('text-muted', 'mt-1', 'timestamp');
         content.appendChild(time);
     }
 
@@ -86,17 +94,17 @@ function clearNotifications() {
             'Content-Type': 'application/json',
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const notificationList = document.getElementById('notification-list');
-            notificationList.innerHTML = ''; // Clear notifications from the UI
-            console.log(data.message); // Log success message
-        } else {
-            console.error("Error clearing notifications:", data.error);
-        }
-    })
-    .catch(error => console.error("Error clearing notifications:", error));
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const notificationList = document.getElementById('notification-list');
+                notificationList.innerHTML = ''; // Clear notifications from the UI
+                console.log(data.message); // Log success message
+            } else {
+                console.error("Error clearing notifications:", data.error);
+            }
+        })
+        .catch(error => console.error("Error clearing notifications:", error));
 }
 
 // Mark notifications as read
@@ -107,20 +115,20 @@ document.getElementById('notificationsDropdown').addEventListener('show.bs.dropd
             'Content-Type': 'application/json',
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            console.log(data.message);
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log(data.message);
 
-            // Remove 'unread' class from all notifications in the dropdown
-            const unreadItems = document.querySelectorAll('#notification-list .unread');
-            unreadItems.forEach(item => item.classList.remove('unread'));
-            updateNotificationDot();
-        } else {
-            console.error("Error marking notifications as read:", data.error);
-        }
-    })
-    .catch(error => console.error("Error marking notifications as read:", error));
+                // Remove 'unread' class from all notifications in the dropdown
+                const unreadItems = document.querySelectorAll('#notification-list .unread');
+                unreadItems.forEach(item => item.classList.remove('unread'));
+                updateNotificationDot();
+            } else {
+                console.error("Error marking notifications as read:", data.error);
+            }
+        })
+        .catch(error => console.error("Error marking notifications as read:", error));
 });
 
 // Change envelope icons to "open" and unbold text after the dropdown is closed
@@ -192,7 +200,6 @@ function addUnavailability() {
         alert("Please fill out all fields.");
         return;
     }
-
     fetch('/add_unavailability', {
         method: 'POST',
         headers: {
@@ -295,10 +302,10 @@ function updateUnavailabilityGrid(unavailabilitySlots) {
                 const cellId = `cell-${day}-${hour}`; 
                 const cell = document.getElementById(cellId);
                 if (cell) {
-                    cell.style.backgroundColor = '#6F4E37';  
+                    cell.style.backgroundColor = '#6F4E37';
                     cell.style.color = 'white';
                     cell.style.textAlign = 'center';
-                    cell.style.display = 'flex'; 
+                    cell.style.display = 'flex';
                     cell.style.alignItems = 'center';
                     cell.style.justifyContent = 'center';
                     cell.innerText = `${formatTime(startDate)} - ${formatTime(endDate)}`;
