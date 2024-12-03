@@ -10,8 +10,8 @@ window.onload = function() {
     const formattedWeek = `${year}-W${weekNumber.toString().padStart(2, '0')}`;
 
     // Set the value of the input field to the current week
-    document.getElementById('availabilityDate').value = formattedWeek;
-    loadAvailability();
+    document.getElementById('unavailabilityDate').value = formattedWeek;
+    loadUnavailability();
     loadNotifications()
 };
 
@@ -153,256 +153,192 @@ function updateNotificationDot() {
     }
 }
 
-
-function getISOWeek(date) {
-    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-    const daysInYear = (date - firstDayOfYear) / (1000 * 60 * 60 * 24);
-    return Math.ceil((daysInYear + firstDayOfYear.getDay() + 1) / 7);
-}
-
-let availabilitySlots = [];
-
 function openModal() {
-    document.getElementById("availabilityModal").style.display = "block";
+    document.getElementById("unavailabilityModal").style.display = "block";
 }
 
 function closeModal() {
-    document.getElementById("availabilityModal").style.display = "none";
+    document.getElementById("unavailabilityModal").style.display = "none";
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const availabilityDateInput = document.getElementById('availabilityDate');
-    const savedWeek = localStorage.getItem('selectedWeek');
-    
-    if (savedWeek) {
-        availabilityDateInput.value = savedWeek;
-    } else {
-        const today = new Date();
-        const currentYear = today.getFullYear();
-        const currentWeek = getISOWeek(today);
-        availabilityDateInput.value = `${currentYear}-W${currentWeek}`;
+function loadUnavailability() {
+    const unavailabilityDate = document.getElementById('unavailabilityDate').value;
+    if (!unavailabilityDate) {
+        console.log("No unavailability date selected.");
+        return; // Don't proceed if no date is selected
     }
-
-    loadAvailability();
-
-    availabilityDateInput.addEventListener('change', () => {
-        const weekInput = availabilityDateInput.value;
-        localStorage.setItem('selectedWeek', weekInput); 
-        loadAvailability(); 
-    });
-});
-
-
-
-
-function day_week_to_date(year, week, day) {
-    const dayMap = {
-        Monday: 0,
-        Tuesday: 1,
-        Wednesday: 2,
-        Thursday: 3,
-        Friday: 4,
-        Saturday: 5,
-        Sunday: 6
-    };
-
-    const jan4 = new Date(Date.UTC(year, 0, 4));
-
-    const jan4DayOfWeek = jan4.getUTCDay();
-
-    const isoWeekStart = new Date(jan4);
-    isoWeekStart.setUTCDate(jan4.getUTCDate() - ((jan4DayOfWeek + 6) % 7));
-
-    const desiredWeekStart = new Date(isoWeekStart);
-    desiredWeekStart.setUTCDate(isoWeekStart.getUTCDate() + (week - 1) * 7);
-
-    const desiredDate = new Date(desiredWeekStart);
-    desiredDate.setUTCDate(desiredWeekStart.getUTCDate() + dayMap[day]);
-
-    return desiredDate;
-}
-
-
-
-
-
-function loadAvailability() {
-    const weekInput = document.getElementById('availabilityDate').value;
-    const [year, week] = weekInput.split("-W").map(Number);
-    const startOfWeek = day_week_to_date(year, week, "Monday")
-    console.log("loading avail for : ", startOfWeek)
     fetch('/get_unavailability', {
         method: 'POST',
         headers: {
-        'Content-Type': 'application/json'
+            'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: JSON.stringify({ startOfWeek : startOfWeek})
+        body: new URLSearchParams({ unavailabilityDate })
     })
         .then(response => response.json())
         .then(data => {
-            console.log("Loaded availability slots:", data.availability);
-            availabilitySlots = data.availability;
+            unavailabilitySlots = data.unavailability;
+            updateUnavailabilityGrid(unavailabilitySlots);
+            updateUnavailabilityList(unavailabilitySlots);
 
-            const list = document.getElementById("availabilityList");
-            list.innerHTML = "";
-
-            availabilitySlots.forEach(slot => {
-                const list = document.getElementById("availabilityList");
-                const listItem = document.createElement("a");
-                listItem.className = "d-flex align-items-center justify-content-between p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
-                listItem.href = "#";
-                listItem.onclick = function (e) {
-                    e.preventDefault();
-                    deleteAvailability(slot, listItem);
-                };
-                listItem.innerHTML = `<i class="bi bi-trash3-fill me-2"></i> ${slot.day}: &nbsp;&nbsp;${slot.startTime} - ${slot.endTime}`;
-
-                list.appendChild(listItem);
-            });
-
-            updateScheduleGrid();
         })
         .catch(error => console.error("Error loading availability:", error));
-    }
-
-
-
-function addAvailability() {
-    const weekInput = document.getElementById('availabilityDate').value;
-    const [year, week] = weekInput.split("-W").map(Number);
-    const day = document.getElementById("day-select").value;
-    const date = day_week_to_date(year, week, day)
-    const startTime = document.getElementById("start-time").value;
-    const endTime = document.getElementById("end-time").value;
-
-    if (startTime && endTime) {
-        const slot = { day, date, startTime, endTime };
-
-        fetch('/add_availability', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(slot)
-        }).then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (!Array.isArray(availabilitySlots)) {
-                        availabilitySlots = []; 
-                    }
-                    availabilitySlots.push(slot);
-
-                    const list = document.getElementById("availabilityList");
-                    const listItem = document.createElement("a");
-                    listItem.href = "#";
-                    listItem.className = "d-flex align-items-center justify-content-between p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
-                    listItem.onclick = function (e) {
-                        e.preventDefault();
-                        deleteAvailability(slot, listItem);
-                    };
-                    listItem.innerHTML = `<i class="bi bi-trash3-fill me-2"></i> ${slot.day}: &nbsp;&nbsp;${slot.startTime} - ${slot.endTime}`;
-
-                    list.appendChild(listItem);
-
-                    updateScheduleGrid();
-
-                    closeModal();
-                } else {
-                    alert("Failed to add availability.");
-                }
-            })
-            .catch(error => console.error("Error adding availability:", error));
-    } else {
-        alert("Please select both start and end times.");
-    }
 }
 
-function deleteAvailability(slot, listItem) {
+function addUnavailability() {
+    const startDatetime = document.getElementById('start-datetime').value;
+    const endDatetime = document.getElementById('end-datetime').value;
 
-    console.log("Deleting this slot ", slot)
-    const dataToDelete = {
-        date: slot.date,  
-        startTime: slot.startTime,
-        endTime: slot.endTime  
-    };
+    if (!startDatetime || !endDatetime) {
+        alert("Please fill out all fields.");
+        return;
+    }
 
-    fetch('/delete_availability', {
+    fetch('/add_unavailability', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify(dataToDelete)
-    }).then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                availabilitySlots = availabilitySlots.filter(s => !(s.date === slot.date && s.startTime === slot.startTime && s.endTime === slot.endTime));
-                listItem.remove();
-                updateScheduleGrid();
-            } else {
-                alert("Failed to delete availability.");
-            }
-        })
-        .catch(error => console.error("Error deleting availability:", error));
+        body: new URLSearchParams({
+            unavailableStartTime: startDatetime,
+            unavailableEndTime: endDatetime,
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeModal();
+            loadUnavailability();
+        } else {
+            alert(`Error: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
 }
 
-function updateScheduleGrid() {
+function deleteUnavailability(unavailabilityID) {
+    fetch('/delete_unavailability', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            unavailabilityID: unavailabilityID,
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadUnavailability();
+        } else {
+            alert(`Error: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+}
+
+function clearUnavailability() {
+    const unavailabilityDate = document.getElementById('unavailabilityDate').value;
+    if (!unavailabilityDate) {
+        console.log("No unavailability date selected.");
+        return; // Don't proceed if no date is selected
+    }
+    // Send the request to the server
+    fetch('/clear_unavailability', {
+        method: 'POST',
+        body: new URLSearchParams({ unavailabilityDate }),
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadUnavailability();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while clearing unavailability');
+    });
+}
+
+function updateUnavailabilityGrid(unavailabilitySlots) {
+    // Clear all cells to default styles
     const cells = document.querySelectorAll('.cell');
     cells.forEach(cell => {
         cell.style.backgroundColor = 'white';
+        cell.style.color = 'black';
+        cell.innerText = '';
     });
 
-    availabilitySlots.forEach(slot => {
-        const day = slot.day;
-        const startHour = parseInt(slot.startTime.split(":")[0]);
-        const endHour = parseInt(slot.endTime.split(":")[0]);
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    unavailabilitySlots.forEach(slot => {
+        const startDate = new Date(slot.start);
+        const endDate = new Date(slot.end);
 
+        // Extract the day, start hour, and end hour
+        const day = dayNames[startDate.getDay()];
+        const startHour = startDate.getHours();
+        const endHour = endDate.getHours();
+
+        // Iterate over the hours in the shift and update the grid
         for (let hour = startHour; hour < endHour; hour++) {
-            if (hour >= 7 && hour <= 18) {
-                const cellId = `cell-${day}-${hour}`;
+            if (hour >= 7 && hour <= 18) { 
+                const cellId = `cell-${day}-${hour}`; 
                 const cell = document.getElementById(cellId);
                 if (cell) {
                     cell.style.backgroundColor = '#6F4E37';  
                     cell.style.color = 'white';
-                    
                     cell.style.textAlign = 'center';
                     cell.style.display = 'flex'; 
                     cell.style.alignItems = 'center';
                     cell.style.justifyContent = 'center';
-                    cell.innerText = `${slot.startTime} - ${slot.endTime}`;
+                    cell.innerText = `${formatTime(startDate)} - ${formatTime(endDate)}`;
                 }
             }
         }
     });
 }
 
-function clearAvailability() {
-    const weekInput = document.getElementById('availabilityDate').value;
-    const [year, week] = weekInput.split("-W").map(Number);
-    const startOfWeek = day_week_to_date(year, week, "Monday")
-    console.log("sending start of week ", startOfWeek)
-    const formattedStartOfWeek = startOfWeek.toISOString().split('T')[0]
-    fetch('/clear_availability', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({startOfWeek: formattedStartOfWeek})
-    }).then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                availabilitySlots = [];
-                document.getElementById("availabilityList").innerHTML = "";
-                updateScheduleGrid();
-            } else {
-                alert("Failed to clear availability.");
-            }
-        })
-        .catch(error => console.error("Error clearing availability:", error));
+function updateUnavailabilityList(unavailabilitySlots) {
+    const list = document.getElementById("unavailabilityList");
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    list.innerHTML = '';
+
+    unavailabilitySlots.forEach(slot => {
+        const startDate = new Date(slot.start);
+        const endDate = new Date(slot.end);
+        const day = dayNames[startDate.getDay()];
+
+        const listItem = document.createElement("a");
+        listItem.className = "d-flex align-items-center justify-content-between p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
+        listItem.href = "#";
+        
+        // Store the unavailability ID as a data attribute on the list item
+        listItem.dataset.unavailabilityId = slot.unavailabilityID;
+
+        listItem.onclick = function (e) {
+            e.preventDefault();
+            deleteUnavailability(listItem.dataset.unavailabilityId);
+        };
+
+        listItem.innerHTML = `<i class="bi bi-trash3-fill me-2"></i> ${day}: &nbsp;&nbsp;${formatTime(startDate)} - ${formatTime(endDate)}`;
+
+        list.appendChild(listItem);
+    });
 }
 
 /// Increment / Decrement Week
 function updateWeek(offset) {
-    const scheduleDateInput = document.getElementById('availabilityDate');
+    const scheduleDateInput = document.getElementById('unavailabilityDate');
     const [year, weekString] = scheduleDateInput.value.split('-W');
     let yearNumber = parseInt(year, 10);
     let weekNumber = parseInt(weekString, 10) + offset;
@@ -419,5 +355,12 @@ function updateWeek(offset) {
     const formattedWeek = `${yearNumber}-W${weekNumber.toString().padStart(2, '0')}`;
     scheduleDateInput.value = formattedWeek;
     console.log(scheduleDateInput)
-    loadAvailability();
+    loadUnavailability();
+}
+
+// Helper function to format time as HH:MM
+function formatTime(date) {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
 }
