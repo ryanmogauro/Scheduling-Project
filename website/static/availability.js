@@ -185,9 +185,19 @@ function loadUnavailability() {
         .then(response => response.json())
         .then(data => {
             unavailabilitySlots = data.unavailability;
+            if (unavailabilitySlots.length == 0) {
+                // Display a message when there is no unavailability
+                const list = document.getElementById("unavailabilityList");
+                list.innerHTML = '';
+                const noUnavailability = document.createElement('p');
+                noUnavailability.id = 'no-availability-message';
+                noUnavailability.textContent = "Nothing to see here...";
+                noUnavailability.classList.add('text-muted', 'text-center', 'py-2');
+                list.appendChild(noUnavailability);
+            } else {
+                updateUnavailabilityList(unavailabilitySlots);
+            }
             updateUnavailabilityGrid(unavailabilitySlots);
-            updateUnavailabilityList(unavailabilitySlots);
-
         })
         .catch(error => console.error("Error loading availability:", error));
 }
