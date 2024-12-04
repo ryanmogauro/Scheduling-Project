@@ -19,6 +19,7 @@ def login():
         remember = 'remember' in request.form
         
         user = User.query.filter_by(email=email).first()
+        print(user)
 
         if user and user.check_password(password):
             login_user(user, remember=remember)
