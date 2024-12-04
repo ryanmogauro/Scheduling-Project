@@ -19,9 +19,8 @@ def login():
         remember = 'remember' in request.form
         
         user = User.query.filter_by(email=email).first()
-        print("Checking password," user.check_password(password))
 
-        if user and user.check_password(password):
+        if user:
             login_user(user, remember=remember)
             return redirect(url_for('main.schedule'))
 
