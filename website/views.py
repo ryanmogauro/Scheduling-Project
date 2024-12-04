@@ -15,53 +15,64 @@ def schedule():
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
     return render_template('schedule.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
 
+def get_week_bounds(date):
+    year, week = map(int, date.split('-W'))
+    week_start_date = datetime.strptime(f'{year} {week} 1', '%G %V %u')
+    week_end_date = week_start_date + timedelta(days=6)
+    return week_start_date, week_end_date
+
 @main_blueprint.route('/get_schedule', methods=['POST'])
 @login_required
 def get_schedule():
     # Get the week input from the form -- ISO Format!
     schedule_date = request.form.get('scheduleDate')
-    year, week = map(int, schedule_date.split('-W'))
-    week_start_date = datetime.strptime(f'{year} {week} 1', '%G %V %u')
-    week_end_date = week_start_date + timedelta(days=6)
-    print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
+    try:
+        week_start_date, week_end_date = get_week_bounds(schedule_date)
+        print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
 
-    shifts_for_week = (
-        db.session.query(Shift)
-        .join(ShiftAssignment, Shift.shiftID == ShiftAssignment.shiftID)
-        .filter(ShiftAssignment.employeeID == current_user.employeeID)
-        .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
-        .all()
-    )
-    
-    return jsonify({
-        "shifts": [
-            {"shiftID": shift.shiftID, "start": shift.shiftStartTime.isoformat(), "end": shift.shiftEndTime.isoformat()}
-            for shift in shifts_for_week
-        ]
-    })
+        shifts_for_week = (
+            db.session.query(Shift)
+            .join(ShiftAssignment, Shift.shiftID == ShiftAssignment.shiftID)
+            .filter(ShiftAssignment.employeeID == current_user.employeeID)
+            .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
+            .all()
+        )
+        
+        return jsonify({
+            "shifts": [
+                {"shiftID": shift.shiftID, "start": shift.shiftStartTime.isoformat(), "end": shift.shiftEndTime.isoformat()}
+                for shift in shifts_for_week
+            ]
+        })
+    except Exception as e:
+        print(f"Error retrieving schedule: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
 
 @main_blueprint.route('/get_notifications', methods=['GET'])
 @login_required
 def get_notifications():
-    # Fetch all notifications for the logged-in user
-    notifications = (
-        db.session.query(Notification)
-        .filter(Notification.employeeID == current_user.employeeID)
-        .order_by(Notification.sendDate.desc())  # Sort by most recent
-        .all()
-    )
+    try:
+        # Fetch all notifications for the logged-in user
+        notifications = (
+            db.session.query(Notification)
+            .filter(Notification.employeeID == current_user.employeeID)
+            .order_by(Notification.sendTime.desc())  # Sort by most recent
+            .all()
+        )
 
-    return jsonify({
-        "notifications": [
-            {
-                "notificationID": notification.notificationID,
-                "message": notification.message,
-                "hasRead": notification.hasRead,
-                "sendDate": notification.sendDate.isoformat()
-            }
-            for notification in notifications
-        ]
-    })
+        return jsonify({
+            "notifications": [
+                {
+                    "notificationID": notification.notificationID,
+                    "message": notification.message,
+                    "hasRead": notification.hasRead,
+                    "sendTime": notification.sendTime.isoformat()
+                }
+                for notification in notifications
+            ]
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @main_blueprint.route('/clear_notifications', methods=['POST'])
 @login_required
@@ -93,256 +104,127 @@ def mark_notifications_read():
         
         # Commit the changes to the database
         db.session.commit()
-
         return jsonify({"success": True, "message": "All notifications marked as read."})
     except Exception as e:
+        db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
-
-
-# NEEDS HEAVY REVISAL BELOW (HARD TO READ AND ALLOWS UNAUTHORIZED DATABASE CHANGES) 
-def getWeekBounds(date):
-    start_of_week = date - timedelta(days=(date.weekday()))
-    end_of_week = start_of_week + timedelta(days=6)
-    return start_of_week, end_of_week
 
 @main_blueprint.route('/events', methods=['GET', 'POST'])
 @login_required
 def events():
-    if request.method == 'POST':
-        schedule = None 
-        
-        for shift in schedule:
-            new_shift = Shift(
-                shiftStartTime = shift.start, 
-                shiftEndTime = shift.end
-            )
-            
-            new_shift_id = new_shift.shiftID
-            new_shift_assignment = ShiftAssignment(
-                shiftID = new_shift_id, 
-                employee = current_user.get_id()
-            )
-    
-             
-    
-    weekStartDay, weekEndDay = getWeekBounds(datetime.now()) #will need to change datetime.now for viewing different weeks
-    
-    #shifts = Shift.query.filter(Shift.shiftStartTime.between(weekStartDay, weekEndDay)).all()
-    
-    employee = Employee.query.filter(Employee.employeeID == current_user.employeeID).first()
-    
-    name = employee.firstName if employee else None
-    
-    shifts = [
-        
-    ] 
-    
-    """ shiftAssignments = ShiftAssignment.query.filter(ShiftAssignment.employeeID == current_user.employeeID).first()
-    
-    shifts = Shift.query.filter(Shift.shiftID in shiftAssignments)
-    
-     """
-    return render_template('events.html', shifts=shifts, name = name)
+    events = [] 
+    return render_template('events.html', events=events, name = name)
 
 @main_blueprint.route('/unavailability', methods=['GET', 'POST'])
 @login_required
 def unavailability():
-    
-    
-    dateToDay = {
-        'Monday' : datetime(2001, 1,1),
-        'Tuesday' : datetime(2001, 1, 2),
-        'Wednesday' : datetime(2001, 1, 3),
-        'Thursday' : datetime(2001, 1, 4),
-        'Friday' : datetime(2001, 1, 5),
-        'Saturday' : datetime(2001, 1, 6),
-        'Sunday' : datetime(2001, 1, 7),
-    }
-    
-    if request.method == 'POST':
-        
-        unavailabilityJSON = request.get_json()
-        unavailability = unavailabilityJSON['slots']
-        
-        if unavailability:
-            prior_unavailability = Unavailability.query.filter(Unavailability.employeeID == current_user.employeeID).all()
-            for entry in prior_unavailability:
-                db.session.delete(entry)
-            db.session.commit()
-
-        for slot in unavailability: 
-            day = slot['day']
-            day_date = dateToDay[day]
-            start_time = datetime.combine(day_date, datetime.strptime(slot["startTime"], "%H:%M").time())
-            end_time = datetime.combine(day_date, datetime.strptime(slot["endTime"], "%H:%M").time())
-
-            new_unavailable_slot = Unavailability(
-                employeeID = current_user.employeeID, 
-                unavailableStartTime = start_time, 
-                unavailableEndTime = end_time
-            )
-            print("About to add this object to unavailability! at: " + str(new_unavailable_slot.unavailableStartTime))
-            db.session.add(new_unavailable_slot)
-            db.session.commit(); 
-        
-    current_unavailability = Unavailability.query.filter(Unavailability.employeeID == current_user.employeeID).all()
-    unavailability_list = [
-        {
-            "day": entry.unavailableStartTime.strftime('%A'),
-            "startTime": entry.unavailableStartTime.strftime('%H:%M'),
-            "endTime": entry.unavailableEndTime.strftime('%H:%M')
-        } for entry in current_unavailability
-    ]
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
-    return render_template('unavailability.html', unavailability = unavailability_list, fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
+    return render_template('unavailability.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
 
 
 @main_blueprint.route('/get_unavailability', methods=['POST'])
 @login_required
 def get_availability(): 
-    data = request.get_json()
-    strStartOfWeek = data.get('startOfWeek')
-    
-    try: 
-        startOfWeek = datetime.strptime(strStartOfWeek.split("T")[0], '%Y-%m-%d').date() 
-
-        startOfWeek, endOfWeek = getWeekBounds(startOfWeek)
-        startOfWeekDatetime = datetime.combine(startOfWeek, datetime.min.time())
-        endOfWeekDateTime = datetime.combine(endOfWeek, datetime.max.time())
-        
-        if not startOfWeek or not endOfWeek:
-            return jsonify({'success': False, 'error': 'Missing year or week parameter'}), 400
-
-
-        week_unavailability = Unavailability.query.filter(
-            Unavailability.employeeID == current_user.employeeID,
-            Unavailability.unavailableStartTime.between(startOfWeekDatetime, endOfWeekDateTime),
-            Unavailability.unavailableEndTime.between(startOfWeekDatetime, endOfWeekDateTime)
-        ).all()
-        
-        week_unavailability_list = [
-            {
-            "day": entry.unavailableStartTime.strftime('%A'),
-            "date": entry.unavailableStartTime.strftime('%Y-%m-%d'),
-            "startTime": entry.unavailableStartTime.strftime('%H:%M'),
-            "endTime": entry.unavailableEndTime.strftime('%H:%M')
-            } for entry in week_unavailability
-        ]
-        
-    
-        curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
-        return jsonify({'availability': week_unavailability_list, 'name': curr_employee.firstName})
-   
-    except Exception as e:
-        print(f"Error clearing availability: {e}")
-        return jsonify({'success': False, 'error': 'Server error'}), 500
-
-@main_blueprint.route('/add_availability', methods=['POST'])
-@login_required
-def add_availability():
-    data = request.get_json()
-    if not data:
-        return jsonify({'success': False, 'error': 'Invalid data'}), 400
-    
-    
-    date = data.get('date')
-    start_time_str = data.get('startTime')
-    end_time_str = data.get('endTime')
-
-    if not all([date, start_time_str, end_time_str]):
-        return jsonify({'success': False, 'error': 'Missing data fields'}), 400
-
+    unavailability_date = request.form.get('unavailabilityDate')
     try:
-        date = date.replace('T', ' ').replace('Z', '') 
-        day_date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f') 
-        
-        start_time = datetime.strptime(start_time_str, "%H:%M").time()  
-        end_time = datetime.strptime(end_time_str, "%H:%M").time()  
+        week_start_date, week_end_date = get_week_bounds(unavailability_date)
+        print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
 
-        start_time_datetime = datetime.combine(day_date.date(), start_time)  
-        end_time_datetime = datetime.combine(day_date.date(), end_time)
-        
-        new_unavailable_slot = Unavailability(
-            employeeID=current_user.employeeID,
-            unavailableStartTime=start_time_datetime,
-            unavailableEndTime=end_time_datetime
+        unavailability_for_week = (
+            db.session.query(Unavailability)
+            .filter(Unavailability.employeeID == current_user.employeeID)
+            .filter(Unavailability.unavailableStartTime >= week_start_date, Unavailability.unavailableEndTime <= week_end_date)
+            .all()
         )
         
-        db.session.add(new_unavailable_slot)
-        db.session.commit()
-
-        return jsonify({'success': True})
-    
+        return jsonify({
+            "unavailability": [
+                {"unavailabilityID": unavailability.unavailabilityID, "start": unavailability.unavailableStartTime.isoformat(), "end": unavailability.unavailableEndTime.isoformat()}
+                for unavailability in unavailability_for_week
+            ]
+        })
     except Exception as e:
-        print(f"Error adding availability: {e}")
+        print(f"Error retrieving unavailability: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
 
-@main_blueprint.route('/delete_availability', methods=['POST'])
+@main_blueprint.route('/add_unavailability', methods=['POST'])
 @login_required
-def delete_availability():
-    data = request.get_json()
-    if not data:
-        return jsonify({'success': False, 'error': 'Invalid data'}), 400
-
-
-
-    date_str = data.get('date') 
-    start_time_str = data.get('startTime')  
-    end_time_str = data.get('endTime') 
-
+def add_unavailability():
+    unavailable_start = request.form.get('unavailableStartTime')
+    unavailable_end = request.form.get('unavailableEndTime')
+    
     try:
-        date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        print(f"unavailable_start: {unavailable_start}, unavailable_end: {unavailable_end}")
+        # Convert string dates to datetime objects
+        unavailable_start_dt = datetime.fromisoformat(unavailable_start)
+        unavailable_end_dt = datetime.fromisoformat(unavailable_end)
 
-        start_time = datetime.strptime(start_time_str, '%H:%M').time() 
-        end_time = datetime.strptime(end_time_str, '%H:%M').time()
-
-        start_datetime = datetime.combine(date, start_time)
-        end_datetime = datetime.combine(date, end_time)
-        slot_to_delete = Unavailability.query.filter_by(
+        # Create a new unavailability record
+        new_unavailability = Unavailability(
             employeeID=current_user.employeeID,
-            unavailableStartTime=start_datetime,
-            unavailableEndTime=end_datetime
-        ).first()
-
-        if slot_to_delete:
-            db.session.delete(slot_to_delete)
-            db.session.commit()
-            return jsonify({'success': True})
-        else:
-            return jsonify({'success': False, 'error': 'Slot not found'}), 404
+            unavailableStartTime=unavailable_start_dt,
+            unavailableEndTime=unavailable_end_dt
+        )
+        
+        # Add to the database session and commit
+        db.session.add(new_unavailability)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Unavailability added successfully'})
     except Exception as e:
-        print(f"Error deleting availability: {e}")
+        db.session.rollback()
+        print(f"Error adding unavailability: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
 
-
-@main_blueprint.route('/clear_availability', methods=['POST'])
+@main_blueprint.route('/delete_unavailability', methods=['POST'])
 @login_required
-def clear_availability(): 
+def delete_unavailability():
+    unavailability_id = request.form.get('unavailabilityID')
     
-    data = request.get_json()
-    strStartOfWeek = data.get('startOfWeek')
-    start = datetime.strptime(strStartOfWeek, '%Y-%m-%d').date()
-    startOfWeek, endOfWeek = getWeekBounds(start)
-    startOfWeekDatetime = datetime.combine(startOfWeek, datetime.min.time())
-    endOfWeekDateTime = datetime.combine(endOfWeek, datetime.min.time())
-
- 
     try:
-        if not startOfWeek or not endOfWeek:
-            return jsonify({'success': False, 'error': 'Missing year or week parameter'}), 400
-
-        week_unavailability = Unavailability.query.filter(
-            Unavailability.employeeID == current_user.employeeID,
-            Unavailability.unavailableStartTime >= startOfWeekDatetime,
-            Shift.shiftEndTime <= endOfWeekDateTime
-        ).all()
-        
-        for entry in week_unavailability: 
-            db.session.delete(entry)
+        # Find the unavailability record by ID
+        unavailability = Unavailability.query.filter_by(unavailabilityID=unavailability_id, employeeID=current_user.employeeID).first()
+        if unavailability:
+            # Delete the record
+            db.session.delete(unavailability)
             db.session.commit()
-        return jsonify({'success': True})
+            return jsonify({'success': True, 'message': 'Unavailability deleted successfully'})
+        else:
+            return jsonify({'success': False, 'error': 'Unavailability not found'}), 404
     except Exception as e:
-        print(f"Error clearing availability: {e}")
+        db.session.rollback()
+        print(f"Error deleting unavailability: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+@main_blueprint.route('/clear_unavailability', methods=['POST'])
+@login_required
+def clear_unavailability():
+    unavailability_date = request.form.get('unavailabilityDate')
+    
+    try:
+        week_start_date, week_end_date = get_week_bounds(unavailability_date)
+        print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
+
+        # Delete unavailability for the current week
+        unavailability_to_delete = (
+            db.session.query(Unavailability)
+            .filter(Unavailability.employeeID == current_user.employeeID)
+            .filter(Unavailability.unavailableStartTime >= week_start_date, Unavailability.unavailableEndTime <= week_end_date)
+            .all()
+        )
+
+        # Check if there are any unavailability records to delete
+        if len(unavailability_to_delete) > 0:
+            for unavailability in unavailability_to_delete:
+                db.session.delete(unavailability)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Unavailability for the current week has been cleared successfully'})
+        else:
+            return jsonify({'success': False, 'error': 'No unavailability found for the current week'}), 404
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error clearing unavailability: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
 
 
@@ -416,9 +298,6 @@ def generate_schedule():
     except Exception as e:
         print(f"Error generating schedule: {e}")
         return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
-
-    
-    
     
 @main_blueprint.route('/approve_schedule', methods=['POST'])
 @login_required

@@ -35,6 +35,7 @@ class Employee(db.Model):
     wage = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     unavailabilities = db.relationship('Unavailability', backref = 'employee')
     notifications = db.relationship('Notification', backref='employee')
+    isAdmin = db.Column(db.Boolean, nullable=False, default=False)
 
 class ShiftAssignment(db.Model):
     assignmentID = db.Column(db.Integer, primary_key=True)
@@ -54,9 +55,18 @@ class Unavailability(db.Model):
     unavailableStartTime = db.Column(db.DateTime)
     unavailableEndTime = db.Column(db.DateTime)
 
+
+class Event(db.Model):
+    eventID = db.Column(db.Integer, primary_key=True)
+    eventHost = db.Column(db.String(100), nullable = False)
+    eventName = db.Column(db.String(100), nullable=False)
+    eventStartTime = db.Column(db.DateTime, nullable=False)
+    eventEndTime = db.Column(db.DateTime, nullable=False)
+    eventDescription = db.Column(db.String(255), nullable=True)
+
 class Notification(db.Model):
     notificationID = db.Column(db.Integer, primary_key=True)
     employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'), nullable=False)
     message = db.Column(db.String(255), nullable=False)
     hasRead = db.Column(db.Boolean, default=False)
-    sendDate = db.Column(db.DateTime, default=datetime.utcnow)
+    sendTime = db.Column(db.DateTime, default=datetime.utcnow)
