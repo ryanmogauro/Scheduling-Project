@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for
-from flask import request, jsonify
+from flask import request, jsonify, json
 from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, date
@@ -354,48 +354,63 @@ def unavailability_page():
     return render_template('unavailability.html')
 
 
+
+
+
 @main_blueprint.route('/generate_schedule_page', methods=['GET'])
 def create_schedule_page():
     return render_template('generateSchedule.html')
 
 
-@main_blueprint.route('/generate_schedule', methods=['GET'])
+@main_blueprint.route('/generate_schedule', methods=['POST'])
 @login_required
 def generate_schedule():
-    """
-    Test endpoint to generate the schedule and return it as JSON.
-    """
     try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "message": "Missing start_date parameter."}), 400
+        
+        try:
+            start_date = datetime.strptime(data['start_date'], "%Y-%m-%d").date()
+            if start_date.weekday() != 0: 
+                return jsonify({"success": False, "message": "start_date must be a Monday."}), 400
+        except ValueError:
+            return jsonify({"success": False, "message": "Invalid start_date format. Use YYYY-MM-DD."}), 400
+        
         employees = getEmployees()
+        print("This is employees! ", employees)
         if not employees:
             print("No active employees found.")
             return jsonify({"success": False, "message": "No active employees found."}), 404
 
-        availability = getAvailabilityDict(employees)
-        
-        newSchedule = generateSchedule(availability)
+        availability = getAvailabilityDict(employees, start_date)
+        newSchedule = generateSchedule(availability, start_date)
 
         formatted_schedule = {}
         day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
         for day_index, day_schedule in enumerate(newSchedule):
-            formatted_schedule[day_names[day_index]] = []
+            day_date = start_date + timedelta(days=day_index)
+            formatted_schedule[day_names[day_index]] = {
+                "date": day_date.strftime("%Y-%m-%d"),
+                "slots": []
+            }
             for slot_index, employees_in_slot in enumerate(day_schedule):
                 if employees_in_slot:
                     hour = slot_index // 2
                     minute = "30" if slot_index % 2 else "00"
                     time_str = f"{hour:02d}:{minute}"
-                    formatted_schedule[day_names[day_index]].append({
+                    formatted_schedule[day_names[day_index]]["slots"].append({
                         'time': time_str,
                         'employees': employees_in_slot
                     })
 
-        print("Generated Schedule:")
-        for day, slots in formatted_schedule.items():
-            print(f"{day}:")
-            for slot in slots:
-                print(f"  {slot['time']} - Employees: {slot['employees']}")
-            print("\n")
+        # print("Generated Schedule:")
+        # for day, info in formatted_schedule.items():
+        #     print(f"{day} ({info['date']}):")
+        #     for slot in info['slots']:
+        #         print(f"  {slot['time']} - Employees: {slot['employees']}")
+        #     print("\n")
 
         return jsonify({"success": True, "schedule": formatted_schedule}), 200
     except Exception as e:
@@ -409,29 +424,40 @@ def generate_schedule():
 @login_required
 def approve_schedule():
     try:
-        scheduled_workers = set()
         data = request.get_json()
-        if not data:
-            return jsonify({"success": False, "message": "Invalid data."}), 400
-        
-        next_monday = (datetime.today() + timedelta(days=7 - datetime.today().weekday())).date()
-        day_dates = days_to_dates(next_monday)
-        
-        schedule = data['schedule'] if data['schedule'] else None
-        print("This is the approved schedule " + str(schedule))
-        for day, slots in schedule.items():
-            day_date = day_dates[day]
-            for slot in slots: 
+        if not data or 'schedule' not in data or 'start_date' not in data:
+            return jsonify({"success": False, "message": "Missing schedule or start_date in request data."}), 400
+
+        start_date_str = data['start_date']
+        try:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            if start_date.weekday() != 0: 
+                return jsonify({"success": False, "message": "start_date must be a Monday."}), 400
+        except ValueError:
+            return jsonify({"success": False, "message": "Invalid start_date format. Use YYYY-MM-DD."}), 400
+
+        schedule = json.loads(data['schedule']) if isinstance(data['schedule'], str) else data['schedule']
+        print("this is schedule", schedule)
+        scheduled_workers = set()
+
+        day_dates = {day: start_date + timedelta(days=index) for index, day in enumerate(
+            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])}
+
+        for day, day_data in schedule.items():
+            day_date = day_dates.get(day)
+            if not day_date:
+                continue  
+            slots = day_data.get('slots', [])
+            for slot in slots:
                 time = slot['time']
                 employees = slot['employees']
-                
+
                 shift_start_time = datetime.strptime(time, "%H:%M").time()
-                shift_end_time = (datetime.combine(datetime.today(), shift_start_time) + timedelta(minutes=30)).time()
-                
-                
+                shift_end_time = (datetime.combine(day_date, shift_start_time) + timedelta(minutes=30)).time()
+
                 new_shift = Shift(
-                    shiftStartTime=datetime.combine(datetime(2001, 1, 1), shift_start_time), 
-                    shiftEndTime=datetime.combine(datetime(2001, 1, 1), shift_end_time)
+                    shiftStartTime=datetime.combine(day_date, shift_start_time),
+                    shiftEndTime=datetime.combine(day_date, shift_end_time)
                 )
                 db.session.add(new_shift)
                 db.session.flush() 
@@ -444,32 +470,35 @@ def approve_schedule():
                     )
                     db.session.add(new_shift_assignment)
 
-                    #it had a problem with db commit here with the added notification commits
-                    #leaving comment here in case of future issues with this
-                    
-        for employee in scheduled_workers: 
-            
+        for employee in scheduled_workers:
             new_notification = Notification(
-                message = f"A new schedule has been published for the week of {next_monday}", #this will change when date is selectable
-                hasRead = False,
-                employeeID= employee
+                message=f"A new schedule has been published for the week of {start_date.strftime('%B %d, %Y')}",
+                hasRead=False,
+                employeeID=employee
             )
             db.session.add(new_notification)
+
         db.session.commit()
-        
-            
-        
-        
-        
-        
-        return ({"success": True, "message": f"Successfully generated new schedule!"}), 500
-        
+        return jsonify({"success": True, "message": "Successfully approved the schedule!"}), 200
+
     except Exception as e:
-        db.session.rollback()
+        db.session.rollback() 
         print(f"Error approving schedule: {e}")
         return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
 
     
+@main_blueprint.route('/admin', methods=['GET'])
+@login_required
+def admin_page():
+    date = next_week_start_date()
+    print("This is date", date)
+    return render_template('admin.html', current_week = date)
+
+
+
+
+
+
 def next_week_start_date():
     return (datetime.today() + timedelta(days=7 - datetime.today().weekday())).date()
 
