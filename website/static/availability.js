@@ -161,12 +161,8 @@ function updateNotificationDot() {
     }
 }
 
-function openModal() {
-    document.getElementById("unavailabilityModal").style.display = "block";
-}
-
 function closeModal() {
-    document.getElementById("unavailabilityModal").style.display = "none";
+    document.querySelector('button.btn-close').click();
 }
 
 function loadUnavailability() {
@@ -185,29 +181,57 @@ function loadUnavailability() {
         .then(response => response.json())
         .then(data => {
             unavailabilitySlots = data.unavailability;
+            if (unavailabilitySlots.length == 0) {
+                // Display a message when there is no unavailability
+                const list = document.getElementById("unavailabilityList");
+                list.innerHTML = '';
+                const noUnavailability = document.createElement('p');
+                noUnavailability.id = 'no-availability-message';
+                noUnavailability.textContent = "Nothing to see here...";
+                noUnavailability.classList.add('text-muted', 'text-center', 'py-2');
+                list.appendChild(noUnavailability);
+            } else {
+                updateUnavailabilityList(unavailabilitySlots);
+            }
             updateUnavailabilityGrid(unavailabilitySlots);
-            updateUnavailabilityList(unavailabilitySlots);
-
         })
         .catch(error => console.error("Error loading availability:", error));
 }
 
 function addUnavailability() {
-    const startDatetime = document.getElementById('start-datetime').value;
-    const endDatetime = document.getElementById('end-datetime').value;
+    const selectedDate = document.getElementById('unavailability-date').value;
+    const startHour = document.getElementById('unavailability-start-hour').value;
+    const endHour = document.getElementById('unavailability-end-hour').value;
 
-    if (!startDatetime || !endDatetime) {
+    // Ensure that the required fields are filled
+    if (!selectedDate || !startHour || !endHour) {
         alert("Please fill out all fields.");
         return;
     }
+
+    // Create a new Date object for the start and end date-time
+    const startDatetime = new Date(selectedDate);
+    const endDatetime = new Date(selectedDate);
+    startDatetime.setHours(startHour, 0, 0, 0);
+    endDatetime.setHours(endHour, 0, 0, 0);
+
+    // Handle timezone
+    const timeZoneOffset = startDatetime.getTimezoneOffset();
+    startDatetime.setMinutes(startDatetime.getMinutes() - timeZoneOffset);
+    endDatetime.setMinutes(endDatetime.getMinutes() - timeZoneOffset);
+
+    // Convert to ISO format
+    const startIso = startDatetime.toISOString();
+    const endIso = endDatetime.toISOString();
+
     fetch('/add_unavailability', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-            unavailableStartTime: startDatetime,
-            unavailableEndTime: endDatetime,
+            unavailableStartTime: startIso,
+            unavailableEndTime: endIso,
         }),
     })
     .then(response => response.json())
