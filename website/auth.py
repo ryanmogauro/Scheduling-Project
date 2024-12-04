@@ -63,7 +63,7 @@ def signup():
             db.session.add(new_employee)
             db.session.commit()
             
-            new_user = User(employeeID = new_employee.employeeID, email = email, passwordHash = generate_password_hash(password))
+            new_user = User(employeeID = new_employee.employeeID, email = email, passwordHash = generate_password_hash(password, "pbkdf2"))
             db.session.add(new_user)
             db.session.commit()
 
