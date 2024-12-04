@@ -35,6 +35,7 @@ class Employee(db.Model):
     wage = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     unavailabilities = db.relationship('Unavailability', backref = 'employee')
     notifications = db.relationship('Notification', backref='employee')
+    isAdmin = db.Column(db.Boolean, nullable=False, default=False)
 
 class ShiftAssignment(db.Model):
     assignmentID = db.Column(db.Integer, primary_key=True)
