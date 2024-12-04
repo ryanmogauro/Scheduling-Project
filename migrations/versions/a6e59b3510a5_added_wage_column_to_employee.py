@@ -16,9 +16,7 @@ branch_labels = None
 depends_on = None
 
 def upgrade():
-    with op.batch_alter_table('employee', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('wage', sa.Numeric(10, 2), nullable=False, server_default='0.00'))
+    pass
 
 def downgrade():
-    with op.batch_alter_table('employee', schema=None) as batch_op:
-        batch_op.drop_column('wage')
+    pass

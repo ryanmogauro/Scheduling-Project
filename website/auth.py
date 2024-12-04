@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for
 from flask import request, request, flash
 from website.models import User, Employee, Unavailability, Shift, ShiftAssignment
 from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 from website import db
 from .models import User
 
@@ -20,7 +21,7 @@ def login():
         
         user = User.query.filter_by(email=email).first()
 
-        if user:
+        if user and check_password_hash(user.passwordHash, password):
             login_user(user, remember=remember)
             return redirect(url_for('main.schedule'))
 
@@ -28,11 +29,7 @@ def login():
             flash("We couldn't find an account with that email address.", "danger")
         else:
             flash("The password you entered is incorrect.", "danger")
-        
     return render_template('signin.html')
-
-
-
 
 @auth_blueprint.route('/', methods=['GET', 'POST'])
 def signup():
@@ -53,8 +50,7 @@ def signup():
             flash("Email must be from the domain @colby.edu.")
             return redirect(url_for('auth.signup'))
         
-        existing_user = User.query.filter_by(email=email).first()
-        if existing_user:
+        if User.query.filter_by(email=email).first():
             flash("An account with that email already exists.")
             return redirect(url_for('auth.signup'))
         
@@ -62,35 +58,21 @@ def signup():
             flash("Password must be between 5 and 20 characters.")
             return redirect(url_for('auth.signup'))
         
-        new_employee = Employee(
-            firstName = firstName, 
-            lastName = lastName, 
-            minHours = 4,
-            maxHours = 12, 
-            )
-        
-        db.session.add(new_employee)
-        db.session.commit()
-        
-        new_employeeID = new_employee.employeeID
-        new_user = User(
-            employeeID = new_employeeID,
-            email = email
-            )
-        
-        new_user.set_password(password)
-        db.session.add(new_user)
         try:
+            new_employee = Employee(firstName = firstName, lastName = lastName)
+            db.session.add(new_employee)
             db.session.commit()
+            
+            new_user = User(employeeID = new_employee.employeeID, email = email, passwordHash = generate_password_hash(password))
+            db.session.add(new_user)
+            db.session.commit()
+
             return redirect(url_for('auth.login'))
         except Exception as e:
             db.session.rollback() 
             flash("Error creating user: " + str(e))
             return redirect(url_for('auth.signup'))
-    
     return render_template('signup.html')
-
-
 
 @auth_blueprint.route('/logout')
 @login_required
