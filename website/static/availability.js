@@ -161,10 +161,6 @@ function updateNotificationDot() {
     }
 }
 
-function closeModal() {
-    document.querySelector('button.btn-close').click();
-}
-
 function loadUnavailability() {
     const unavailabilityDate = document.getElementById('unavailabilityDate').value;
     if (!unavailabilityDate) {
@@ -237,7 +233,6 @@ function addUnavailability() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            closeModal();
             loadUnavailability();
         } else {
             alert(`Error: ${data.error}`);
@@ -281,6 +276,34 @@ function clearUnavailability() {
     }
     // Send the request to the server
     fetch('/clear_unavailability', {
+        method: 'POST',
+        body: new URLSearchParams({ unavailabilityDate }),
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadUnavailability();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while clearing unavailability');
+    });
+}
+
+function autofillUnavailability() {
+    const unavailabilityDate = document.getElementById('unavailabilityDate').value;
+    if (!unavailabilityDate) {
+        console.log("No unavailability date selected.");
+        return; // Don't proceed if no date is selected
+    }
+    // Send the request to the server
+    fetch('/autofill_unavailability', {
         method: 'POST',
         body: new URLSearchParams({ unavailabilityDate }),
         headers: {

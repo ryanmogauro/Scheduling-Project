@@ -21,6 +21,18 @@ def get_week_bounds(date):
     week_end_date = week_start_date + timedelta(days=6)
     return week_start_date, week_end_date
 
+def get_previous_week_bounds(date):
+    year, week = map(int, date.split('-W'))
+    if week > 1:
+        week -= 1
+    else:
+        year -= 1
+        week = datetime.strptime(f'{year}-12-31', '%Y-%m-%d').isocalendar()[1]
+    
+    week_start_date = datetime.strptime(f'{year} {week} 1', '%G %V %u')
+    week_end_date = week_start_date + timedelta(days=6)
+    return week_start_date, week_end_date
+
 @main_blueprint.route('/get_schedule', methods=['POST'])
 @login_required
 def get_schedule():
@@ -109,13 +121,13 @@ def mark_notifications_read():
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
 
-@main_blueprint.route('/events', methods=['GET', 'POST'])
+@main_blueprint.route('/events', methods=['GET'])
 @login_required
 def events():
     events = [] 
     return render_template('events.html', events=events, name = name)
 
-@main_blueprint.route('/unavailability', methods=['GET', 'POST'])
+@main_blueprint.route('/unavailability', methods=['GET'])
 @login_required
 def unavailability():
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
@@ -220,23 +232,49 @@ def clear_unavailability():
             db.session.commit()
             return jsonify({'success': True, 'message': 'Unavailability for the current week has been cleared successfully'})
         else:
-            return jsonify({'success': False, 'error': 'No unavailability found for the current week'}), 404
+            return jsonify({'success': True, 'message': 'No unavailability records found for the current week to clear'})
 
     except Exception as e:
         db.session.rollback()
         print(f"Error clearing unavailability: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
 
-
-    
-
-@main_blueprint.route('/unavailability', methods=['GET'])
+@main_blueprint.route('/autofill_unavailability', methods=['POST'])
 @login_required
-def unavailability_page():
-    return render_template('unavailability.html')
+def autofill_unavailability():
+    unavailability_date = request.form.get('unavailabilityDate')
+    
+    try:
+        clear_unavailability()
+        week_start_date, week_end_date = get_previous_week_bounds(unavailability_date)
+        print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
 
+        # Get unavailability for the previous week
+        unavailability_to_autofill = (
+            db.session.query(Unavailability)
+            .filter(Unavailability.employeeID == current_user.employeeID)
+            .filter(Unavailability.unavailableStartTime >= week_start_date, Unavailability.unavailableEndTime <= week_end_date)
+            .all()
+        )
 
-
+        # Check if there are any unavailability records to autofill
+        if len(unavailability_to_autofill) > 0:
+            for unavailability in unavailability_to_autofill:
+                new_unavailability = Unavailability(
+                    employeeID=current_user.employeeID,
+                    unavailableStartTime=unavailability.unavailableStartTime + timedelta(weeks=1),
+                    unavailableEndTime=unavailability.unavailableEndTime + timedelta(weeks=1)
+                )
+                # Add to the database session and commit
+                db.session.add(new_unavailability)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Unavailability for the current week has been autofilled successfully'})
+        else:
+            return jsonify({'success': True, 'message': 'No unavailability records found for the previous week to autofill'})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error clearing unavailability: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
 
 
 @main_blueprint.route('/generate_schedule_page', methods=['GET'])
