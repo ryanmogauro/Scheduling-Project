@@ -161,6 +161,10 @@ function updateNotificationDot() {
     }
 }
 
+function closeModal() {
+    document.querySelector('button.btn-close').click();
+}
+
 function loadUnavailability() {
     const unavailabilityDate = document.getElementById('unavailabilityDate').value;
     if (!unavailabilityDate) {
@@ -234,6 +238,7 @@ function addUnavailability() {
     .then(data => {
         if (data.success) {
             loadUnavailability();
+            closeModal();
         } else {
             alert(`Error: ${data.error}`);
         }
