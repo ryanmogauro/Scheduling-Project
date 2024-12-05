@@ -155,12 +155,11 @@ def add_unavailability():
     
     try:
         print(f"unavailable_start: {unavailable_start}, unavailable_end: {unavailable_end}")
-        # Convert string dates to datetime objects
         unavailable_start_cleaned = unavailable_start.replace("Z", "")
         unavailable_start_date = datetime.fromisoformat(unavailable_start_cleaned)
         unavailable_end_cleaned = unavailable_end.replace("Z", "")
         unavailable_end_date = datetime.fromisoformat(unavailable_end_cleaned)
-        # Create a new unavailability record
+
         new_unavailability = Unavailability(
             employeeID=current_user.employeeID,
             unavailableStartTime=unavailable_start_date,
