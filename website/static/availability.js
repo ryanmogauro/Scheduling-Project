@@ -396,7 +396,7 @@ function updateUnavailabilityList(unavailabilitySlots) {
         const day = dayNames[startDate.getDay()];
 
         const listItem = document.createElement("a");
-        listItem.className = "d-flex align-items-center justify-content-between p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
+        listItem.className = "d-flex align-items-center justify-content-start p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
         listItem.href = "#";
 
         // Store the unavailability ID as a data attribute on the list item
@@ -407,7 +407,15 @@ function updateUnavailabilityList(unavailabilitySlots) {
             deleteUnavailability(listItem.dataset.unavailabilityId);
         };
 
-        listItem.innerHTML = `<i class="bi bi-trash3-fill me-2"></i> ${day}: &nbsp;&nbsp;${formatTime(startDate)} - ${formatTime(endDate)}`;
+        // HTML structure with a wrapper for the day and time
+        listItem.innerHTML = `
+        <i class="bi bi-trash3-fill me-2 d-flex align-items-center"></i>
+        <div class="d-flex flex-column align-items-center w-100">
+            <span class="text-center">${day}</span>
+            <span class="fw-bold text-center">${formatTime(startDate)} <span>to</span> ${formatTime(endDate)}</span>
+        </div>
+        `;
+    
 
         list.appendChild(listItem);
     });
