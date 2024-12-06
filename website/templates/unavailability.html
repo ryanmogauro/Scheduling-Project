@@ -29,18 +29,18 @@
                     <li>
                         <a href="{{ url_for('main.unavailability') }}" class="nav-link px-2 text-dark">
                             <i class="bi bi-check2-circle"></i>
-                            Availability
+                            Unavailability
                             <i class="bi bi-dot dot-icon"></i>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('main.schedule') }}" class="nav-link px-2 text-secondary">
+                        <a href="{{ url_for('main.schedule') }}" class="nav-link px-2 text-secondary hover-dark">
                             <i class="bi bi-calendar-range me-1"></i>
                             Schedule
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('main.events') }}" class="nav-link px-2 text-secondary">
+                        <a href="{{ url_for('main.events') }}" class="nav-link px-2 text-secondary hover-dark">
                             <i class="bi bi-gift me-1"></i>
                             Events
                         </a>
@@ -71,8 +71,9 @@
                         </li>
                         <li class="dropdown-divider"></li>
                         <li class="d-flex justify-content-end px-2">
-                            <button class="btn btn-sm btn-light border" id="clear-notifications"
-                                onclick=clearNotifications()>Clear</button>
+                            <button class="btn btn-sm btn-light hover-dark-bg border border-dark" id="clear-notifications"
+                                onclick=clearNotifications()>
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Clear</button>
                         </li>
                     </ul>
                 </li>
@@ -99,8 +100,8 @@
                         <li class="dropdown-divider"></li>
                         <!-- Logout Button -->
                         <li class="d-flex justify-content-end px-2">
-                            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-light border text-danger"
-                                id="logout-link">
+                            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-light hover-dark-bg border border-dark" id="logout-link">
+                                <i class="bi bi-door-open"></i>
                                 Sign out
                             </a>
                         </li>
@@ -122,7 +123,7 @@
                     <ul class="nav nav-pills flex-column mb-auto">
                         <li>
                             <a href="#"
-                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none"
+                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none border border-dark"
                                 data-bs-toggle="modal" data-bs-target="#unavailabilityModal">
                                 <i class="bi bi-plus-circle me-2"></i>
                                 Add
@@ -176,18 +177,20 @@
                                                 valid
                                                 date and hour range.</p>
                                         </div>
-                                        <div class="modal-footer">
+                                        <div class="modal-footer d-flex justify-content-between">
+                                            <!-- Cancel Button -->
                                             <a href="#"
-                                                class="d-flex align-items-center p-2 mb-2 bg-secondary text-white rounded text-decoration-none"
+                                                class="d-flex align-items-center p-2 bg-secondary text-white rounded text-decoration-none hover-gray border border-dark"
                                                 data-bs-dismiss="modal">
                                                 <i class="bi bi-x-circle me-2"></i>
                                                 Cancel
                                             </a>
+                                            <!-- Add Button -->
                                             <a href="#"
-                                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded text-decoration-none"
+                                                class="d-flex align-items-center p-2 bg-brown text-white rounded text-decoration-none border border-dark"
                                                 onclick="addUnavailability()">
                                                 <i class="bi bi-plus-circle me-2"></i>
-                                                Add
+                                                Confirm
                                             </a>
                                         </div>
                                     </div>
@@ -196,7 +199,7 @@
                         </li>
                         <li>
                             <a href="#"
-                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none"
+                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none border border-dark"
                                 data-bs-toggle="modal" data-bs-target="#confirmClearModal">
                                 <i class="bi bi-arrow-counterclockwise me-2"></i>
                                 Clear
@@ -215,15 +218,17 @@
                                         <div class="modal-body">
                                             Are you sure you want to clear your unavailability for this week?
                                         </div>
-                                        <div class="modal-footer">
+                                        <div class="modal-footer d-flex justify-content-between">
+                                            <!-- Cancel Button -->
                                             <a href="#"
-                                                class="d-flex align-items-center p-2 mb-2 bg-secondary text-white rounded text-decoration-none"
+                                                class="d-flex align-items-center p-2 bg-secondary text-white rounded text-decoration-none hover-gray border border-dark"
                                                 data-bs-dismiss="modal">
                                                 <i class="bi bi-x-circle me-2"></i>
                                                 Cancel
                                             </a>
+                                            <!-- Add Button -->
                                             <a href="#"
-                                                class="d-flex align-items-center p-2 mb-2 bg-danger text-white rounded text-decoration-none"
+                                                class="d-flex align-items-center p-2 bg-brown text-white rounded text-decoration-none border border-dark"
                                                 onclick="clearUnavailability()" data-bs-dismiss="modal">
                                                 <i class="bi bi-arrow-counterclockwise me-2"></i>
                                                 Confirm
@@ -236,7 +241,7 @@
                         <li>
                             <!-- Autofill Link -->
                             <a href="#"
-                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none"
+                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none border border-dark"
                                 data-bs-toggle="modal" data-bs-target="#confirmAutofillModal">
                                 <i class="bi bi-magic me-2"></i>
                                 Autofill
@@ -256,15 +261,17 @@
                                             Are you sure you want to clear your unavailability for this week and
                                             automatically fill it with the unavailability from the previous week?
                                         </div>
-                                        <div class="modal-footer">
+                                        <div class="modal-footer d-flex justify-content-between">
+                                            <!-- Cancel Button -->
                                             <a href="#"
-                                                class="d-flex align-items-center p-2 mb-2 bg-secondary text-white rounded text-decoration-none"
+                                                class="d-flex align-items-center p-2 bg-secondary text-white rounded text-decoration-none hover-gray border border-dark"
                                                 data-bs-dismiss="modal">
                                                 <i class="bi bi-x-circle me-2"></i>
                                                 Cancel
                                             </a>
+                                            <!-- Add Button -->
                                             <a href="#"
-                                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded text-decoration-none"
+                                                class="d-flex align-items-center p-2 bg-brown text-white rounded text-decoration-none border border-dark"
                                                 onclick="autofillUnavailability()" data-bs-dismiss="modal">
                                                 <i class="bi bi-magic me-2"></i>
                                                 Confirm
@@ -302,7 +309,7 @@
                         </div>
                         <h4 class="text-center m-0">
                             <i class="bi bi-check2-circle me-2"></i>
-                            My Availability
+                            My Unavailability
                         </h4>
                         <!-- Dropdown -->
                         <div class="dropdown">

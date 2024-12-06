@@ -27,9 +27,9 @@
                 <!-- Navigation Buttons -->
                 <ul class="nav">
                     <li>
-                        <a href="{{ url_for('main.unavailability') }}" class="nav-link px-2 text-secondary">
+                        <a href="{{ url_for('main.unavailability') }}" class="nav-link px-2 text-secondary hover-dark">
                             <i class="bi bi-check2-circle"></i>
-                            Availability
+                            Unavailability
                         </a>
                     </li>
                     <li>
@@ -40,7 +40,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('main.events') }}" class="nav-link px-2 text-secondary">
+                        <a href="{{ url_for('main.events') }}" class="nav-link px-2 text-secondary hover-dark">
                             <i class="bi bi-gift me-1"></i>
                             Events
                         </a>
@@ -71,7 +71,8 @@
                         </li>
                         <li class="dropdown-divider"></li>
                         <li class="d-flex justify-content-end px-2">
-                            <button class="btn btn-sm btn-light border" id="clear-notifications" onclick=clearNotifications()>Clear</button>
+                            <button class="btn btn-sm btn-light hover-dark-bg border border-dark" id="clear-notifications" onclick=clearNotifications()>
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Clear</button>
                         </li>
                     </ul>
                 </li>
@@ -97,7 +98,8 @@
                         <li class="dropdown-divider"></li>
                         <!-- Logout Button -->
                         <li class="d-flex justify-content-end px-2">
-                            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-light border text-danger" id="logout-link">
+                            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-light hover-dark-bg border border-dark" id="logout-link">
+                                <i class="bi bi-door-open"></i>
                                 Sign out
                             </a>
                         </li>
@@ -121,21 +123,21 @@
                     <ul class="nav nav-pills flex-column mb-auto">
                         <li>
                             <a href="#"
-                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none">
+                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none border border-dark">
                                 <i class="bi bi-filter-circle me-2"></i>
                                 Filters
                             </a>
                         </li>
                         <li>
                             <a href="#"
-                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none">
+                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none border border-dark">
                                 <i class="bi bi-wrench me-2"></i>
                                 Tools
                             </a>
                         </li>
                         <li>
                             <a href="#"
-                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none">
+                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none border border-dark">
                                 <i class="bi bi-pencil-fill me-2"></i>
                                 Request Change
                             </a>

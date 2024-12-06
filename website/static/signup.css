@@ -106,3 +106,8 @@ form[action="/"] {
     text-align: center;
     margin: 10px 0;
 }
+
+.form-control:focus {
+    border-color: #6F4E37 !important; /* Neutral gray border */
+    box-shadow: none !important; /* Remove the default focus shadow */
+}

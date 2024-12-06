@@ -76,3 +76,12 @@ form[action="/login"] {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
+
+.form-control:focus {
+    border-color: #6F4E37 !important; /* Neutral gray border */
+    box-shadow: none !important; /* Remove the default focus shadow */
+}
+
+input[type="checkbox"]:checked {
+    accent-color: #6F4E37; /* Set the desired color */
+}

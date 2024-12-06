@@ -31,6 +31,18 @@ body h5 {
     display: block; /* Visible only when the list has items */
 }
 
+.nav-link.hover-dark:hover {
+    color: #343a40 !important; /* Dark text color (Bootstrap's "text-dark") */
+}
+
+.hover-gray:hover {
+    background-color: #495057 !important; /* Dark text color (Bootstrap's "text-dark") */
+}
+
+.hover-dark-bg:hover {
+    background-color: #d6d6d6 !important;
+}
+
 .timestamp {
     font-size: 0.6rem;
 }
@@ -141,4 +153,8 @@ body h5 {
 
 .bg-brown {
     background-color: #6F4E37;
+}
+
+.bg-brown:hover {
+    background-color: #593E2C;
 }
