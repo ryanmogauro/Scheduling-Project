@@ -22,7 +22,7 @@
               </a>
         
               <div class="col-md-3 text-end">
-                <button type="button1" class="btn btn-primary me-2 shadow-none" onclick="location.href='{{ url_for('auth.login') }}'">Login</button>
+                <button type="button1" class="btn btn-primary me-2 shadow-none border border-dark" onclick="location.href='{{ url_for('auth.login') }}'">Login</button>
                 <button type="button2" class="btn btn-outline-primary  shadow-none" onclick="location.href='{{ url_for('auth.signup') }}'">Sign-up</button>
               </div>
             </header>
@@ -45,7 +45,7 @@
                 <input type="checkbox" name="remember" value="remember-me"> Remember me
             </label>
           </div>
-          <button class="w-100 btn btn-lg btn-primary mb-3" type="submit">Sign in</button>
+          <button class="w-100 btn btn-lg btn-primary mb-3 shadow-none border border-dark" type="submit">Sign in</button>
         <!-- Flash Message Section -->
         {% with messages = get_flashed_messages() %}
             {% if messages %}
