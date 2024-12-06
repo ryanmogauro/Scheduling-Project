@@ -198,9 +198,9 @@ function updateScheduleGrid(scheduleSlots) {
     // Clear all cells to default styles
     const cells = document.querySelectorAll('.cell');
     cells.forEach(cell => {
-        cell.style.backgroundColor = 'white';
-        cell.style.color = 'black';
-        cell.innerText = '';
+        cell.style.background = 'white'
+        cell.style.color = 'white'
+        cell.innerHTML = '';
     });
 
     const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -219,13 +219,25 @@ function updateScheduleGrid(scheduleSlots) {
                 const cellId = `cell-${day}-${hour}`; 
                 const cell = document.getElementById(cellId);
                 if (cell) {
-                    cell.style.backgroundColor = '#6F4E37';  
-                    cell.style.color = 'white';
+                    cell.style.background = 'linear-gradient(135deg, #7A5E47, #6F4E37)';
                     cell.style.textAlign = 'center';
-                    cell.style.display = 'flex'; 
+                    cell.style.display = 'flex';
                     cell.style.alignItems = 'center';
                     cell.style.justifyContent = 'center';
-                    cell.innerText = `${formatTime(startDate)} - ${formatTime(endDate)}`;
+                    
+                    // Add time range as styled content
+                    cell.innerHTML = `
+                        <div style="text-align: center; font-size: 12px;">
+                            <span style="font-weight: bold;">${formatTime(startDate)}</span>
+                            <br />
+                            <span>to</span>
+                            <br />
+                            <span style="font-weight: bold;">${formatTime(endDate)}</span>
+                        </div>
+                    `;
+
+                    // Optionally add a tooltip for detailed information
+                    cell.setAttribute('title', `Shift from ${formatTime(startDate)} to ${formatTime(endDate)}`);
                 }
             }
         }
