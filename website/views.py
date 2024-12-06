@@ -167,19 +167,47 @@ def add_unavailability():
     
     try:
         print(f"unavailable_start: {unavailable_start}, unavailable_end: {unavailable_end}")
-        # Convert string dates to datetime objects
-        unavailable_start_dt = datetime.fromisoformat(unavailable_start)
-        unavailable_end_dt = datetime.fromisoformat(unavailable_end)
+        unavailable_start_cleaned = unavailable_start.replace("Z", "")
+        unavailable_start_date = datetime.fromisoformat(unavailable_start_cleaned)
+        unavailable_end_cleaned = unavailable_end.replace("Z", "")
+        unavailable_end_date = datetime.fromisoformat(unavailable_end_cleaned)
 
-        # Create a new unavailability record
         new_unavailability = Unavailability(
             employeeID=current_user.employeeID,
-            unavailableStartTime=unavailable_start_dt,
-            unavailableEndTime=unavailable_end_dt
+            unavailableStartTime=unavailable_start_date,
+            unavailableEndTime=unavailable_end_date
         )
+        overlapping_intervals = (Unavailability.query
+                                 .filter(Unavailability.employeeID == current_user.employeeID)
+                                 .filter(Unavailability.unavailableEndTime > unavailable_start_date)
+                                 .filter(Unavailability.unavailableStartTime < unavailable_end_date)
+                                 .order_by(Unavailability.unavailableStartTime)
+                                 .all())
         
-        # Add to the database session and commit
-        db.session.add(new_unavailability)
+        
+        current_start = unavailable_start_date
+        final_intervals_to_add = []
+
+        for interval in overlapping_intervals:
+            if interval.unavailableStartTime > current_start:
+                gap_start = current_start
+                gap_end = interval.unavailableStartTime
+                if gap_start < gap_end:
+                    final_intervals_to_add.append((gap_start, gap_end))
+            
+            if interval.unavailableEndTime > current_start:
+                current_start = interval.unavailableEndTime
+        
+        if current_start < unavailable_end_date:
+            final_intervals_to_add.append((current_start, unavailable_end_date))
+
+        for (start, end) in final_intervals_to_add:
+            new_unavailability = Unavailability(
+                employeeID=current_user.employeeID,
+                unavailableStartTime=start,
+                unavailableEndTime=end
+            )
+            db.session.add(new_unavailability)
         db.session.commit()
         
         return jsonify({'success': True, 'message': 'Unavailability added successfully'})

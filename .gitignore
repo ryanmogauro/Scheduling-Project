@@ -92,5 +92,5 @@ src/scss/_themes.scss
 # Eleventy
 # We generate our own .eleventyignore file dynamically during builds
 .eleventyignore
-
+instance/mydatabase.db
 instance/*.db
