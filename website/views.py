@@ -170,45 +170,38 @@ def add_unavailability():
         unavailable_start_date = datetime.fromisoformat(unavailable_start)
         unavailable_end_date = datetime.fromisoformat(unavailable_end)
 
-        new_unavailability = Unavailability(
-            employeeID=current_user.employeeID,
-            unavailableStartTime=unavailable_start_date,
-            unavailableEndTime=unavailable_end_date
-        )
+        # Find overlapping unavailability periods
         overlapping_intervals = (Unavailability.query
                                  .filter(Unavailability.employeeID == current_user.employeeID)
                                  .filter(Unavailability.unavailableEndTime > unavailable_start_date)
                                  .filter(Unavailability.unavailableStartTime < unavailable_end_date)
                                  .order_by(Unavailability.unavailableStartTime)
                                  .all())
-        
-        
-        current_start = unavailable_start_date
-        final_intervals_to_add = []
 
+        # Start with the new unavailability as the base
+        merge_start = unavailable_start_date
+        merge_end = unavailable_end_date
+
+        # Merge with the overlapping intervals
         for interval in overlapping_intervals:
-            if interval.unavailableStartTime > current_start:
-                gap_start = current_start
-                gap_end = interval.unavailableStartTime
-                if gap_start < gap_end:
-                    final_intervals_to_add.append((gap_start, gap_end))
-            
-            if interval.unavailableEndTime > current_start:
-                current_start = interval.unavailableEndTime
-        
-        if current_start < unavailable_end_date:
-            final_intervals_to_add.append((current_start, unavailable_end_date))
+            # If the existing interval overlaps with the new one, merge them
+            if interval.unavailableStartTime <= merge_end and interval.unavailableEndTime >= merge_start:
+                # Merge by extending the period to the earliest start time and latest end time
+                merge_start = min(merge_start, interval.unavailableStartTime)
+                merge_end = max(merge_end, interval.unavailableEndTime)
+                # Remove the old overlapping interval
+                db.session.delete(interval)
 
-        for (start, end) in final_intervals_to_add:
-            new_unavailability = Unavailability(
-                employeeID=current_user.employeeID,
-                unavailableStartTime=start,
-                unavailableEndTime=end
-            )
-            db.session.add(new_unavailability)
+        # Create and add the merged unavailability period
+        merged_unavailability = Unavailability(
+            employeeID=current_user.employeeID,
+            unavailableStartTime=merge_start,
+            unavailableEndTime=merge_end
+        )
+        db.session.add(merged_unavailability)
         db.session.commit()
-        
         return jsonify({'success': True, 'message': 'Unavailability added successfully'})
+
     except Exception as e:
         db.session.rollback()
         print(f"Error adding unavailability: {e}")
