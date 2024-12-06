@@ -215,6 +215,12 @@ function addUnavailability() {
     startDatetime.setHours(startHour, 0, 0, 0);
     endDatetime.setHours(endHour, 0, 0, 0);
 
+    // Validation: Ensure start time is before end time and not equal
+    if (startDatetime >= endDatetime) {
+        alert("Start time must be before end time.");
+        return;
+    }
+
     // Handle timezone
     const timeZoneOffset = startDatetime.getTimezoneOffset();
     startDatetime.setMinutes(startDatetime.getMinutes() - timeZoneOffset);
@@ -234,19 +240,19 @@ function addUnavailability() {
             unavailableEndTime: endIso,
         }),
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            loadUnavailability();
-            closeModal();
-        } else {
-            alert(`Error: ${data.error}`);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred. Please try again.');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadUnavailability();
+                closeModal();
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
 }
 
 function deleteUnavailability(unavailabilityID) {
@@ -259,18 +265,18 @@ function deleteUnavailability(unavailabilityID) {
             unavailabilityID: unavailabilityID,
         }),
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            loadUnavailability();
-        } else {
-            alert(`Error: ${data.error}`);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred. Please try again.');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadUnavailability();
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
 }
 
 function clearUnavailability() {
@@ -287,18 +293,18 @@ function clearUnavailability() {
             'Content-Type': 'application/x-www-form-urlencoded',
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            loadUnavailability();
-        } else {
-            alert('Error: ' + data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while clearing unavailability');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadUnavailability();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while clearing unavailability');
+        });
 }
 
 function autofillUnavailability() {
@@ -315,18 +321,18 @@ function autofillUnavailability() {
             'Content-Type': 'application/x-www-form-urlencoded',
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            loadUnavailability();
-        } else {
-            alert('Error: ' + data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while clearing unavailability');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadUnavailability();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while clearing unavailability');
+        });
 }
 
 function updateUnavailabilityGrid(unavailabilitySlots) {
@@ -350,8 +356,8 @@ function updateUnavailabilityGrid(unavailabilitySlots) {
 
         // Iterate over the hours in the shift and update the grid
         for (let hour = startHour; hour < endHour; hour++) {
-            if (hour >= 7 && hour <= 18) { 
-                const cellId = `cell-${day}-${hour}`; 
+            if (hour >= 7 && hour <= 18) {
+                const cellId = `cell-${day}-${hour}`;
                 const cell = document.getElementById(cellId);
                 if (cell) {
                     cell.style.backgroundColor = '#6F4E37';
@@ -380,7 +386,7 @@ function updateUnavailabilityList(unavailabilitySlots) {
         const listItem = document.createElement("a");
         listItem.className = "d-flex align-items-center justify-content-between p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
         listItem.href = "#";
-        
+
         // Store the unavailability ID as a data attribute on the list item
         listItem.dataset.unavailabilityId = slot.unavailabilityID;
 
