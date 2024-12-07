@@ -76,7 +76,6 @@
                         </li>
                     </ul>
                 </li>
-                <!-- Profile Dropdown -->
                 <li class="nav-item dropdown">
                     <button class="btn p-0 border-0 bg-transparent shadow-none" type="button" id="profileDropdown"
                         data-bs-toggle="dropdown" aria-expanded="false">
@@ -85,16 +84,37 @@
                             <i class="bi bi-person-fill"></i>
                         </span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profileDropdown" style="min-width: 200px;">
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profileDropdown"
+                        style="min-width: 350px;">
                         <li class="dropdown-header d-flex align-items-center">
-                            <i class="bi bi-person-fill me-2"></i> Profile Info
+                            <i class="bi bi-person-fill me-2"></i> {{fname}} {{lname}}
                         </li>
                         <li class="dropdown-divider mt-0"></li>
                         <!-- Employee Info Section -->
-                        <li class="px-3">
-                            <p class="mb-1"><strong>Name:</strong> {{fname}} {{lname}}</p>
-                            <p class="mb-1"><strong>Hourly:</strong> ${{ '{:.2f}'.format(wage) }}</p>
-                        </li>
+                        <table class="table table-borderless text-dark">
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Email:</th>
+                                    <td>{{ email }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Hourly Wage:</th>
+                                    <td>${{ wage }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Minimum Hours:</th>
+                                    <td>{{ minHours }} hrs</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Maximum Hours:</th>
+                                    <td>{{ maxHours }} hrs</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Role:</th>
+                                    <td>{{ admin }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                         <li class="dropdown-divider"></li>
                         <!-- Logout Button -->
                         <li class="d-flex justify-content-end px-2">
