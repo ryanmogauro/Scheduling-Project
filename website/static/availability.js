@@ -214,6 +214,8 @@ function addUnavailability() {
     const endDatetime = new Date(selectedDate);
     startDatetime.setUTCHours(startHour, 0, 0, 0);
     endDatetime.setUTCHours(endHour, 0, 0, 0);
+    console.log(startHour)
+    console.log(endHour)
 
     // Validation: Ensure start time is before end time and not equal
     if (startDatetime >= endDatetime) {
