@@ -331,7 +331,6 @@ function updateEventsGrid(eventsSlots) {
         const day = dayNames[startDate.getDay()];
         const startHour = startDate.getHours();
         const endHour = endDate.getHours();
-
         // Iterate over the hours in the shift and update the grid
         for (let hour = startHour; hour < endHour; hour++) {
             if (hour >= 17 && hour <= 24) {
@@ -382,7 +381,7 @@ function updateEventsList(eventsSlots) {
 
         listItem.onclick = function (e) {
             e.preventDefault();
-            deleteUnavailability(listItem.dataset.eventId);
+            deleteEvent(listItem.dataset.eventId);
         };
 
         // HTML structure with a wrapper for the day and time
