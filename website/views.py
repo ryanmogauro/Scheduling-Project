@@ -13,7 +13,7 @@ main_blueprint = Blueprint('main', __name__)
 @login_required
 def schedule():
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
-    return render_template('schedule.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
+    return render_template('schedule.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage, gyear = curr_employee.gradYear)
 
 def get_week_bounds(date):
     year, week = map(int, date.split('-W'))
@@ -128,7 +128,14 @@ def events():
 @login_required
 def unavailability():
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
-    return render_template('unavailability.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
+
+    admin_status = curr_employee.isAdmin
+    if admin_status == True:
+        admin_status = "Admin"
+    else:
+        admin_status = "Employee"    
+
+    return render_template('unavailability.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage, gyear = curr_employee.gradYear, email=current_user.email, admin=admin_status, maxHours = curr_employee.maxHours, minHours=curr_employee.minHours)
 
 
 @main_blueprint.route('/get_unavailability', methods=['POST'])
