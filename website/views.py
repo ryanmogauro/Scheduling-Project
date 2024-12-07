@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask import request, jsonify, json
-from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification
+from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification, Event
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, date
 from website import db
@@ -117,19 +117,11 @@ def mark_notifications_read():
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
 
-@main_blueprint.route('/events', methods=['GET'])
-@login_required
-def events():
-    events = [] 
-    
-    return render_template('events.html', events=events, name = name)
-
 @main_blueprint.route('/unavailability', methods=['GET'])
 @login_required
 def unavailability():
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
     return render_template('unavailability.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
-
 
 @main_blueprint.route('/get_unavailability', methods=['POST'])
 @login_required
@@ -292,6 +284,35 @@ def autofill_unavailability():
         print(f"Error clearing unavailability: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
 
+@main_blueprint.route('/events', methods=['GET'])
+@login_required
+def events():
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    return render_template('events.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
+
+@main_blueprint.route('/get_events', methods=['POST'])
+@login_required
+def get_events(): 
+    events_date = request.form.get('eventsDate')
+    try:
+        week_start_date, week_end_date = get_week_bounds(events_date)
+        print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
+
+        events_for_week = (
+            db.session.query(Event)
+            .filter(Event.eventStartTime >= week_start_date, Event.eventStartTime <= week_end_date)
+            .all()
+        )
+        
+        return jsonify({
+            "event": [
+                {"eventID": event.eventID, "start": event.eventStartTime.isoformat(), "end": event.eventStartTime.isoformat()}
+                for event in events_for_week
+            ]
+        })
+    except Exception as e:
+        print(f"Error retrieving events: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
 
 @main_blueprint.route('/generate_schedule_page', methods=['GET'])
 def create_schedule_page():
