@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask import request, jsonify, json
-from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification
+from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification, Event
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, date
 from website import db
@@ -128,7 +128,6 @@ def mark_notifications_read():
 @login_required
 def events():
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
-    events = [] 
     if admin_status == True:
         admin_status = "Admin"
     else:
@@ -148,7 +147,6 @@ def unavailability():
         admin_status = "Employee"    
 
     return render_template('unavailability.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage, gyear = curr_employee.gradYear, email=current_user.email, admin=admin_status, maxHours = curr_employee.maxHours, minHours=curr_employee.minHours)
-
 
 @main_blueprint.route('/get_unavailability', methods=['POST'])
 @login_required
@@ -311,6 +309,35 @@ def autofill_unavailability():
         print(f"Error clearing unavailability: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
 
+@main_blueprint.route('/events', methods=['GET'])
+@login_required
+def events():
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    return render_template('events.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
+
+@main_blueprint.route('/get_events', methods=['POST'])
+@login_required
+def get_events(): 
+    events_date = request.form.get('eventsDate')
+    try:
+        week_start_date, week_end_date = get_week_bounds(events_date)
+        print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
+
+        events_for_week = (
+            db.session.query(Event)
+            .filter(Event.eventStartTime >= week_start_date, Event.eventStartTime <= week_end_date)
+            .all()
+        )
+        
+        return jsonify({
+            "event": [
+                {"eventID": event.eventID, "start": event.eventStartTime.isoformat(), "end": event.eventStartTime.isoformat()}
+                for event in events_for_week
+            ]
+        })
+    except Exception as e:
+        print(f"Error retrieving events: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
 
 @main_blueprint.route('/generate_schedule_page', methods=['GET'])
 def create_schedule_page():
@@ -343,6 +370,10 @@ def generate_schedule():
 
         formatted_schedule = {}
         day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        
+        
+        employees = Employee.query.filter(Employee.employeeID.in_(availability.keys())).all()
+        employee_dict = {emp.employeeID: emp for emp in employees}
 
         for day_index, day_schedule in enumerate(newSchedule):
             day_date = start_date + timedelta(days=day_index)
@@ -355,18 +386,18 @@ def generate_schedule():
                     hour = slot_index // 2
                     minute = "30" if slot_index % 2 else "00"
                     time_str = f"{hour:02d}:{minute}"
+
+                    # Convert each employee_id to {id: employee_id, name: employee_name}
+                    detailed_employees = [
+                        {"id": emp_id, "name": f"{employee_dict[emp_id].firstName} {employee_dict[emp_id].lastName[:1]}"}
+                        for emp_id in employees_in_slot
+                    ]
+
                     formatted_schedule[day_names[day_index]]["slots"].append({
                         'time': time_str,
-                        'employees': employees_in_slot
-                    })
-
-        # print("Generated Schedule:")
-        # for day, info in formatted_schedule.items():
-        #     print(f"{day} ({info['date']}):")
-        #     for slot in info['slots']:
-        #         print(f"  {slot['time']} - Employees: {slot['employees']}")
-        #     print("\n")
-
+                        'employees': detailed_employees
+                    })   
+                    
         return jsonify({"success": True, "schedule": formatted_schedule}), 200
     except Exception as e:
         print(f"Error generating schedule: {e}")
@@ -428,7 +459,8 @@ def approve_schedule():
                 db.session.add(new_shift)
                 db.session.flush() 
 
-                for employee_id in employees:
+                for employee in employees:
+                    employee_id = employee['id'] 
                     scheduled_workers.add(employee_id)
                     new_shift_assignment = ShiftAssignment(
                         shiftID=new_shift.shiftID,
