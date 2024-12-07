@@ -311,13 +311,104 @@ def get_events():
             ]
         })
     except Exception as e:
-        print(f"Error retrieving events: {e}")
+        print(f"Error retrieving event: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+@main_blueprint.route('/add_event', methods=['POST'])
+@login_required
+def add_event(): 
+    event_start = request.form.get('eventStartTime')
+    event_end = request.form.get('eventsEndTime')
+    
+    try:
+        print(f"event_start: {event_start}, event_end: {event_end}")
+        event_start_date = datetime.fromisoformat(event_start)
+        event_end_date = datetime.fromisoformat(event_end)
+
+        # Find overlapping unavailability periods
+        overlapping_intervals = (Event.query
+                                 .filter(Event.employeeID == current_user.employeeID)
+                                 .filter(Event.eventEndTime > event_start_date)
+                                 .filter(Event.eventStartTime < event_end_date)
+                                 .order_by(Event.eventStartTime)
+                                 .all())
+
+        # Start with the new unavailability as the base
+        merge_start = event_start_date
+        merge_end = event_end_date
+
+        # Merge with the overlapping intervals
+        for interval in overlapping_intervals:
+            # If the existing interval overlaps with the new one, merge them
+            if interval.eventStartTime <= merge_end and interval.eventEndTime >= merge_start:
+                # Merge by extending the period to the earliest start time and latest end time
+                merge_start = min(merge_start, interval.eventStartTime)
+                merge_end = max(merge_end, interval.eventEndTime)
+                # Remove the old overlapping interval
+                db.session.delete(interval)
+        
+        db.session.add(event)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Event added successfully'})
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error adding event: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+@main_blueprint.route('/delete_event', methods=['POST'])
+@login_required
+def delete_event():
+    event_id = request.form.get('eventID')
+    
+    try:
+        # Find the event record by ID
+        event = Event.query.filter_by(eventID=event_id).first()
+        if event:
+            # Delete the record
+            db.session.delete(event)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Event deleted successfully'})
+        else:
+            return jsonify({'success': False, 'error': 'Event not found'}), 404
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting event: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+@main_blueprint.route('/clear_events', methods=['POST'])
+@login_required
+def clear_events():
+    events_date = request.form.get('eventsDate')
+    
+    try:
+        week_start_date, week_end_date = get_week_bounds(events_date)
+        print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
+
+        # Delete unavailability for the current week
+        events_to_delete = (
+            db.session.query(Event)
+            .filter(Event.eventStartTime >= week_start_date, Event.eventEndTime <= week_end_date)
+            .all()
+        )
+
+        # Check if there are any unavailability records to delete
+        if len(events_to_delete) > 0:
+            for event in events_to_delete:
+                db.session.delete(event)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Events for the current week has been cleared successfully'})
+        else:
+            return jsonify({'success': True, 'message': 'No event records found for the current week to clear'})
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error clearing event: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
 
 @main_blueprint.route('/generate_schedule_page', methods=['GET'])
 def create_schedule_page():
     return render_template('generateSchedule.html')
-
 
 @main_blueprint.route('/generate_schedule', methods=['POST'])
 @login_required
