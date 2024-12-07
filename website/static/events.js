@@ -162,7 +162,8 @@ function updateNotificationDot() {
 }
 
 function closeModal() {
-    document.querySelector('button.btn-close').click();
+    const modal = bootstrap.Modal.getInstance(document.getElementById('eventsModal'));
+    if (modal) modal.hide();
 }
 
 function loadEvents() {
@@ -186,6 +187,93 @@ function loadEvents() {
         .catch(error => console.error("Error loading events:", error));
 }
 
+function addEvent(){
+    const selectedDate = document.getElementById('unavailability-date').value;
+    const startHour = document.getElementById('unavailability-start-hour').value;
+    const endHour = document.getElementById('unavailability-end-hour').value;
+
+    // Ensure that the required fields are filled
+    if (!selectedDate || !startHour || !endHour) {
+        alert("Please fill out all fields.");
+        return;
+    }
+
+    // Create a new Date object for the start and end date-time
+    const startDatetime = new Date(selectedDate);
+    const endDatetime = new Date(selectedDate);
+    startDatetime.setUTCHours(startHour, 0, 0, 0);
+    endDatetime.setUTCHours(endHour, 0, 0, 0);
+    console.log(startHour)
+    console.log(endHour)
+
+    // Validation: Ensure start time is before end time and not equal
+    if (startDatetime >= endDatetime) {
+        alert("Start time must be before end time.");
+        return;
+    }
+
+    // Convert to ISO format w/o timezone info
+    const startIso = startDatetime.toISOString().slice(0, -1);
+    const endIso = endDatetime.toISOString().slice(0, -1);
+    
+    const hostName = document.getElementById('event-host').value;
+    const eventName = document.getElementById('event-name').value;
+    const eventDescription = document.getElementById('event-description').value;
+
+
+    fetch('/add_event', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            eventHost: hostName,
+            eventName: eventName, 
+            eventStartTime: startIso,
+            eventEndTime: endIso,
+            eventDescription: eventDescription,
+        }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadEvents();
+                closeModal();
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+
+}
+
+
+function deleteEvent(eventID) {
+    fetch('/delete_event', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            eventID: eventID, 
+        }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadEvents();
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+}
 function updateEventsGrid(eventsSlots) {
     // Clear all cells to default styles
     const cells = document.querySelectorAll('.cell');
