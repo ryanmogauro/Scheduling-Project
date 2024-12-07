@@ -274,6 +274,34 @@ function deleteEvent(eventID) {
             alert('An error occurred. Please try again.');
         });
 }
+
+function clearEvents() {
+    const eventsDate = document.getElementById('eventDate').value;
+    if (!eventsDate) {
+        return; 
+    }
+
+    fetch('/clear_events', {
+        method: 'POST',
+        body: new URLSearchParams({ eventsDate }),
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadEvents();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while clearing unavailability');
+        });
+}
+
 function updateEventsGrid(eventsSlots) {
     // Clear all cells to default styles
     const cells = document.querySelectorAll('.cell');
