@@ -327,7 +327,7 @@ def get_events():
 
         return jsonify({
             "events": [
-                {"eventID": event.eventID, "start": event.eventStartTime.isoformat(), "end": event.eventStartTime.isoformat()}
+                {"eventID": event.eventID, "start": event.eventStartTime.isoformat(), "end": event.eventEndTime.isoformat()}
                 for event in events_for_week
             ]
         })
