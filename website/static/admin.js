@@ -22,10 +22,17 @@ window.onload = function() {
     const year = today.getFullYear();
     const startOfYear = new Date(year, 0, 1);
     const days = Math.floor((today - startOfYear) / (24 * 60 * 60 * 1000));
-    const weekNumber = Math.ceil((days + 1) / 7);
+    
+    let weekNumber = Math.ceil((days + 1) / 7); // use let instead of const here
+    weekNumber += 1; // now this is allowed since weekNumber is declared with let
 
-    const formattedWeek = `${year}-W${weekNumber.toString().padStart(2, '0')}`;
+    let nextWeekYear = year;
+    if (weekNumber > 52) {
+        weekNumber = 1;
+        nextWeekYear += 1;
+    }
 
+    const formattedWeek = `${nextWeekYear}-W${weekNumber.toString().padStart(2, '0')}`;
     document.getElementById('availabilityDate').value = formattedWeek;
 };
 
@@ -227,8 +234,35 @@ function updateWeek(offset) {
     }
 
     const formattedWeek = `${yearNumber}-W${weekNumber.toString().padStart(2, '0')}`;
-    scheduleDateInput.value = formattedWeek;
-    console.log(scheduleDateInput)
+    const currentMonday = getCurrentWeekMonday();
+    const currentWeekYear = currentMonday.getFullYear();
+    const currentWeekNumber = getISOWeekNumber(currentMonday);
+
+    if (yearNumber < currentWeekYear || (yearNumber === currentWeekYear && weekNumber <= currentWeekNumber)) {
+        alert("You cannot schedule for a past week.");
+        const revertWeek = `${currentWeekYear}-W${String(currentWeekNumber+1).padStart(2, '0')}`;
+        scheduleDateInput.value = revertWeek;
+    } else {
+        scheduleDateInput.value = formattedWeek;
+    }
+    console.log("Selected week:", scheduleDateInput.value);
+}
+
+
+function getCurrentWeekMonday() {
+    const today = new Date();
+    const dayOfWeek = (today.getDay() + 6) % 7; 
+    const monday = new Date(today);
+    monday.setDate(monday.getDate() - dayOfWeek);
+    return monday;
+}
+
+function getISOWeekNumber(date) {
+    const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = tempDate.getUTCDay() || 7;
+    tempDate.setUTCDate(tempDate.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(),0,1));
+    return Math.ceil((((tempDate - yearStart) / 86400000) + 1)/7);
 }
 
 

@@ -36,7 +36,6 @@ def get_previous_week_bounds(date):
 @main_blueprint.route('/get_schedule', methods=['POST'])
 @login_required
 def get_schedule():
-    # Get the week input from the form -- ISO Format!
     schedule_date = request.form.get('scheduleDate')
     try:
         week_start_date, week_end_date = get_week_bounds(schedule_date)
@@ -64,11 +63,10 @@ def get_schedule():
 @login_required
 def get_notifications():
     try:
-        # Fetch all notifications for the logged-in user
         notifications = (
             db.session.query(Notification)
             .filter(Notification.employeeID == current_user.employeeID)
-            .order_by(Notification.sendTime.desc())  # Sort by most recent
+            .order_by(Notification.sendTime.desc()) 
             .all()
         )
 
@@ -89,9 +87,7 @@ def get_notifications():
 @main_blueprint.route('/clear_notifications', methods=['POST'])
 @login_required
 def clear_notifications():
-    # Clear all notifications for the currently logged-in user.
     try:
-        # Delete all notifications for the current user
         Notification.query.filter_by(employeeID=current_user.employeeID).delete()
         db.session.commit()
         return jsonify({"success": True, "message": "All notifications cleared."})
@@ -125,6 +121,7 @@ def mark_notifications_read():
 @login_required
 def events():
     events = [] 
+    
     return render_template('events.html', events=events, name = name)
 
 @main_blueprint.route('/unavailability', methods=['GET'])
@@ -371,6 +368,20 @@ def approve_schedule():
                 return jsonify({"success": False, "message": "start_date must be a Monday."}), 400
         except ValueError:
             return jsonify({"success": False, "message": "Invalid start_date format. Use YYYY-MM-DD."}), 400
+        
+        
+        end_date = start_date + timedelta(days=6)
+        
+        existing_shifts = (
+            db.session.query(Shift)
+            .filter(Shift.shiftStartTime >= start_date)
+            .filter(Shift.shiftEndTime <= end_date + timedelta(days=1))  
+            .first()
+        )
+
+        if existing_shifts:
+            return jsonify({"success": False, "message": "A schedule for this week already exists."}), 400
+
 
         schedule = json.loads(data['schedule']) if isinstance(data['schedule'], str) else data['schedule']
         print("this is schedule", schedule)
@@ -426,6 +437,13 @@ def approve_schedule():
 @main_blueprint.route('/admin', methods=['GET'])
 @login_required
 def admin_page():
+    
+    #will update this logic with emails as we approach demo
+    # allowed_admin_emails = []
+    # if current_user.email not in allowed_admin_emails:
+    #     return "Access denied", 403
+    
+    
     date = next_week_start_date()
     print("This is date", date)
     return render_template('admin.html', current_week = date)
