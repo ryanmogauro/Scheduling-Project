@@ -21,7 +21,7 @@ def create_app():
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)
     db.init_app(app)
     migrate = Migrate(app, db)
-
+    
     login_manager = LoginManager(app)
     login_manager.login_view = 'auth.signup'
 

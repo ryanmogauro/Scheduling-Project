@@ -310,3 +310,24 @@ function formatTime(date) {
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${hours}:${minutes}`;
 }
+
+function exportSchedule() {
+    const scheduleDate = document.getElementById('scheduleDate').value;
+    if (!scheduleDate) {
+        console.log("No schedule date selected.");
+        return; // Don't proceed if no date is selected
+    }
+
+    fetch('/export_schedule', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({ scheduleDate })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const shifts = data.shifts;
+    })
+    .catch(error => console.error("Error loading schedule:", error));
+}

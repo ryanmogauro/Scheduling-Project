@@ -1,10 +1,15 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask import request, jsonify, json
-from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification, Event
+from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, date
 from website import db
 from website.scheduleGenerator import getEmployees, getAvailabilityDict, generateSchedule
+
+from flask import Flask, Response
+from ics import Calendar, Event
+from datetime import datetime, timedelta
+import os 
 
 # Create a blueprint
 main_blueprint = Blueprint('main', __name__)
@@ -13,14 +18,7 @@ main_blueprint = Blueprint('main', __name__)
 @login_required
 def schedule():
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
-    admin_status = curr_employee.isAdmin
-    if admin_status == True:
-        admin_status = "Admin"
-    else:
-        admin_status = "Employee"    
-
-    return render_template('schedule.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage, gyear = curr_employee.gradYear, email=current_user.email, admin=admin_status, maxHours = curr_employee.maxHours, minHours=curr_employee.minHours)
-
+    return render_template('schedule.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
 
 def get_week_bounds(date):
     year, week = map(int, date.split('-W'))
@@ -124,18 +122,19 @@ def mark_notifications_read():
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
 
+@main_blueprint.route('/events', methods=['GET'])
+@login_required
+def events():
+    events = [] 
+    
+    return render_template('events.html', events=events, name = name)
+
 @main_blueprint.route('/unavailability', methods=['GET'])
 @login_required
 def unavailability():
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    return render_template('unavailability.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
 
-    admin_status = curr_employee.isAdmin
-    if admin_status == True:
-        admin_status = "Admin"
-    else:
-        admin_status = "Employee"    
-
-    return render_template('unavailability.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage, gyear = curr_employee.gradYear, email=current_user.email, admin=admin_status, maxHours = curr_employee.maxHours, minHours=curr_employee.minHours)
 
 @main_blueprint.route('/get_unavailability', methods=['POST'])
 @login_required
@@ -443,6 +442,7 @@ def clear_events():
 def create_schedule_page():
     return render_template('generateSchedule.html')
 
+
 @main_blueprint.route('/generate_schedule', methods=['POST'])
 @login_required
 def generate_schedule():
@@ -469,10 +469,6 @@ def generate_schedule():
 
         formatted_schedule = {}
         day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        
-        
-        employees = Employee.query.filter(Employee.employeeID.in_(availability.keys())).all()
-        employee_dict = {emp.employeeID: emp for emp in employees}
 
         for day_index, day_schedule in enumerate(newSchedule):
             day_date = start_date + timedelta(days=day_index)
@@ -485,18 +481,18 @@ def generate_schedule():
                     hour = slot_index // 2
                     minute = "30" if slot_index % 2 else "00"
                     time_str = f"{hour:02d}:{minute}"
-
-                    # Convert each employee_id to {id: employee_id, name: employee_name}
-                    detailed_employees = [
-                        {"id": emp_id, "name": f"{employee_dict[emp_id].firstName} {employee_dict[emp_id].lastName[:1]}"}
-                        for emp_id in employees_in_slot
-                    ]
-
                     formatted_schedule[day_names[day_index]]["slots"].append({
                         'time': time_str,
-                        'employees': detailed_employees
-                    })   
-                    
+                        'employees': employees_in_slot
+                    })
+
+        # print("Generated Schedule:")
+        # for day, info in formatted_schedule.items():
+        #     print(f"{day} ({info['date']}):")
+        #     for slot in info['slots']:
+        #         print(f"  {slot['time']} - Employees: {slot['employees']}")
+        #     print("\n")
+
         return jsonify({"success": True, "schedule": formatted_schedule}), 200
     except Exception as e:
         print(f"Error generating schedule: {e}")
@@ -558,8 +554,7 @@ def approve_schedule():
                 db.session.add(new_shift)
                 db.session.flush() 
 
-                for employee in employees:
-                    employee_id = employee['id'] 
+                for employee_id in employees:
                     scheduled_workers.add(employee_id)
                     new_shift_assignment = ShiftAssignment(
                         shiftID=new_shift.shiftID,
@@ -616,4 +611,58 @@ def days_to_dates(target_monday):
         day_name_to_date[day_name] = day_date
     
     return day_name_to_date
+    
+
+@main_blueprint.route('/export_schedule', methods=['POST'])
+@login_required
+def export_schedule():
+    # Create a new iCalendar instance
+    calendar = Calendar()
+
+    # Example schedule data
+    schedule_date = request.form.get('scheduleDate')
+    print(schedule_date)
+    try:
+        week_start_date, week_end_date = get_week_bounds(schedule_date)
+    
+        shifts_for_week = (
+            db.session.query(Shift)
+            .join(ShiftAssignment, Shift.shiftID == ShiftAssignment.shiftID)
+            .filter(ShiftAssignment.employeeID == current_user.employeeID)
+            .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
+            .all()
+            )
+
+
+        # Add events to the calendar
+        for shift in shifts_for_week:
+            event = Event()
+            event.name = "Mary Low Shift"
+            event.begin = shift.shiftStartTime.isoformat()
+            event.end = shift.shiftEndTime.isoformat()
+            calendar.events.add(event)
+
+        calendar_data = calendar.serialize()
+
+        response = Response(
+            calendar_data,
+            mimetype="text/calendar",
+            headers={"Content-Disposition": "attachment;filename=schedule.ics"}
+        )
+
+        print(response)
+
+        # Save the .ics file to the server
+        with open('schedule.ics', 'w', encoding='utf-8') as f:
+            f.write(calendar_data)
+
+        return Response(
+            calendar_data,
+            mimetype="text/calendar",
+            headers={"Content-Disposition": "attachment;filename=schedule.ics"}
+        )
+
+    except Exception as e:
+        print(f"exporting schedule error{e}")
+        return Response()
     
