@@ -87,6 +87,33 @@ function addNotification(text, hasRead = false, timestamp = null) {
     updateNotificationDot();
 }
 
+function clearEvents() {
+    const eventDate = document.getElementById('eventDate').value;
+    if (!eventDate) {
+        return; 
+    }
+
+    fetch('/clear_unavailability', {
+        method: 'POST',
+        body: new URLSearchParams({ eventDate }),
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadEvents();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while clearing unavailability');
+        });
+}
+
 function clearNotifications() {
     fetch('/clear_notifications', {
         method: 'POST',
