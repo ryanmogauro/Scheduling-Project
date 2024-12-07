@@ -212,8 +212,8 @@ function addUnavailability() {
     // Create a new Date object for the start and end date-time
     const startDatetime = new Date(selectedDate);
     const endDatetime = new Date(selectedDate);
-    startDatetime.setHours(startHour, 0, 0, 0);
-    endDatetime.setHours(endHour, 0, 0, 0);
+    startDatetime.setUTCHours(startHour, 0, 0, 0);
+    endDatetime.setUTCHours(endHour, 0, 0, 0);
 
     // Validation: Ensure start time is before end time and not equal
     if (startDatetime >= endDatetime) {
@@ -221,14 +221,9 @@ function addUnavailability() {
         return;
     }
 
-    // Handle timezone
-    const timeZoneOffset = startDatetime.getTimezoneOffset();
-    startDatetime.setMinutes(startDatetime.getMinutes() - timeZoneOffset);
-    endDatetime.setMinutes(endDatetime.getMinutes() - timeZoneOffset);
-
-    // Convert to ISO format
-    const startIso = startDatetime.toISOString();
-    const endIso = endDatetime.toISOString();
+    // Convert to ISO format w/o timezone info
+    const startIso = startDatetime.toISOString().slice(0, -1);
+    const endIso = endDatetime.toISOString().slice(0, -1);
 
     fetch('/add_unavailability', {
         method: 'POST',
