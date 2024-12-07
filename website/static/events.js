@@ -162,7 +162,8 @@ function updateNotificationDot() {
 }
 
 function closeModal() {
-    document.querySelector('button.btn-close').click();
+    const modal = bootstrap.Modal.getInstance(document.getElementById('eventsModal'));
+    if (modal) modal.hide();
 }
 
 function loadEvents() {
@@ -181,9 +182,135 @@ function loadEvents() {
         .then(response => response.json())
         .then(data => {
             eventsSlots = data.events;
+            if (eventsSlots.length == 0) {
+                // Display a message when there is no unavailability
+                const list = document.getElementById("eventsList");
+                list.innerHTML = '';
+                const noEvent = document.createElement('p');
+                noEvent.id = 'no-event-message';
+                noEvent.textContent = "Nothing to see here...";
+                noEvent.classList.add('text-muted', 'text-center', 'py-2');
+                list.appendChild(noEvent);
+            } else {
+                updateEventsList(eventsSlots);
+            }
             updateEventsGrid(eventsSlots);
         })
         .catch(error => console.error("Error loading events:", error));
+}
+
+function addEvent(){
+    const selectedDate = document.getElementById('unavailability-date').value;
+    const startHour = document.getElementById('unavailability-start-hour').value;
+    const endHour = document.getElementById('unavailability-end-hour').value;
+
+    // Ensure that the required fields are filled
+    if (!selectedDate || !startHour || !endHour) {
+        alert("Please fill out all fields.");
+        return;
+    }
+
+    // Create a new Date object for the start and end date-time
+    const startDatetime = new Date(selectedDate);
+    const endDatetime = new Date(selectedDate);
+    startDatetime.setUTCHours(startHour, 0, 0, 0);
+    endDatetime.setUTCHours(endHour, 0, 0, 0);
+    console.log(startHour)
+    console.log(endHour)
+
+    // Validation: Ensure start time is before end time and not equal
+    if (startDatetime >= endDatetime) {
+        alert("Start time must be before end time.");
+        return;
+    }
+
+    // Convert to ISO format w/o timezone info
+    const startIso = startDatetime.toISOString().slice(0, -1);
+    const endIso = endDatetime.toISOString().slice(0, -1);
+    
+    const hostName = document.getElementById('event-host').value;
+    const eventName = document.getElementById('event-name').value;
+    const eventDescription = document.getElementById('event-description').value;
+
+
+    fetch('/add_event', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            eventHost: hostName,
+            eventName: eventName, 
+            eventStartTime: startIso,
+            eventEndTime: endIso,
+            eventDescription: eventDescription,
+        }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadEvents();
+                closeModal();
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+
+}
+
+function deleteEvent(eventID) {
+    fetch('/delete_event', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            eventID: eventID, 
+        }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadEvents();
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+}
+
+function clearEvents() {
+    const eventsDate = document.getElementById('eventDate').value;
+    if (!eventsDate) {
+        return; 
+    }
+
+    fetch('/clear_events', {
+        method: 'POST',
+        body: new URLSearchParams({ eventsDate }),
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadEvents();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while clearing unavailability');
+        });
 }
 
 function updateEventsGrid(eventsSlots) {
@@ -204,7 +331,6 @@ function updateEventsGrid(eventsSlots) {
         const day = dayNames[startDate.getDay()];
         const startHour = startDate.getHours();
         const endHour = endDate.getHours();
-
         // Iterate over the hours in the shift and update the grid
         for (let hour = startHour; hour < endHour; hour++) {
             if (hour >= 17 && hour <= 24) {
@@ -233,6 +359,42 @@ function updateEventsGrid(eventsSlots) {
                 }
             }
         }
+    });
+}
+
+function updateEventsList(eventsSlots) {
+    const list = document.getElementById("eventsList");
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    list.innerHTML = '';
+
+    eventsSlots.forEach(slot => {
+        const startDate = new Date(slot.start);
+        const endDate = new Date(slot.end);
+        const day = dayNames[startDate.getDay()];
+
+        const listItem = document.createElement("a");
+        listItem.className = "d-flex align-items-center justify-content-start p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
+        listItem.href = "#";
+
+        // Store the event ID as a data attribute on the list item
+        listItem.dataset.eventId = slot.eventID;
+
+        listItem.onclick = function (e) {
+            e.preventDefault();
+            deleteEvent(listItem.dataset.eventId);
+        };
+
+        // HTML structure with a wrapper for the day and time
+        listItem.innerHTML = `
+        <i class="bi bi-trash3-fill me-2 d-flex align-items-center"></i>
+        <div class="d-flex flex-column align-items-center w-100">
+            <span class="text-center">${day}</span>
+            <span class="fw-bold text-center">${formatTime(startDate)} <span>to</span> ${formatTime(endDate)}</span>
+        </div>
+        `;
+    
+
+        list.appendChild(listItem);
     });
 }
 
