@@ -31,7 +31,7 @@ window.onload = function() {
         weekNumber = 1;
         nextWeekYear += 1;
     }
-
+    
     const formattedWeek = `${nextWeekYear}-W${weekNumber.toString().padStart(2, '0')}`;
     document.getElementById('availabilityDate').value = formattedWeek;
 };
@@ -322,7 +322,7 @@ function displaySchedule(schedule) {
                     slotDiv.style.justifyContent = 'center';
                     slotDiv.style.borderBottom = '1px solid #fff';
 
-                    slotDiv.innerText = `[${slot.employees.join(', ')}]`;
+                    slotDiv.innerText = slot.employees.map(e => e.name).join(', ');
                     cell.appendChild(slotDiv);
                 });
 

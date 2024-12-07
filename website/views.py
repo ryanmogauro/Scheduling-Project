@@ -345,6 +345,10 @@ def generate_schedule():
 
         formatted_schedule = {}
         day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        
+        
+        employees = Employee.query.filter(Employee.employeeID.in_(availability.keys())).all()
+        employee_dict = {emp.employeeID: emp for emp in employees}
 
         for day_index, day_schedule in enumerate(newSchedule):
             day_date = start_date + timedelta(days=day_index)
@@ -357,18 +361,18 @@ def generate_schedule():
                     hour = slot_index // 2
                     minute = "30" if slot_index % 2 else "00"
                     time_str = f"{hour:02d}:{minute}"
+
+                    # Convert each employee_id to {id: employee_id, name: employee_name}
+                    detailed_employees = [
+                        {"id": emp_id, "name": f"{employee_dict[emp_id].firstName} {employee_dict[emp_id].lastName[:1]}"}
+                        for emp_id in employees_in_slot
+                    ]
+
                     formatted_schedule[day_names[day_index]]["slots"].append({
                         'time': time_str,
-                        'employees': employees_in_slot
-                    })
-
-        # print("Generated Schedule:")
-        # for day, info in formatted_schedule.items():
-        #     print(f"{day} ({info['date']}):")
-        #     for slot in info['slots']:
-        #         print(f"  {slot['time']} - Employees: {slot['employees']}")
-        #     print("\n")
-
+                        'employees': detailed_employees
+                    })   
+                    
         return jsonify({"success": True, "schedule": formatted_schedule}), 200
     except Exception as e:
         print(f"Error generating schedule: {e}")
@@ -430,7 +434,8 @@ def approve_schedule():
                 db.session.add(new_shift)
                 db.session.flush() 
 
-                for employee_id in employees:
+                for employee in employees:
+                    employee_id = employee['id'] 
                     scheduled_workers.add(employee_id)
                     new_shift_assignment = ShiftAssignment(
                         shiftID=new_shift.shiftID,
