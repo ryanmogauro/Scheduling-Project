@@ -324,9 +324,9 @@ def get_events():
             .filter(Event.eventStartTime >= week_start_date, Event.eventStartTime <= week_end_date)
             .all()
         )
-        
+
         return jsonify({
-            "event": [
+            "events": [
                 {"eventID": event.eventID, "start": event.eventStartTime.isoformat(), "end": event.eventStartTime.isoformat()}
                 for event in events_for_week
             ]

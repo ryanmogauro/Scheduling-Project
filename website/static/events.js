@@ -182,6 +182,18 @@ function loadEvents() {
         .then(response => response.json())
         .then(data => {
             eventsSlots = data.events;
+            if (eventsSlots.length == 0) {
+                // Display a message when there is no unavailability
+                const list = document.getElementById("eventsList");
+                list.innerHTML = '';
+                const noEvent = document.createElement('p');
+                noEvent.id = 'no-event-message';
+                noEvent.textContent = "Nothing to see here...";
+                noEvent.classList.add('text-muted', 'text-center', 'py-2');
+                list.appendChild(noEvent);
+            } else {
+                updateEventsList(eventsSlots);
+            }
             updateEventsGrid(eventsSlots);
         })
         .catch(error => console.error("Error loading events:", error));
@@ -249,7 +261,6 @@ function addEvent(){
         });
 
 }
-
 
 function deleteEvent(eventID) {
     fetch('/delete_event', {
@@ -349,6 +360,42 @@ function updateEventsGrid(eventsSlots) {
                 }
             }
         }
+    });
+}
+
+function updateEventsList(eventsSlots) {
+    const list = document.getElementById("eventsList");
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    list.innerHTML = '';
+
+    unavailabilitySlots.forEach(slot => {
+        const startDate = new Date(slot.start);
+        const endDate = new Date(slot.end);
+        const day = dayNames[startDate.getDay()];
+
+        const listItem = document.createElement("a");
+        listItem.className = "d-flex align-items-center justify-content-start p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
+        listItem.href = "#";
+
+        // Store the event ID as a data attribute on the list item
+        listItem.dataset.eventId = slot.eventID;
+
+        listItem.onclick = function (e) {
+            e.preventDefault();
+            deleteUnavailability(listItem.dataset.eventId);
+        };
+
+        // HTML structure with a wrapper for the day and time
+        listItem.innerHTML = `
+        <i class="bi bi-trash3-fill me-2 d-flex align-items-center"></i>
+        <div class="d-flex flex-column align-items-center w-100">
+            <span class="text-center">${day}</span>
+            <span class="fw-bold text-center">${formatTime(startDate)} <span>to</span> ${formatTime(endDate)}</span>
+        </div>
+        `;
+    
+
+        list.appendChild(listItem);
     });
 }
 
