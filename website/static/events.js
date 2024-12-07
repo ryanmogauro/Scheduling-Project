@@ -368,7 +368,7 @@ function updateEventsList(eventsSlots) {
     const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     list.innerHTML = '';
 
-    unavailabilitySlots.forEach(slot => {
+    eventsSlots.forEach(slot => {
         const startDate = new Date(slot.start);
         const endDate = new Date(slot.end);
         const day = dayNames[startDate.getDay()];
