@@ -302,6 +302,7 @@ def autofill_unavailability():
 @login_required
 def events():
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    admin_status = curr_employee.isAdmin
     if admin_status == True:
         admin_status = "Admin"
     else:
@@ -339,7 +340,7 @@ def add_event():
     event_host = request.form.get('eventHost')
     event_name = request.form.get('eventName')
     event_start = request.form.get('eventStartTime')
-    event_end = request.form.get('eventsEndTime')
+    event_end = request.form.get('eventEndTime')
     event_description = request.form.get('eventDescription')
     
     try:
@@ -404,6 +405,8 @@ def delete_event():
         db.session.rollback()
         print(f"Error deleting event: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
+    
+    
 
 @main_blueprint.route('/clear_events', methods=['POST'])
 @login_required
