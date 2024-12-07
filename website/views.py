@@ -302,6 +302,7 @@ def autofill_unavailability():
 @login_required
 def events():
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+
     admin_status = curr_employee.isAdmin
     if admin_status == True:
         admin_status = "Admin"
