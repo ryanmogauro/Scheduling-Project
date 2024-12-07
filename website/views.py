@@ -342,8 +342,11 @@ def get_events():
 @main_blueprint.route('/add_event', methods=['POST'])
 @login_required
 def add_event(): 
+    event_host = request.form.get('eventHost')
+    event_name = request.form.get('eventName')
     event_start = request.form.get('eventStartTime')
     event_end = request.form.get('eventsEndTime')
+    event_description = request.form.get('eventDescription')
     
     try:
         print(f"event_start: {event_start}, event_end: {event_end}")
@@ -352,7 +355,6 @@ def add_event():
 
         # Find overlapping unavailability periods
         overlapping_intervals = (Event.query
-                                 .filter(Event.employeeID == current_user.employeeID)
                                  .filter(Event.eventEndTime > event_start_date)
                                  .filter(Event.eventStartTime < event_end_date)
                                  .order_by(Event.eventStartTime)
@@ -371,8 +373,16 @@ def add_event():
                 merge_end = max(merge_end, interval.eventEndTime)
                 # Remove the old overlapping interval
                 db.session.delete(interval)
-        
-        db.session.add(event)
+
+        # Create and add the merged unavailability period
+        merged_event = Event(
+            eventHost = event_host,
+            eventName = event_name,
+            eventStartTime=merge_start,
+            eventEndTime=merge_end,
+            eventDescription = event_description,
+        )
+        db.session.add(merged_event)
         db.session.commit()
         return jsonify({'success': True, 'message': 'Event added successfully'})
 
