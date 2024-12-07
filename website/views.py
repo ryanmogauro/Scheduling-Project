@@ -1,10 +1,15 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask import request, jsonify, json
-from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification, Event
+from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, date
 from website import db
 from website.scheduleGenerator import getEmployees, getAvailabilityDict, generateSchedule
+
+from flask import Flask, Response
+from ics import Calendar, Event
+from datetime import datetime, timedelta
+import os 
 
 # Create a blueprint
 main_blueprint = Blueprint('main', __name__)
@@ -13,14 +18,7 @@ main_blueprint = Blueprint('main', __name__)
 @login_required
 def schedule():
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
-    admin_status = curr_employee.isAdmin
-    if admin_status == True:
-        admin_status = "Admin"
-    else:
-        admin_status = "Employee"    
-
-    return render_template('schedule.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage, gyear = curr_employee.gradYear, email=current_user.email, admin=admin_status, maxHours = curr_employee.maxHours, minHours=curr_employee.minHours)
-
+    return render_template('schedule.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
 
 def get_week_bounds(date):
     year, week = map(int, date.split('-W'))
@@ -124,18 +122,19 @@ def mark_notifications_read():
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
 
+@main_blueprint.route('/events', methods=['GET'])
+@login_required
+def events():
+    events = [] 
+    
+    return render_template('events.html', events=events, name = name)
+
 @main_blueprint.route('/unavailability', methods=['GET'])
 @login_required
 def unavailability():
     curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    return render_template('unavailability.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage)
 
-    admin_status = curr_employee.isAdmin
-    if admin_status == True:
-        admin_status = "Admin"
-    else:
-        admin_status = "Employee"    
-
-    return render_template('unavailability.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage, gyear = curr_employee.gradYear, email=current_user.email, admin=admin_status, maxHours = curr_employee.maxHours, minHours=curr_employee.minHours)
 
 @main_blueprint.route('/get_unavailability', methods=['POST'])
 @login_required
@@ -298,136 +297,11 @@ def autofill_unavailability():
         print(f"Error clearing unavailability: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
 
-@main_blueprint.route('/events', methods=['GET'])
-@login_required
-def events():
-    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
-    if admin_status == True:
-        admin_status = "Admin"
-    else:
-        admin_status = "Employee"    
-
-    return render_template('events.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage, gyear = curr_employee.gradYear, email=current_user.email, admin=admin_status, maxHours = curr_employee.maxHours, minHours=curr_employee.minHours)
-
-@main_blueprint.route('/get_events', methods=['POST'])
-@login_required
-def get_events(): 
-    events_date = request.form.get('eventsDate')
-    try:
-        week_start_date, week_end_date = get_week_bounds(events_date)
-        print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
-
-        events_for_week = (
-            db.session.query(Event)
-            .filter(Event.eventStartTime >= week_start_date, Event.eventStartTime <= week_end_date)
-            .all()
-        )
-        
-        return jsonify({
-            "event": [
-                {"eventID": event.eventID, "start": event.eventStartTime.isoformat(), "end": event.eventStartTime.isoformat()}
-                for event in events_for_week
-            ]
-        })
-    except Exception as e:
-        print(f"Error retrieving event: {e}")
-        return jsonify({'success': False, 'error': 'Server error'}), 500
-
-@main_blueprint.route('/add_event', methods=['POST'])
-@login_required
-def add_event(): 
-    event_start = request.form.get('eventStartTime')
-    event_end = request.form.get('eventsEndTime')
-    
-    try:
-        print(f"event_start: {event_start}, event_end: {event_end}")
-        event_start_date = datetime.fromisoformat(event_start)
-        event_end_date = datetime.fromisoformat(event_end)
-
-        # Find overlapping unavailability periods
-        overlapping_intervals = (Event.query
-                                 .filter(Event.employeeID == current_user.employeeID)
-                                 .filter(Event.eventEndTime > event_start_date)
-                                 .filter(Event.eventStartTime < event_end_date)
-                                 .order_by(Event.eventStartTime)
-                                 .all())
-
-        # Start with the new unavailability as the base
-        merge_start = event_start_date
-        merge_end = event_end_date
-
-        # Merge with the overlapping intervals
-        for interval in overlapping_intervals:
-            # If the existing interval overlaps with the new one, merge them
-            if interval.eventStartTime <= merge_end and interval.eventEndTime >= merge_start:
-                # Merge by extending the period to the earliest start time and latest end time
-                merge_start = min(merge_start, interval.eventStartTime)
-                merge_end = max(merge_end, interval.eventEndTime)
-                # Remove the old overlapping interval
-                db.session.delete(interval)
-        
-        db.session.add(event)
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'Event added successfully'})
-
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error adding event: {e}")
-        return jsonify({'success': False, 'error': 'Server error'}), 500
-
-@main_blueprint.route('/delete_event', methods=['POST'])
-@login_required
-def delete_event():
-    event_id = request.form.get('eventID')
-    
-    try:
-        # Find the event record by ID
-        event = Event.query.filter_by(eventID=event_id).first()
-        if event:
-            # Delete the record
-            db.session.delete(event)
-            db.session.commit()
-            return jsonify({'success': True, 'message': 'Event deleted successfully'})
-        else:
-            return jsonify({'success': False, 'error': 'Event not found'}), 404
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error deleting event: {e}")
-        return jsonify({'success': False, 'error': 'Server error'}), 500
-
-@main_blueprint.route('/clear_events', methods=['POST'])
-@login_required
-def clear_events():
-    events_date = request.form.get('eventsDate')
-    
-    try:
-        week_start_date, week_end_date = get_week_bounds(events_date)
-        print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
-
-        # Delete unavailability for the current week
-        events_to_delete = (
-            db.session.query(Event)
-            .filter(Event.eventStartTime >= week_start_date, Event.eventEndTime <= week_end_date)
-            .all()
-        )
-
-        # Check if there are any unavailability records to delete
-        if len(events_to_delete) > 0:
-            for event in events_to_delete:
-                db.session.delete(event)
-            db.session.commit()
-            return jsonify({'success': True, 'message': 'Events for the current week has been cleared successfully'})
-        else:
-            return jsonify({'success': True, 'message': 'No event records found for the current week to clear'})
-
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error clearing event: {e}")
-        return jsonify({'success': False, 'error': 'Server error'}), 500
 
 @main_blueprint.route('/generate_schedule_page', methods=['GET'])
 def create_schedule_page():
     return render_template('generateSchedule.html')
+
 
 @main_blueprint.route('/generate_schedule', methods=['POST'])
 @login_required
@@ -455,10 +329,6 @@ def generate_schedule():
 
         formatted_schedule = {}
         day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        
-        
-        employees = Employee.query.filter(Employee.employeeID.in_(availability.keys())).all()
-        employee_dict = {emp.employeeID: emp for emp in employees}
 
         for day_index, day_schedule in enumerate(newSchedule):
             day_date = start_date + timedelta(days=day_index)
@@ -471,18 +341,18 @@ def generate_schedule():
                     hour = slot_index // 2
                     minute = "30" if slot_index % 2 else "00"
                     time_str = f"{hour:02d}:{minute}"
-
-                    # Convert each employee_id to {id: employee_id, name: employee_name}
-                    detailed_employees = [
-                        {"id": emp_id, "name": f"{employee_dict[emp_id].firstName} {employee_dict[emp_id].lastName[:1]}"}
-                        for emp_id in employees_in_slot
-                    ]
-
                     formatted_schedule[day_names[day_index]]["slots"].append({
                         'time': time_str,
-                        'employees': detailed_employees
-                    })   
-                    
+                        'employees': employees_in_slot
+                    })
+
+        # print("Generated Schedule:")
+        # for day, info in formatted_schedule.items():
+        #     print(f"{day} ({info['date']}):")
+        #     for slot in info['slots']:
+        #         print(f"  {slot['time']} - Employees: {slot['employees']}")
+        #     print("\n")
+
         return jsonify({"success": True, "schedule": formatted_schedule}), 200
     except Exception as e:
         print(f"Error generating schedule: {e}")
@@ -544,8 +414,7 @@ def approve_schedule():
                 db.session.add(new_shift)
                 db.session.flush() 
 
-                for employee in employees:
-                    employee_id = employee['id'] 
+                for employee_id in employees:
                     scheduled_workers.add(employee_id)
                     new_shift_assignment = ShiftAssignment(
                         shiftID=new_shift.shiftID,
@@ -602,4 +471,58 @@ def days_to_dates(target_monday):
         day_name_to_date[day_name] = day_date
     
     return day_name_to_date
+    
+
+@main_blueprint.route('/export_schedule', methods=['POST'])
+@login_required
+def export_schedule():
+    # Create a new iCalendar instance
+    calendar = Calendar()
+
+    # Example schedule data
+    schedule_date = request.form.get('scheduleDate')
+    print(schedule_date)
+    try:
+        week_start_date, week_end_date = get_week_bounds(schedule_date)
+    
+        shifts_for_week = (
+            db.session.query(Shift)
+            .join(ShiftAssignment, Shift.shiftID == ShiftAssignment.shiftID)
+            .filter(ShiftAssignment.employeeID == current_user.employeeID)
+            .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
+            .all()
+            )
+
+
+        # Add events to the calendar
+        for shift in shifts_for_week:
+            event = Event()
+            event.name = "Mary Low Shift"
+            event.begin = shift.shiftStartTime.isoformat()
+            event.end = shift.shiftEndTime.isoformat()
+            calendar.events.add(event)
+
+        calendar_data = calendar.serialize()
+
+        response = Response(
+            calendar_data,
+            mimetype="text/calendar",
+            headers={"Content-Disposition": "attachment;filename=schedule.ics"}
+        )
+
+        print(response)
+
+        # Save the .ics file to the server
+        with open('schedule.ics', 'w', encoding='utf-8') as f:
+            f.write(calendar_data)
+
+        return Response(
+            calendar_data,
+            mimetype="text/calendar",
+            headers={"Content-Disposition": "attachment;filename=schedule.ics"}
+        )
+
+    except Exception as e:
+        print(f"exporting schedule error{e}")
+        return Response()
     
