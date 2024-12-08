@@ -383,7 +383,7 @@ function updateEventsList(eventsSlots) {
 
         listItem.onclick = function (e) {
             e.preventDefault();
-            deleteUnavailability(listItem.dataset.eventId);
+            deleteEvent(listItem.dataset.eventId);
         };
 
         // HTML structure with a wrapper for the day and time
