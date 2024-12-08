@@ -1,5 +1,5 @@
 /// On Page Load
-window.onload = function() {
+window.onload = function () {
     const today = new Date();
     const year = today.getFullYear();
     const startOfYear = new Date(year, 0, 1);
@@ -28,25 +28,25 @@ function loadNotifications() {
             'Content-Type': 'application/json',
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        const notifications = data.notifications;
-        const notificationList = document.getElementById('notification-list');
-        notificationList.innerHTML = ''; // Clear existing notifications
-        if (notifications.length == 0) {
-            // Display a message when no notifications are available
-            const noNotifications = document.createElement('li');
-            noNotifications.textContent = "Nothing to see here...";
-            noNotifications.classList.add('text-muted', 'text-center', 'py-2');
-            notificationList.appendChild(noNotifications);
-        } else {
-            notifications.forEach(notification => {
-                addNotification(notification.message, notification.hasRead, notification.sendTime);
-                updateNotificationDot();
-            });
-        }
-    })
-    .catch(error => console.error("Error loading notifications:", error));
+        .then(response => response.json())
+        .then(data => {
+            const notifications = data.notifications;
+            const notificationList = document.getElementById('notification-list');
+            notificationList.innerHTML = ''; // Clear existing notifications
+            if (notifications.length == 0) {
+                // Display a message when no notifications are available
+                const noNotifications = document.createElement('li');
+                noNotifications.textContent = "Nothing to see here...";
+                noNotifications.classList.add('text-muted', 'text-center', 'py-2');
+                notificationList.appendChild(noNotifications);
+            } else {
+                notifications.forEach(notification => {
+                    addNotification(notification.message, notification.hasRead, notification.sendTime);
+                    updateNotificationDot();
+                });
+            }
+        })
+        .catch(error => console.error("Error loading notifications:", error));
 }
 
 function addNotification(text, hasRead = false, timestamp = null) {
@@ -78,7 +78,7 @@ function addNotification(text, hasRead = false, timestamp = null) {
     if (timestamp) {
         const time = document.createElement('span');
         time.textContent = new Date(timestamp).toLocaleString();
-        time.classList.add('text-muted', 'mt-1','timestamp');
+        time.classList.add('text-muted', 'mt-1', 'timestamp');
         content.appendChild(time);
     }
 
@@ -95,17 +95,17 @@ function clearNotifications() {
             'Content-Type': 'application/json',
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const notificationList = document.getElementById('notification-list');
-            notificationList.innerHTML = ''; // Clear notifications from the UI
-            console.log(data.message); // Log success message
-        } else {
-            console.error("Error clearing notifications:", data.error);
-        }
-    })
-    .catch(error => console.error("Error clearing notifications:", error));
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const notificationList = document.getElementById('notification-list');
+                notificationList.innerHTML = ''; // Clear notifications from the UI
+                console.log(data.message); // Log success message
+            } else {
+                console.error("Error clearing notifications:", data.error);
+            }
+        })
+        .catch(error => console.error("Error clearing notifications:", error));
 }
 
 // Mark notifications as read
@@ -116,20 +116,20 @@ document.getElementById('notificationsDropdown').addEventListener('show.bs.dropd
             'Content-Type': 'application/json',
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            console.log(data.message);
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log(data.message);
 
-            // Remove 'unread' class from all notifications in the dropdown
-            const unreadItems = document.querySelectorAll('#notification-list .unread');
-            unreadItems.forEach(item => item.classList.remove('unread'));
-            updateNotificationDot();
-        } else {
-            console.error("Error marking notifications as read:", data.error);
-        }
-    })
-    .catch(error => console.error("Error marking notifications as read:", error));
+                // Remove 'unread' class from all notifications in the dropdown
+                const unreadItems = document.querySelectorAll('#notification-list .unread');
+                unreadItems.forEach(item => item.classList.remove('unread'));
+                updateNotificationDot();
+            } else {
+                console.error("Error marking notifications as read:", data.error);
+            }
+        })
+        .catch(error => console.error("Error marking notifications as read:", error));
 });
 
 // Change envelope icons to "open" and unbold text after the dropdown is closed
@@ -163,7 +163,7 @@ function updateNotificationDot() {
 }
 
 /// Loading schedule -- ISO Format!
-document.getElementById('scheduleDate').addEventListener('change', function() {
+document.getElementById('scheduleDate').addEventListener('change', function () {
     loadSchedule();
 });
 
@@ -181,17 +181,13 @@ function loadSchedule() {
         },
         body: new URLSearchParams({ scheduleDate })
     })
-    .then(response => response.json())
-    .then(data => {
-        const shifts = data.shifts;
-        updateScheduleGrid(shifts);
-        const totalHoursWorked = calculateTotalHours(shifts);
-        document.getElementById('totalHours').innerText = totalHoursWorked
-        const hourlyWage = parseFloat(document.getElementById('totalWage').innerText);
-        const totalWage = totalHoursWorked * hourlyWage;
-        document.getElementById('totalWage').innerText = totalWage.toFixed(2);
-    })
-    .catch(error => console.error("Error loading schedule:", error));
+        .then(response => response.json())
+        .then(data => {
+            const shifts = data.shifts;
+            updateScheduleGrid(shifts);
+            calculateTotalWageAndHours(shifts);
+        })
+        .catch(error => console.error("Error loading schedule:", error));
 }
 
 function exportSchedule() {
@@ -210,26 +206,27 @@ function exportSchedule() {
             scheduleDate,
         })
     })
-    .then(response => response.blob())
-    .then(data => {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(data);
-        a.download = 'schedule.ics'; // Provide a default filename
-        a.click();
-    })
-    .catch(error => console.error("Error loading schedule:", error));
+        .then(response => response.blob())
+        .then(data => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(data);
+            a.download = 'schedule.ics'; // Provide a default filename
+            a.click();
+        })
+        .catch(error => console.error("Error loading schedule:", error));
 }
 
 function updateScheduleGrid(scheduleSlots) {
     // Clear all cells to default styles
     const cells = document.querySelectorAll('.cell');
     cells.forEach(cell => {
-        cell.style.background = 'white'
-        cell.style.color = 'white'
-        cell.innerHTML = '';
+        cell.style.background = 'white';
+        cell.style.color = 'white';
+        cell.innerHTML = ''; // Ensure no content is left behind
     });
 
     const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
     scheduleSlots.forEach(slot => {
         const startDate = new Date(slot.start);
         const endDate = new Date(slot.end);
@@ -237,35 +234,63 @@ function updateScheduleGrid(scheduleSlots) {
         // Extract the day, start hour, and end hour
         const day = dayNames[startDate.getDay()];
         const startHour = startDate.getHours();
-        const endHour = endDate.getHours();
 
-        // Iterate over the hours in the shift and update the grid
-        for (let hour = startHour; hour < endHour; hour++) {
-            if (hour >= 7 && hour <= 18) { 
-                const cellId = `cell-${day}-${hour}`; 
-                const cell = document.getElementById(cellId);
-                if (cell) {
-                    cell.style.background = 'linear-gradient(135deg, #7A5E47, #6F4E37)';
-                    cell.style.textAlign = 'center';
-                    cell.style.display = 'flex';
-                    cell.style.alignItems = 'center';
-                    cell.style.justifyContent = 'center';
-                    
-                    // Add time range as styled content
-                    cell.innerHTML = `
-                        <div style="text-align: center; font-size: 12px;">
-                            <span style="font-weight: bold;">${formatTime(startDate)}</span>
-                            <br />
-                            <span>to</span>
-                            <br />
-                            <span style="font-weight: bold;">${formatTime(endDate)}</span>
-                        </div>
-                    `;
+        // Get the cell ID for the start hour
+        const cellId = `cell-${day}-${startHour}`;
+        const cell = document.getElementById(cellId);
 
-                    // Optionally add a tooltip for detailed information
-                    cell.setAttribute('title', `Shift from ${formatTime(startDate)} to ${formatTime(endDate)}`);
-                }
+        if (cell) {
+            // Set cell's background style
+            cell.style.textAlign = 'center';
+            cell.style.display = 'flex';
+            cell.style.alignItems = 'center';
+            cell.style.justifyContent = 'center';
+
+            // Create a list inside the cell to hold time bubbles if it's the first time we add time slots
+            let list = cell.querySelector('.time-list');
+            if (!list) {
+                list = document.createElement('div');
+                list.className = 'time-list';
+                list.style.textAlign = 'center';
+                list.style.fontSize = '10px';
+                cell.appendChild(list);
             }
+
+            // Create the bubble for the current time slot
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble'
+            bubble.style.display = 'flex';
+            bubble.style.alignItems = 'center';
+            bubble.style.marginBottom = '4px';
+            bubble.style.marginTop = '4px';
+            bubble.style.paddingRight = '4px';
+            bubble.style.borderRadius = '5px';
+
+            // Icon inside the bubble
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-dot';
+            icon.style.fontSize = '14px';
+
+            // Apply different styles based on whether it's the top of the hour or 30 minutes
+            if (startDate.getMinutes() === 0) {
+                // Style for top of the hour
+                bubble.style.backgroundColor = 'white';
+                bubble.style.color = '#6F4E37';
+                icon.style.color = '#6F4E37';
+                bubble.style.borderColor = '#6F4E37';
+                bubble.style.borderWidth = '1px';
+                bubble.style.borderStyle = 'solid';
+            } else {
+                // Style for 30 minutes past the hour
+                bubble.style.backgroundColor = '#6F4E37';
+                bubble.style.color = 'white';
+                icon.style.color = 'white';
+                bubble.classList.add('border', 'border-dark');
+            }
+
+            bubble.appendChild(icon);
+            bubble.appendChild(document.createTextNode(`${formatTime(startDate)}-${formatTime(endDate)}`));
+            list.appendChild(bubble);
         }
     });
 }
@@ -305,6 +330,15 @@ function calculateTotalHours(shifts) {
     }
 
     return totalHours.toFixed(2); // Round to 2 decimal places for total hours
+}
+
+function calculateTotalWageAndHours(shifts) {
+    const totalHoursWorked = calculateTotalHours(shifts);
+    document.getElementById('totalHours').innerText = totalHoursWorked
+    console.log(document.getElementById('hourlyWage').innerText)
+    const hourlyWage = parseFloat(document.getElementById('hourlyWage').innerText.replace('$', ''));
+    const totalWage = totalHoursWorked * hourlyWage;
+    document.getElementById('totalWage').innerText = '$' + totalWage.toFixed(2);
 }
 
 /// Increment / Decrement Week
