@@ -29,20 +29,21 @@ def schedule():
 def get_week_bounds(date):
     year, week = map(int, date.split('-W'))
     week_start_date = datetime.strptime(f'{year} {week} 1', '%G %V %u')
-    week_end_date = week_start_date + timedelta(days=6)
+    week_end_date = week_start_date + timedelta(days=6, hours=23, minutes=59)
     return week_start_date, week_end_date
 
 def get_previous_week_bounds(date):
+    # Parse the input date to find the start of the current ISO week
     year, week = map(int, date.split('-W'))
-    if week > 1:
-        week -= 1
-    else:
-        year -= 1
-        week = datetime.strptime(f'{year}-12-31', '%Y-%m-%d').isocalendar()[1]
+    current_week_start = datetime.strptime(f'{year} {week} 1', '%G %V %u')
     
-    week_start_date = datetime.strptime(f'{year} {week} 1', '%G %V %u')
-    week_end_date = week_start_date + timedelta(days=6)
-    return week_start_date, week_end_date
+    # Subtract 7 days to get to the previous week's start
+    previous_week_start = current_week_start - timedelta(days=7)
+    
+    # Calculate the end of the previous week
+    previous_week_end = previous_week_start + timedelta(days=6, hours=23, minutes=59)
+    
+    return previous_week_start, previous_week_end
 
 @main_blueprint.route('/get_schedule', methods=['POST'])
 @login_required
