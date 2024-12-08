@@ -108,12 +108,6 @@ body h5 {
     box-sizing: border-box;
 }
 
-.cell:hover {
-    background-color: #f0f0f0;
-    color: #333;
-}
-
-
 /* Responsive Layout */
 @media (max-width: 1200px) {
     body h5 {
@@ -150,6 +144,10 @@ body h5 {
 
     .cell {
         height: 60px;
+        font-size: 0.5rem; 
+    }
+
+    .bubble {
         font-size: 0.5rem; 
     }
 

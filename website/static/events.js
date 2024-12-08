@@ -15,6 +15,12 @@ window.onload = function () {
     loadNotifications()
 };
 
+let eventsSlots = [];
+
+window.addEventListener('resize', () => {
+    updateEventsGrid(eventsSlots);
+});
+
 function printPage() {
     window.print();
 }
@@ -337,12 +343,13 @@ function updateEventsGrid(eventsSlots) {
     // Clear all cells to default styles
     const cells = document.querySelectorAll('.cell');
     cells.forEach(cell => {
-        cell.style.background = 'white'
-        cell.style.color = 'white'
-        cell.innerHTML = '';
+        cell.style.background = 'white';
+        cell.style.color = 'white';
+        cell.innerHTML = ''; // Ensure no content is left behind
     });
 
     const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
     eventsSlots.forEach(slot => {
         const startDate = new Date(slot.start);
         const endDate = new Date(slot.end);
@@ -352,33 +359,77 @@ function updateEventsGrid(eventsSlots) {
         const startHour = startDate.getHours();
         const endHour = endDate.getHours();
 
+        // Get the cell ID for the start hour
+        const cellId = `cell-${day}-${startHour}`;
+        const cell = document.getElementById(cellId);
 
-        // Iterate over the hours in the shift and update the grid
-        for (let hour = startHour; hour < endHour; hour++) {
-            if (hour >= 17 && hour <= 23) {
-                const cellId = `cell-${day}-${hour}`;
-                const cell = document.getElementById(cellId);
-                if (cell) {                
-                    cell.style.background = 'linear-gradient(135deg, #7A5E47, #6F4E37)';
-                    cell.style.textAlign = 'center';
-                    cell.style.display = 'flex';
-                    cell.style.alignItems = 'center';
-                    cell.style.justifyContent = 'center';
-                    
-                    // Add time range as styled content
-                    cell.innerHTML = `
-                        <div style="text-align: center; font-size: 12px;">
-                            <span style="font-weight: bold;">${formatTime(startDate)}</span>
-                            <br />
-                            <span>to</span>
-                            <br />
-                            <span style="font-weight: bold;">${formatTime(endDate)}</span>
-                        </div>
-                    `;
+        if (cell) {
+            // Set cell's background style
+            cell.style.textAlign = 'center';
+            cell.style.display = 'flex';
+            cell.style.alignItems = 'center';
+            cell.style.justifyContent = 'center';
 
-                    // Optionally add a tooltip for detailed information
-                    cell.setAttribute('title', `Events from ${formatTime(startDate)} to ${formatTime(endDate)}`);
-                }
+            // Create a list inside the cell to hold time bubbles if it's the first time we add time slots
+            let list = cell.querySelector('.time-list');
+            if (!list) {
+                list = document.createElement('div');
+                list.className = 'time-list';
+                list.style.textAlign = 'center';
+                list.style.fontSize = '10px';
+                cell.appendChild(list);
+            }
+
+            // Create the bubble for the current time slot
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.style.display = 'flex';
+            bubble.style.alignItems = 'center';
+            bubble.style.borderRadius = '5px';
+            bubble.style.position = 'absolute'; // Position it absolutely for spanning
+
+            // Icon inside the bubble
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-dot';
+            icon.style.fontSize = '14px';
+
+            // Apply different styles based on whether it's the top of the hour or 30 minutes
+            if (startDate.getMinutes() === 0) {
+                // Style for top of the hour
+                bubble.style.backgroundColor = 'white';
+                bubble.style.color = '#6F4E37';
+                icon.style.color = '#6F4E37';
+                bubble.style.borderColor = '#6F4E37';
+                bubble.style.borderWidth = '1px';
+                bubble.style.borderStyle = 'solid';
+            } else {
+                // Style for 30 minutes past the hour
+                bubble.style.backgroundColor = '#6F4E37';
+                bubble.style.color = 'white';
+                icon.style.color = 'white';
+                bubble.classList.add('border', 'border-dark');
+            }
+
+            // Set the bubble text and append the icon
+            bubble.appendChild(icon);
+            bubble.appendChild(document.createTextNode(`${formatTime(startDate)}-${formatTime(endDate)}`));
+            list.appendChild(bubble);
+
+            // Calculate how much space the bubble should span horizontally
+            const startCell = document.getElementById(`cell-${day}-${startHour}`);
+            const endCell = document.getElementById(`cell-${day}-${endHour}`);
+
+            if (startCell && endCell) {
+                const startOffset = startCell.offsetLeft + 4; //handle padding
+                const endOffset = endCell.offsetLeft + endCell.offsetWidth - 4;
+
+                bubble.style.left = `${startOffset}px`;  // Start at the start hour
+                bubble.style.width = `${endOffset - startOffset}px`; // Span across the cells
+
+                const cellHeight = startCell.offsetHeight; // Get the height of the cell
+                const bubbleHeight = bubble.offsetHeight; // Get the height of the bubble
+                const verticalOffset = (cellHeight - bubbleHeight) / 2; // Calculate how much to offset for centering
+                bubble.style.top = `${startCell.offsetTop + verticalOffset}px`;
             }
         }
     });
