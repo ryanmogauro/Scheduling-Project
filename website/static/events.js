@@ -172,6 +172,7 @@ function loadEvents() {
         console.log("No events date selected.");
         return; // Don't proceed if no date is selected
     }
+    
     fetch('/get_events', {
         method: 'POST',
         headers: {
@@ -179,29 +180,35 @@ function loadEvents() {
         },
         body: new URLSearchParams({ eventsDate })
     })
-        .then(response => response.json())
-        .then(data => {
-            eventsSlots = data.events;
-            if (eventsSlots.length == 0) {
-                // Display a message when there is no unavailability
-                const list = document.getElementById("eventsList");
-                const listClaim = document.getElementById("claimList");
-                list.innerHTML = '';
-                listClaim.innerHTML = ''
-                const noEvent = document.createElement('p');
-                noEvent.id = 'no-event-message';
-                noEvent.textContent = "Nothing to see here...";
-                noEvent.classList.add('text-muted', 'text-center', 'py-2');
-                list.appendChild(noEvent);
-                listClaim.appendChild(noEvent);
-            } else {
-                updateEventsList(eventsSlots);
-                updateAssignList(eventsSlots);
-            }
-            updateEventsGrid(eventsSlots);
-        })
-        .catch(error => console.error("Error loading events:", error));
+    .then(response => response.json())
+    .then(data => {
+        eventsSlots = data.events;
+
+        if (eventsSlots.length === 0) {
+            // Display a message when there are no events
+            showNoEventMessage("eventsList");
+            showNoEventMessage("assignList");
+        } else {
+            updateEventsList(eventsSlots);
+            updateAssignList(eventsSlots);
+        }
+
+        updateEventsGrid(eventsSlots);
+    })
+    .catch(error => console.error("Error loading events:", error));
 }
+
+// Helper function to display the "no events" message
+function showNoEventMessage(listId) {
+    const list = document.getElementById(listId);
+    list.innerHTML = ''; // Clear existing content
+    const noEventMessage = document.createElement('p');
+    noEventMessage.id = 'no-event-message';
+    noEventMessage.textContent = "Nothing to see here...";
+    noEventMessage.classList.add('text-muted', 'text-center', 'py-2');
+    list.appendChild(noEventMessage);
+}
+
 
 function addEvent(){
     const selectedDate = document.getElementById('unavailability-date').value;
@@ -291,7 +298,7 @@ function deleteEvent(eventID) {
 }
 
 function clearEvents() {
-    const eventsDate = document.getElementById('eventDate').value;
+    const eventsDate = document.getElementById('eventsDate').value;
     if (!eventsDate) {
         return; 
     }
@@ -405,7 +412,7 @@ function updateEventsList(eventsSlots) {
 }
 
 function updateAssignList(eventsSlots) {
-    const list = document.getElementById("claimList");
+    const list = document.getElementById("assignList");
     const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     list.innerHTML = '';
 
