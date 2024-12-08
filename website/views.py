@@ -686,7 +686,14 @@ def days_to_dates(target_monday):
 def claim_event():
     event_id = request.form.get('eventID')
     try:
-        event_workers = EventAssignment.query.filter_by(eventID=event_id).all()
+        event_workers = (EventAssignment.query.filter_by(eventID=event_id).all())
+        matched_workers = EventAssignment.query.filter_by(eventID=event_id, employeeID=current_user.employeeID).all()
+        
+        print("length of mworks is ", len(matched_workers))
+        if len(matched_workers) > 0:
+            print("About to return error")
+            return jsonify({'success': False, 'error': 'Employee is already assigned to event'}), 404
+            
         if len(event_workers) < 2:
             new_event_assignment = EventAssignment(
                 eventID = event_id, 
