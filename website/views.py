@@ -9,6 +9,7 @@ from website.scheduleGenerator import getEmployees, getAvailabilityDict, generat
 from flask import Flask, Response
 from ics import Calendar, Event as IcsEvent
 from datetime import datetime, timedelta
+import pytz
 import os 
 
 # Create a blueprint
@@ -69,6 +70,67 @@ def get_schedule():
     except Exception as e:
         print(f"Error retrieving schedule: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
+
+@main_blueprint.route('/export_schedule', methods=['POST'])
+@login_required
+def export_schedule():
+    # Create a new iCalendar instance
+    calendar = Calendar()
+    schedule_date = request.form.get('scheduleDate')
+
+    try:
+        # Calculate week bounds
+        week_start_date, week_end_date = get_week_bounds(schedule_date)
+
+        # Query shifts for the current employee in the specified week
+        shifts_for_week = (
+            db.session.query(Shift)
+            .join(ShiftAssignment, Shift.shiftID == ShiftAssignment.shiftID)
+            .filter(ShiftAssignment.employeeID == current_user.employeeID)
+            .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
+            .all()
+        )
+
+        # Timezone for Eastern Time (ET)
+        eastern = pytz.timezone('US/Eastern')
+
+        # Add events to the calendar
+        for shift in shifts_for_week:
+            event = IcsEvent()
+            event.name = "Mary Low Coffeehouse"
+            
+            # Convert shift times to Eastern Time (ET)
+            start_time_et = shift.shiftStartTime.astimezone(eastern)
+            end_time_et = shift.shiftEndTime.astimezone(eastern)
+            
+            # Set the event's start and end times
+            event.begin = start_time_et
+            event.end = end_time_et
+            event.description = "Work Shift"
+            
+            # Add the event to the calendar
+            calendar.events.add(event)
+
+        # Serialize calendar data
+        calendar_data = calendar.serialize()
+
+        # Return the file directly in the response
+        return Response(
+            calendar_data,
+            mimetype="text/calendar",
+            headers={
+                "Content-Disposition": "attachment; filename=schedule.ics"
+            }
+        )
+
+    except Exception as e:
+        print(f"Error exporting schedule: {e}")
+        return Response(
+            f"Error exporting schedule: {e}", 
+            status=500, 
+            mimetype="text/plain"
+        )
+   
 
 @main_blueprint.route('/get_notifications', methods=['GET'])
 @login_required
@@ -618,59 +680,4 @@ def days_to_dates(target_monday):
         day_date = target_monday + timedelta(days=i)
         day_name_to_date[day_name] = day_date
     
-    return day_name_to_date
-    
-
-@main_blueprint.route('/export_schedule', methods=['POST'])
-@login_required
-def export_schedule():
-    # Create a new iCalendar instance
-    calendar = Calendar()
-
-    # Example schedule data
-    schedule_date = request.form.get('scheduleDate')
-    print(schedule_date)
-    try:
-        week_start_date, week_end_date = get_week_bounds(schedule_date)
-    
-        shifts_for_week = (
-            db.session.query(Shift)
-            .join(ShiftAssignment, Shift.shiftID == ShiftAssignment.shiftID)
-            .filter(ShiftAssignment.employeeID == current_user.employeeID)
-            .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
-            .all()
-            )
-
-
-        # Add events to the calendar
-        for shift in shifts_for_week:
-            event = icsEvent()
-            event.name = "Mary Low Shift"
-            event.begin = shift.shiftStartTime.isoformat()
-            event.end = shift.shiftEndTime.isoformat()
-            calendar.events.add(event)
-
-        calendar_data = calendar.serialize()
-
-        response = Response(
-            calendar_data,
-            mimetype="text/calendar",
-            headers={"Content-Disposition": "attachment;filename=schedule.ics"}
-        )
-
-        print(response)
-
-        # Save the .ics file to the server
-        with open('schedule.ics', 'w', encoding='utf-8') as f:
-            f.write(calendar_data)
-
-        return Response(
-            calendar_data,
-            mimetype="text/calendar",
-            headers={"Content-Disposition": "attachment;filename=schedule.ics"}
-        )
-
-    except Exception as e:
-        print(f"exporting schedule error{e}")
-        return Response()
-    
+    return day_name_to_date 

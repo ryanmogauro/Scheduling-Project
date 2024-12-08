@@ -1,6 +1,10 @@
 # Python
 __pycache__/
 
+
+#calendar
+*.ics
+
 # Ignore the virtual environment
 venv/
 
