@@ -400,6 +400,42 @@ function updateEventsList(eventsSlots) {
     });
 }
 
+function updateAssignList(eventsSlots) {
+    const list = document.getElementById("claimList");
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    list.innerHTML = '';
+
+    eventsSlots.forEach(slot => {
+        const startDate = new Date(slot.start);
+        const endDate = new Date(slot.end);
+        const day = dayNames[startDate.getDay()];
+
+        const listItem = document.createElement("a");
+        listItem.className = "d-flex align-items-center justify-content-start p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
+        listItem.href = "#";
+
+        // Store the event ID as a data attribute on the list item
+        listItem.dataset.eventId = slot.eventID;
+
+        listItem.onclick = function (e) {
+            e.preventDefault();
+            claimEvent(listItem.dataset.eventId);
+        };
+
+        // HTML structure with a wrapper for the day and time
+        listItem.innerHTML = `
+        <i class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none border border-dark"></i>
+        <div class="d-flex flex-column align-items-center w-100">
+            <span class="text-center">${day}</span>
+            <span class="fw-bold text-center">${formatTime(startDate)} <span>to</span> ${formatTime(endDate)}</span>
+        </div>
+        `;
+    
+
+        list.appendChild(listItem);
+    });
+}
+
 /// Increment / Decrement Week
 function updateWeek(offset) {
     const scheduleDateInput = document.getElementById('eventsDate');

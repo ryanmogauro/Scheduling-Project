@@ -194,6 +194,32 @@ function loadSchedule() {
     .catch(error => console.error("Error loading schedule:", error));
 }
 
+function exportSchedule() {
+    const scheduleDate = document.getElementById('scheduleDate').value;
+    if (!scheduleDate) {
+        console.log("No schedule date selected.");
+        return; // Don't proceed if no date is selected
+    }
+
+    fetch('/export_schedule', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            scheduleDate,
+        })
+    })
+    .then(response => response.blob())
+    .then(data => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(data);
+        a.download = 'schedule.ics'; // Provide a default filename
+        a.click();
+    })
+    .catch(error => console.error("Error loading schedule:", error));
+}
+
 function updateScheduleGrid(scheduleSlots) {
     // Clear all cells to default styles
     const cells = document.querySelectorAll('.cell');
@@ -311,23 +337,3 @@ function formatTime(date) {
     return `${hours}:${minutes}`;
 }
 
-function exportSchedule() {
-    const scheduleDate = document.getElementById('scheduleDate').value;
-    if (!scheduleDate) {
-        console.log("No schedule date selected.");
-        return; // Don't proceed if no date is selected
-    }
-
-    fetch('/export_schedule', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({ scheduleDate })
-    })
-    .then(response => response.json())
-    .then(data => {
-        const shifts = data.shifts;
-    })
-    .catch(error => console.error("Error loading schedule:", error));
-}
