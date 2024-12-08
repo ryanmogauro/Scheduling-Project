@@ -185,14 +185,18 @@ function loadEvents() {
             if (eventsSlots.length == 0) {
                 // Display a message when there is no unavailability
                 const list = document.getElementById("eventsList");
+                const listClaim = document.getElementById("claimList");
                 list.innerHTML = '';
+                listClaim.innerHTML = ''
                 const noEvent = document.createElement('p');
                 noEvent.id = 'no-event-message';
                 noEvent.textContent = "Nothing to see here...";
                 noEvent.classList.add('text-muted', 'text-center', 'py-2');
                 list.appendChild(noEvent);
+                listClaim.appendChild(noEvent);
             } else {
                 updateEventsList(eventsSlots);
+                updateAssignList(eventsSlots);
             }
             updateEventsGrid(eventsSlots);
         })
