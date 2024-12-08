@@ -331,9 +331,11 @@ function updateEventsGrid(eventsSlots) {
         const day = dayNames[startDate.getDay()];
         const startHour = startDate.getHours();
         const endHour = endDate.getHours();
+
+
         // Iterate over the hours in the shift and update the grid
         for (let hour = startHour; hour < endHour; hour++) {
-            if (hour >= 17 && hour <= 24) {
+            if (hour >= 17 && hour <= 23) {
                 const cellId = `cell-${day}-${hour}`;
                 const cell = document.getElementById(cellId);
                 if (cell) {                
@@ -461,4 +463,29 @@ function formatTime(date) {
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${hours}:${minutes}`;
+}
+
+function claimEvent(eventID){
+    fetch('/claim_event', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            eventID: eventID,
+        }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadEvents();
+                closeModal();
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
 }
