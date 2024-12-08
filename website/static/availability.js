@@ -437,7 +437,7 @@ function updateWeek(offset) {
     const formattedWeek = `${yearNumber}-W${weekNumber.toString().padStart(2, '0')}`;
     scheduleDateInput.value = formattedWeek;
     console.log(scheduleDateInput)
-    loadEvents();
+    loadUnavailability();
 }
 
 // Helper function to format time as HH:MM
