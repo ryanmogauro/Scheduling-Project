@@ -189,7 +189,10 @@ function loadEvents() {
             showNoEventMessage("eventsList");
             showNoEventMessage("assignList");
         } else {
-            updateEventsList(eventsSlots);
+            const eventsList = document.getElementById("eventsList");
+            if (eventsList) {
+                updateEventsList(eventsSlots);
+            }
             updateAssignList(eventsSlots);
         }
 
