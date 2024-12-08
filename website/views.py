@@ -1,11 +1,10 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask import request, jsonify, json
-from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification, Event
+from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification, Event, EventAssignment
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, date
 from website import db
 from website.scheduleGenerator import getEmployees, getAvailabilityDict, generateSchedule
-
 from flask import Flask, Response
 from ics import Calendar, Event as IcsEvent
 from datetime import datetime, timedelta
@@ -644,7 +643,7 @@ def export_schedule():
 
         # Add events to the calendar
         for shift in shifts_for_week:
-            event = icsEvent()
+            event = IcsEvent()
             event.name = "Mary Low Shift"
             event.begin = shift.shiftStartTime.isoformat()
             event.end = shift.shiftEndTime.isoformat()
@@ -674,3 +673,25 @@ def export_schedule():
         print(f"exporting schedule error{e}")
         return Response()
     
+    
+@main_blueprint.route('/claim_event', methods=['POST'])
+@login_required
+def claim_event():
+    event_id = request.form.get('eventID')
+    try:
+        event_workers = EventAssignment.query.filter_by(eventID=event_id).all()
+        if len(event_workers) < 2:
+            new_event_assignment = EventAssignment(
+                eventID = event_id, 
+                employeeID = current_user.employeeID
+            )
+            db.session.add(new_event_assignment)
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': 'Event successfully claimed!'})
+        else:
+            return jsonify({'success': False, 'error': 'Too many employees already working this event'}), 404
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error claiming event: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
