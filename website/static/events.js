@@ -201,12 +201,18 @@ function loadEvents() {
 // Helper function to display the "no events" message
 function showNoEventMessage(listId) {
     const list = document.getElementById(listId);
-    list.innerHTML = ''; // Clear existing content
-    const noEventMessage = document.createElement('p');
-    noEventMessage.id = 'no-event-message';
-    noEventMessage.textContent = "Nothing to see here...";
-    noEventMessage.classList.add('text-muted', 'text-center', 'py-2');
-    list.appendChild(noEventMessage);
+    
+    // Check if the list exists before attempting to update it
+    if (list) {
+        list.innerHTML = ''; // Clear existing content
+        const noEventMessage = document.createElement('p');
+        noEventMessage.id = 'no-event-message';
+        noEventMessage.textContent = "Nothing to see here...";
+        noEventMessage.classList.add('text-muted', 'text-center', 'py-2');
+        list.appendChild(noEventMessage);
+    } else {
+        console.warn(`Element with ID '${listId}' not found.`);
+    }
 }
 
 
