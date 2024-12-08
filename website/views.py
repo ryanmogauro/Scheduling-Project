@@ -403,75 +403,80 @@ def get_events():
 
 @main_blueprint.route('/add_event', methods=['POST'])
 @login_required
-def add_event(): 
-    event_host = request.form.get('eventHost')
-    event_name = request.form.get('eventName')
-    event_start = request.form.get('eventStartTime')
-    event_end = request.form.get('eventEndTime')
-    event_description = request.form.get('eventDescription')
-    
-    try:
-        print(f"event_start: {event_start}, event_end: {event_end}")
-        event_start_date = datetime.fromisoformat(event_start)
-        event_end_date = datetime.fromisoformat(event_end)
+def add_event():
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    if curr_employee.isAdmin:
+        event_host = request.form.get('eventHost')
+        event_name = request.form.get('eventName')
+        event_start = request.form.get('eventStartTime')
+        event_end = request.form.get('eventEndTime')
+        event_description = request.form.get('eventDescription')
+        
+        try:
+            print(f"event_start: {event_start}, event_end: {event_end}")
+            event_start_date = datetime.fromisoformat(event_start)
+            event_end_date = datetime.fromisoformat(event_end)
 
-        # Find overlapping unavailability periods
-        overlapping_intervals = (Event.query
-                                 .filter(Event.eventEndTime > event_start_date)
-                                 .filter(Event.eventStartTime < event_end_date)
-                                 .order_by(Event.eventStartTime)
-                                 .all())
+            # Find overlapping unavailability periods
+            overlapping_intervals = (Event.query
+                                    .filter(Event.eventEndTime > event_start_date)
+                                    .filter(Event.eventStartTime < event_end_date)
+                                    .order_by(Event.eventStartTime)
+                                    .all())
 
-        # Start with the new unavailability as the base
-        merge_start = event_start_date
-        merge_end = event_end_date
+            # Start with the new unavailability as the base
+            merge_start = event_start_date
+            merge_end = event_end_date
 
-        # Merge with the overlapping intervals
-        for interval in overlapping_intervals:
-            # If the existing interval overlaps with the new one, merge them
-            if interval.eventStartTime <= merge_end and interval.eventEndTime >= merge_start:
-                # Merge by extending the period to the earliest start time and latest end time
-                merge_start = min(merge_start, interval.eventStartTime)
-                merge_end = max(merge_end, interval.eventEndTime)
-                # Remove the old overlapping interval
-                db.session.delete(interval)
+            # Merge with the overlapping intervals
+            for interval in overlapping_intervals:
+                # If the existing interval overlaps with the new one, merge them
+                if interval.eventStartTime <= merge_end and interval.eventEndTime >= merge_start:
+                    # Merge by extending the period to the earliest start time and latest end time
+                    merge_start = min(merge_start, interval.eventStartTime)
+                    merge_end = max(merge_end, interval.eventEndTime)
+                    # Remove the old overlapping interval
+                    db.session.delete(interval)
 
-        # Create and add the merged unavailability period
-        merged_event = Event(
-            eventHost = event_host,
-            eventName = event_name,
-            eventStartTime=merge_start,
-            eventEndTime=merge_end,
-            eventDescription = event_description,
-        )
-        db.session.add(merged_event)
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'Event added successfully'})
+            # Create and add the merged unavailability period
+            merged_event = Event(
+                eventHost = event_host,
+                eventName = event_name,
+                eventStartTime=merge_start,
+                eventEndTime=merge_end,
+                eventDescription = event_description,
+            )
+            db.session.add(merged_event)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Event added successfully'})
 
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error adding event: {e}")
-        return jsonify({'success': False, 'error': 'Server error'}), 500
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error adding event: {e}")
+            return jsonify({'success': False, 'error': 'Server error'}), 500
+    return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
 @main_blueprint.route('/delete_event', methods=['POST'])
 @login_required
 def delete_event():
     event_id = request.form.get('eventID')
-    
-    try:
-        # Find the event record by ID
-        event = Event.query.filter_by(eventID=event_id).first()
-        if event:
-            # Delete the record
-            db.session.delete(event)
-            db.session.commit()
-            return jsonify({'success': True, 'message': 'Event deleted successfully'})
-        else:
-            return jsonify({'success': False, 'error': 'Event not found'}), 404
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error deleting event: {e}")
-        return jsonify({'success': False, 'error': 'Server error'}), 500
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    if curr_employee.isAdmin:
+        try:
+            # Find the event record by ID
+            event = Event.query.filter_by(eventID=event_id).first()
+            if event:
+                # Delete the record
+                db.session.delete(event)
+                db.session.commit()
+                return jsonify({'success': True, 'message': 'Event deleted successfully'})
+            else:
+                return jsonify({'success': False, 'error': 'Event not found'}), 404
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error deleting event: {e}")
+            return jsonify({'success': False, 'error': 'Server error'}), 500
+    return jsonify({'success': False, 'error': 'Unauthorized'}), 401
     
     
 
@@ -479,199 +484,197 @@ def delete_event():
 @login_required
 def clear_events():
     events_date = request.form.get('eventsDate')
-    
-    try:
-        week_start_date, week_end_date = get_week_bounds(events_date)
-        print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    if curr_employee.isAdmin:
+        try:
+            week_start_date, week_end_date = get_week_bounds(events_date)
+            print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
 
-        # Delete unavailability for the current week
-        events_to_delete = (
-            db.session.query(Event)
-            .filter(Event.eventStartTime >= week_start_date, Event.eventEndTime <= week_end_date)
-            .all()
-        )
+            # Delete unavailability for the current week
+            events_to_delete = (
+                db.session.query(Event)
+                .filter(Event.eventStartTime >= week_start_date, Event.eventEndTime <= week_end_date)
+                .all()
+            )
 
-        # Check if there are any unavailability records to delete
-        if len(events_to_delete) > 0:
-            for event in events_to_delete:
-                db.session.delete(event)
-            db.session.commit()
-            return jsonify({'success': True, 'message': 'Events for the current week has been cleared successfully'})
-        else:
-            return jsonify({'success': True, 'message': 'No event records found for the current week to clear'})
+            # Check if there are any unavailability records to delete
+            if len(events_to_delete) > 0:
+                for event in events_to_delete:
+                    db.session.delete(event)
+                db.session.commit()
+                return jsonify({'success': True, 'message': 'Events for the current week has been cleared successfully'})
+            else:
+                return jsonify({'success': True, 'message': 'No event records found for the current week to clear'})
 
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error clearing event: {e}")
-        return jsonify({'success': False, 'error': 'Server error'}), 500
-
-@main_blueprint.route('/generate_schedule_page', methods=['GET'])
-def create_schedule_page():
-    return render_template('generateSchedule.html')
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error clearing event: {e}")
+            return jsonify({'success': False, 'error': 'Server error'}), 500
+    return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
 @main_blueprint.route('/generate_schedule', methods=['POST'])
 @login_required
 def generate_schedule():
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"success": False, "message": "Missing start_date parameter."}), 400
-        
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    if curr_employee.isAdmin:
         try:
-            start_date = datetime.strptime(data['start_date'], "%Y-%m-%d").date()
-            if start_date.weekday() != 0: 
-                return jsonify({"success": False, "message": "start_date must be a Monday."}), 400
-        except ValueError:
-            return jsonify({"success": False, "message": "Invalid start_date format. Use YYYY-MM-DD."}), 400
-        
-        employees = getEmployees()
-        print("This is employees! ", employees)
-        if not employees:
-            print("No active employees found.")
-            return jsonify({"success": False, "message": "No active employees found."}), 404
+            data = request.get_json()
+            if not data:
+                return jsonify({"success": False, "message": "Missing start_date parameter."}), 400
+            
+            try:
+                start_date = datetime.strptime(data['start_date'], "%Y-%m-%d").date()
+                if start_date.weekday() != 0: 
+                    return jsonify({"success": False, "message": "start_date must be a Monday."}), 400
+            except ValueError:
+                return jsonify({"success": False, "message": "Invalid start_date format. Use YYYY-MM-DD."}), 400
+            
+            employees = getEmployees()
+            print("This is employees! ", employees)
+            if not employees:
+                print("No active employees found.")
+                return jsonify({"success": False, "message": "No active employees found."}), 404
 
-        availability = getAvailabilityDict(employees, start_date)
-        newSchedule = generateSchedule(availability, start_date)
+            availability = getAvailabilityDict(employees, start_date)
+            newSchedule = generateSchedule(availability, start_date)
 
-        formatted_schedule = {}
-        day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        
-        employees = Employee.query.filter(Employee.employeeID.in_(availability.keys())).all()
-        employee_dict = {emp.employeeID: emp for emp in employees}
+            formatted_schedule = {}
+            day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            
+            employees = Employee.query.filter(Employee.employeeID.in_(availability.keys())).all()
+            employee_dict = {emp.employeeID: emp for emp in employees}
 
-        for day_index, day_schedule in enumerate(newSchedule):
-            day_date = start_date + timedelta(days=day_index)
-            formatted_schedule[day_names[day_index]] = {
-                "date": day_date.strftime("%Y-%m-%d"),
-                "slots": []
-            }
-            for slot_index, employees_in_slot in enumerate(day_schedule):
-                if employees_in_slot:
-                    hour = slot_index // 2
-                    minute = "30" if slot_index % 2 else "00"
-                    time_str = f"{hour:02d}:{minute}"
+            for day_index, day_schedule in enumerate(newSchedule):
+                day_date = start_date + timedelta(days=day_index)
+                formatted_schedule[day_names[day_index]] = {
+                    "date": day_date.strftime("%Y-%m-%d"),
+                    "slots": []
+                }
+                for slot_index, employees_in_slot in enumerate(day_schedule):
+                    if employees_in_slot:
+                        hour = slot_index // 2
+                        minute = "30" if slot_index % 2 else "00"
+                        time_str = f"{hour:02d}:{minute}"
 
-                    # Convert each employee_id to {id: employee_id, name: employee_name}
-                    detailed_employees = [
-                        {"id": emp_id, "name": f"{employee_dict[emp_id].firstName} {employee_dict[emp_id].lastName[:1]}"}
-                        for emp_id in employees_in_slot
-                    ]
+                        # Convert each employee_id to {id: employee_id, name: employee_name}
+                        detailed_employees = [
+                            {"id": emp_id, "name": f"{employee_dict[emp_id].firstName} {employee_dict[emp_id].lastName[:1]}"}
+                            for emp_id in employees_in_slot
+                        ]
 
-                    formatted_schedule[day_names[day_index]]["slots"].append({
-                        'time': time_str,
-                        'employees': detailed_employees
-                    })   
+                        formatted_schedule[day_names[day_index]]["slots"].append({
+                            'time': time_str,
+                            'employees': detailed_employees
+                        })   
 
-        return jsonify({"success": True, "schedule": formatted_schedule}), 200
-    except Exception as e:
-        print(f"Error generating schedule: {e}")
-        return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
+            return jsonify({"success": True, "schedule": formatted_schedule}), 200
+        except Exception as e:
+            print(f"Error generating schedule: {e}")
+            return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
+    return jsonify({'success': False, 'error': 'Unauthorized'}), 401
     
 @main_blueprint.route('/approve_schedule', methods=['POST'])
 @login_required
 def approve_schedule():
-    try:
-        data = request.get_json()
-        if not data or 'schedule' not in data or 'start_date' not in data:
-            return jsonify({"success": False, "message": "Missing schedule or start_date in request data."}), 400
-
-        start_date_str = data['start_date']
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    if curr_employee.isAdmin:
         try:
-            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
-            if start_date.weekday() != 0: 
-                return jsonify({"success": False, "message": "start_date must be a Monday."}), 400
-        except ValueError:
-            return jsonify({"success": False, "message": "Invalid start_date format. Use YYYY-MM-DD."}), 400
-        
-        
-        end_date = start_date + timedelta(days=6)
-        
-        existing_shifts = (
-            db.session.query(Shift)
-            .filter(Shift.shiftStartTime >= start_date)
-            .filter(Shift.shiftEndTime <= end_date + timedelta(days=1))  
-            .first()
-        )
+            data = request.get_json()
+            if not data or 'schedule' not in data or 'start_date' not in data:
+                return jsonify({"success": False, "message": "Missing schedule or start_date in request data."}), 400
 
-        if existing_shifts:
-            return jsonify({"success": False, "message": "A schedule for this week already exists."}), 400
-
-
-        schedule = json.loads(data['schedule']) if isinstance(data['schedule'], str) else data['schedule']
-        print("this is schedule", schedule)
-        scheduled_workers = set()
-
-        day_dates = {day: start_date + timedelta(days=index) for index, day in enumerate(
-            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])}
-
-        for day, day_data in schedule.items():
-            day_date = day_dates.get(day)
-            if not day_date:
-                continue  
-            slots = day_data.get('slots', [])
-            for slot in slots:
-                time = slot['time']
-                employees = slot['employees']
-
-                shift_start_time = datetime.strptime(time, "%H:%M").time()
-                shift_end_time = (datetime.combine(day_date, shift_start_time) + timedelta(minutes=30)).time()
-
-                new_shift = Shift(
-                    shiftStartTime=datetime.combine(day_date, shift_start_time),
-                    shiftEndTime=datetime.combine(day_date, shift_end_time)
-                )
-                db.session.add(new_shift)
-                db.session.flush() 
-
-                for employee in employees:
-                    employee_id = employee['id'] 
-                    scheduled_workers.add(employee_id)
-                    new_shift_assignment = ShiftAssignment(
-                        shiftID=new_shift.shiftID,
-                        employeeID=employee_id
-                    )
-                    db.session.add(new_shift_assignment)
-
-        for employee in scheduled_workers:
-            new_notification = Notification(
-                message=f"A new schedule has been published for the week of {start_date.strftime('%B %d, %Y')}",
-                hasRead=False,
-                employeeID=employee
+            start_date_str = data['start_date']
+            try:
+                start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+                if start_date.weekday() != 0: 
+                    return jsonify({"success": False, "message": "start_date must be a Monday."}), 400
+            except ValueError:
+                return jsonify({"success": False, "message": "Invalid start_date format. Use YYYY-MM-DD."}), 400
+            
+            
+            end_date = start_date + timedelta(days=6)
+            
+            existing_shifts = (
+                db.session.query(Shift)
+                .filter(Shift.shiftStartTime >= start_date)
+                .filter(Shift.shiftEndTime <= end_date + timedelta(days=1))  
+                .first()
             )
-            db.session.add(new_notification)
 
-        db.session.commit()
-        return jsonify({"success": True, "message": "Successfully approved the schedule!"}), 200
+            if existing_shifts:
+                return jsonify({"success": False, "message": "A schedule for this week already exists."}), 400
 
-    except Exception as e:
-        db.session.rollback() 
-        print(f"Error approving schedule: {e}")
-        return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
+
+            schedule = json.loads(data['schedule']) if isinstance(data['schedule'], str) else data['schedule']
+            print("this is schedule", schedule)
+            scheduled_workers = set()
+
+            day_dates = {day: start_date + timedelta(days=index) for index, day in enumerate(
+                ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])}
+
+            for day, day_data in schedule.items():
+                day_date = day_dates.get(day)
+                if not day_date:
+                    continue  
+                slots = day_data.get('slots', [])
+                for slot in slots:
+                    time = slot['time']
+                    employees = slot['employees']
+
+                    shift_start_time = datetime.strptime(time, "%H:%M").time()
+                    shift_end_time = (datetime.combine(day_date, shift_start_time) + timedelta(minutes=30)).time()
+
+                    new_shift = Shift(
+                        shiftStartTime=datetime.combine(day_date, shift_start_time),
+                        shiftEndTime=datetime.combine(day_date, shift_end_time)
+                    )
+                    db.session.add(new_shift)
+                    db.session.flush() 
+
+                    for employee in employees:
+                        employee_id = employee['id'] 
+                        scheduled_workers.add(employee_id)
+                        new_shift_assignment = ShiftAssignment(
+                            shiftID=new_shift.shiftID,
+                            employeeID=employee_id
+                        )
+                        db.session.add(new_shift_assignment)
+
+            for employee in scheduled_workers:
+                new_notification = Notification(
+                    message=f"A new schedule has been published for the week of {start_date.strftime('%B %d, %Y')}",
+                    hasRead=False,
+                    employeeID=employee
+                )
+                db.session.add(new_notification)
+
+            db.session.commit()
+            return jsonify({"success": True, "message": "Successfully approved the schedule!"}), 200
+
+        except Exception as e:
+            db.session.rollback() 
+            print(f"Error approving schedule: {e}")
+            return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
+    return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
     
 @main_blueprint.route('/admin', methods=['GET'])
 @login_required
 def admin_page():
-    
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    if curr_employee.isAdmin:
     #will update this logic with emails as we approach demo
     # allowed_admin_emails = []
     # if current_user.email not in allowed_admin_emails:
     #     return "Access denied", 403
-    
-    
-    date = next_week_start_date()
-    print("This is date", date)
-    return render_template('admin.html', current_week = date)
-
-
-
-
-
+        date = next_week_start_date()
+        print("This is date", date)
+        return render_template('admin.html', current_week = date)
+    return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
 def next_week_start_date():
     return (datetime.today() + timedelta(days=7 - datetime.today().weekday())).date()
 
-    
 def days_to_dates(target_monday):
     day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     day_name_to_date = {}
