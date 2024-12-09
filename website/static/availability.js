@@ -167,6 +167,11 @@ function updateNotificationDot() {
     }
 }
 
+/// Loading schedule -- ISO Format!
+document.getElementById('unavailabilityDate').addEventListener('change', function () {
+    loadUnavailability();
+});
+
 function closeModal() {
     document.querySelector('button.btn-close').click();
 }

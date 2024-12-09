@@ -167,6 +167,11 @@ function updateNotificationDot() {
     }
 }
 
+/// Loading schedule -- ISO Format!
+document.getElementById('eventsDate').addEventListener('change', function () {
+    loadEvents();
+});
+
 function closeModal() {
     const modal = bootstrap.Modal.getInstance(document.getElementById('eventsModal'));
     if (modal) modal.hide();
