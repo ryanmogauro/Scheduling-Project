@@ -495,7 +495,7 @@ function updateAssignList(eventsSlots) {
 
         // HTML structure with a wrapper for the day and time
         listItem.innerHTML = `
-        <i class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none border border-dark"></i>
+        <i class="bi bi-plus-circle me-2"></i>
         <div class="d-flex flex-column align-items-center w-100">
             <span class="text-center">${day}</span>
             <span class="fw-bold text-center">${formatTime(startDate)} <span>to</span> ${formatTime(endDate)}</span>
