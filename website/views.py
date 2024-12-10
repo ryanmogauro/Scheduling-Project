@@ -200,15 +200,44 @@ def available_shifts():
 @login_required
 def claim_shift():
     shift_id = request.json.get('shift_id')
+    print("THIS IS SHIFT ID ", shift_id)
     try:
         #get info associated with shift
         traded_shift = Shift.query.filter_by(shiftID=shift_id).first()
         traded_shift_assignment = ShiftAssignment.query.filter_by(shiftID=shift_id).first()
-        if not traded_shift or not traded_shift_assignment:
-            return jsonify({'success': False, 'error': 'Shift not found.'}), 404
         
         shiftStart = traded_shift.shiftStartTime
         shiftEnd = traded_shift.shiftEndTime
+        
+        employee_id = current_user.employeeID
+        old_employee_id = traded_shift_assignment.employeeID
+        
+       
+        
+        #check if user is already working at that time
+        overlapping_shifts = (
+            db.session.query(Shift)
+            .join(ShiftAssignment, Shift.shiftID == ShiftAssignment.shiftID)
+            .filter(ShiftAssignment.employeeID == employee_id)
+            .filter(Shift.shiftStartTime < shiftEnd, Shift.shiftEndTime > shiftStart)
+            .all()
+        )
+        
+        if overlapping_shifts:
+            return jsonify({'success': False, 'error': 'You are already working this shift'}), 404
+        
+        
+        if not traded_shift or not traded_shift_assignment:
+            return jsonify({'success': False, 'error': 'Shift not found.'}), 404
+        
+        shift_trade = ShiftAssignment.query.filter_by(shiftID=shift_id).first()
+        db.session.delete(shift_trade)
+        db.session.commit()
+        
+        if(employee_id == old_employee_id):
+            return jsonify({'success': True, 'message': 'Shift successfully claimed!'})
+            
+        
         
         #delete old shift and shift assignment
         db.session.delete(traded_shift)
@@ -224,7 +253,7 @@ def claim_shift():
         db.session.add(new_shift)
         db.session.commit()
         
-        employee_id = current_user.employeeID
+        
         new_shift_assignment = ShiftAssignment(
             shiftID=new_shift.shiftID,
             employeeID=employee_id
