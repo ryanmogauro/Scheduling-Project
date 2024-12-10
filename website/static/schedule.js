@@ -13,6 +13,7 @@ window.onload = function () {
     document.getElementById('scheduleDate').value = formattedWeek;
     loadSchedule();
     loadNotifications();
+    getShiftTrades(); 
 };
 
 /// Print Page
@@ -165,9 +166,10 @@ function updateNotificationDot() {
 /// Loading schedule -- ISO Format!
 document.getElementById('scheduleDate').addEventListener('change', function () {
     loadSchedule();
+    getShiftTrades(); 
 });
 
-function loadSchedule() {
+function loadSchedule(forModal = false) {
     const scheduleDate = document.getElementById('scheduleDate').value;
     if (!scheduleDate) {
         console.log("No schedule date selected.");
@@ -184,11 +186,16 @@ function loadSchedule() {
         .then(response => response.json())
         .then(data => {
             const shifts = data.shifts;
-            updateScheduleGrid(shifts);
-            calculateTotalWageAndHours(shifts);
+            if (forModal) {
+                populateShiftTradeModal(shifts); // Populate the modal
+            } else {
+                updateScheduleGrid(shifts); // Update the regular schedule
+                calculateTotalWageAndHours(shifts);
+            }
         })
         .catch(error => console.error("Error loading schedule:", error));
 }
+
 
 function exportSchedule() {
     const scheduleDate = document.getElementById('scheduleDate').value;
@@ -361,6 +368,7 @@ function updateWeek(offset) {
     scheduleDateInput.value = formattedWeek;
     console.log(scheduleDateInput)
     loadSchedule();
+    getShiftTrades(); 
 }
 
 
@@ -371,3 +379,157 @@ function formatTime(date) {
     return `${hours}:${minutes}`;
 }
 
+function submitTradeRequest() {
+    const selectedShift = document.querySelector('input[name="shift"]:checked');
+    if (!selectedShift) {
+        alert('Please select a shift to trade.');
+        return;
+    }
+
+    const shiftId = selectedShift.value;
+    console.log("This is shiftID: ", shiftId)
+    fetch('/trade_shift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shift_id: shiftId})
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                document.getElementById('shiftTradeModal').querySelector('.btn-close').click(); // Close modal
+            } else {
+                alert('Failed to request shift trade.');
+            }
+        })
+        .catch(error => console.error('Error submitting trade request:', error));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const modalElement = document.getElementById('shiftTradeModal');
+    if (modalElement) {
+        modalElement.addEventListener('show.bs.modal', function () {
+            loadSchedule(true); // Load schedule for modal
+        });
+    } else {
+        console.error('shiftTradeModal element not found.');
+    }
+});
+
+function populateShiftTradeModal(shifts) {
+    console.log("Populate shifts has been called");
+    const shiftList = document.getElementById('shiftList');
+    shiftList.innerHTML = '';
+
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    console.log("This is shifts ", shifts)
+    shifts.forEach(shift => {
+        const startDate = new Date(shift.start);
+        const endDate = new Date(shift.end);
+        const day = daysOfWeek[startDate.getDay()];
+
+
+
+        if (!shift.shiftID) {
+            console.log('Missing shiftID for shift:', shift);
+            return; // Skip this iteration if shiftID is missing
+        }
+
+
+        const listItem = document.createElement('li');
+        listItem.classList.add('list-group-item');
+        listItem.innerHTML = `
+            <input type="radio" name="shift" value="${shift.shiftID}" id="shift-${shift.shiftID}">
+            <label for="shift-${shift.shiftID}">
+                ${day}: ${formatTime(startDate)} - ${formatTime(endDate)}
+            </label>
+        `;
+        shiftList.appendChild(listItem);
+    });
+}
+
+
+function getShiftTrades() {
+    const scheduleDate = document.getElementById('scheduleDate').value;
+    fetch('/available_shifts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ week: scheduleDate })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log(data.shifts); // Display the retrieved shifts
+                updateTradeList(data.shifts)
+            } else {
+                alert('Failed to retrieve available shifts.');
+            }
+        })
+        .catch(error => console.error('Error retrieving shifts:', error));
+}
+
+function updateTradeList(shifts) {
+    const list = document.getElementById("assignList");
+    if (!list) {
+        console.error("assignList element not found.");
+        return;
+    }
+
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    list.innerHTML = ''; // Clear the list
+
+    shifts.forEach(shift => {
+        const startDate = new Date(shift.shiftStartTime);
+        const endDate = new Date(shift.shiftEndTime);
+        const day = dayNames[startDate.getDay()];
+
+        const listItem = document.createElement("a");
+        listItem.className = "d-flex align-items-center justify-content-start p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
+        listItem.href = "#";
+
+        // Store the shift ID as a data attribute on the list item
+        listItem.dataset.shiftId = shift.shiftID;
+
+        // Add a click event to handle claiming the shift
+        listItem.onclick = function (e) {
+            e.preventDefault();
+            console.log(`Claiming shift ID: ${listItem.dataset.shiftId}`);
+            claimShift(listItem.dataset.shiftId);
+        };
+
+        // Populate the inner HTML of the list item
+        listItem.innerHTML = `
+            <div class="d-flex flex-column align-items-center w-100">
+                <span class="text-center">${day}</span>
+                <span class="fw-bold text-center">${formatTime(startDate)} <span>to</span> ${formatTime(endDate)}</span>
+            </div>
+        `;
+
+        list.appendChild(listItem);
+    });
+}
+
+function claimShift(shiftId) {
+    fetch('/claim_shift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shift_id: shiftId })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Shift ${shiftId} claimed successfully!`);
+
+                const shiftElement = document.querySelector(`[data-shift-id="${shiftId}"]`);
+                if (shiftElement) {
+                    shiftElement.remove(); // Remove the element from the DOM
+                } else {
+                    console.warn(`Shift element with ID ${shiftId} not found in the list.`);
+                }
+            } else {
+                alert(`Failed to claim shift ${shiftId}: ${data.error}`);
+            }
+        })
+        .catch(error => console.error('Error claiming shift:', error));
+}

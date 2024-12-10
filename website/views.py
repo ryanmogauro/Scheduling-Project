@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask import request, jsonify, json
-from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification, Event, EventAssignment
+from website.models import User, Employee, Unavailability, Shift, ShiftAssignment, Notification, Event, EventAssignment, ShiftTrades
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, date
 from website import db
@@ -713,3 +713,123 @@ def claim_event():
         db.session.rollback()
         print(f"Error claiming event: {e}")
         return jsonify({'success': False, 'error': 'Server error'}), 500
+
+
+@main_blueprint.route('/trade_shift', methods=['POST'])
+@login_required
+def trade_shift():
+    data = request.json  # Retrieve JSON data from the request
+
+    # Ensure data is valid
+    if not data:
+        return jsonify({'success': False, 'message': 'No data provided.'}), 400
+
+    shift_id = data.get('shift_id')  # Extract shiftID from the request
+    if not shift_id:
+        return jsonify({'success': False, 'message': 'Shift ID is required.'}), 400
+
+    # Verify the shift exists
+    shift = Shift.query.filter_by(shiftID=shift_id).first()
+    if not shift:
+        return jsonify({'success': False, 'message': 'Invalid shift ID.'}), 404
+
+    # Verify no existing trade for the same shift
+    existing_trade = ShiftTrades.query.filter_by(shiftID=shift_id).first()
+    if existing_trade:
+        return jsonify({'success': False, 'message': 'Trade for this shift already exists.'}), 400
+
+    # Create the trade
+    try:
+        trade = ShiftTrades(shiftID=shift_id)
+        db.session.add(trade)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Shift trade created successfully.', 'trade_id': trade.shiftTradeID}), 201
+    except Exception as e:
+        db.session.rollback()  # Roll back the transaction on error
+        return jsonify({'success': False, 'message': f'Error creating trade: {str(e)}'}), 500
+
+    
+
+@main_blueprint.route('/available_shifts', methods=['POST'])
+@login_required
+def available_shifts():
+    data = request.json
+    if not data or not data.get('week'):
+        return jsonify({'success': False, 'error': 'Invalid data'}), 400
+    
+    week = data.get('week')
+    week_start_date, week_end_date = get_week_bounds(week)
+    print("This is week start for shifts", week_start_date)
+    open_shifts_for_week = (
+        db.session.query(Shift)
+        .join(ShiftTrades, Shift.shiftID == ShiftTrades.shiftID)
+        .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
+        .all()
+    )
+
+    try:
+        # Serialize the Shift objects
+        shifts = [
+            {
+                'shiftID': shift.shiftID,
+                'shiftStartTime': shift.shiftStartTime.isoformat(),
+                'shiftEndTime': shift.shiftEndTime.isoformat(),
+            }
+            for shift in open_shifts_for_week
+        ]
+        print("This is the list of avail shifts: ", shifts)
+        return jsonify({'success': True, 'shifts': shifts})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error: {str(e)}'}), 500
+    
+    
+
+
+
+@main_blueprint.route('/claim_shift', methods=['POST'])
+@login_required
+def claim_shift():
+    shift_id = request.json.get('shift_id')
+    try:
+        #get info associated with shift
+        traded_shift = Shift.query.filter_by(shiftID=shift_id).first()
+        traded_shift_assignment = ShiftAssignment.query.filter_by(shiftID=shift_id).first()
+        if not traded_shift or not traded_shift_assignment:
+            return jsonify({'success': False, 'error': 'Shift not found.'}), 404
+        
+        shiftStart = traded_shift.shiftStartTime
+        shiftEnd = traded_shift.shiftEndTime
+        
+        #delete old shift and shift assignment
+        db.session.delete(traded_shift)
+        db.session.delete(traded_shift_assignment)
+        
+        
+        #write shift and shift assignment for claimed employee
+        new_shift = Shift(
+            shiftStartTime = shiftStart,
+            shiftEndTime = shiftEnd
+        )
+        
+        db.session.add(new_shift)
+        db.session.commit()
+        
+        employee_id = current_user.employeeID
+        new_shift_assignment = ShiftAssignment(
+            shiftID=new_shift.shiftID,
+            employeeID=employee_id
+        )
+        
+        db.session.add(new_shift_assignment)
+        db.session.commit()
+            
+        return jsonify({'success': True, 'message': 'Shift successfully claimed!'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error claiming event: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+    
+    
+    

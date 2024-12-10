@@ -206,20 +206,20 @@ function loadUnavailability() {
 
 function addUnavailability() {
     const selectedDate = document.getElementById('unavailability-date').value;
-    const startHour = document.getElementById('unavailability-start-hour').value;
-    const endHour = document.getElementById('unavailability-end-hour').value;
+    const startHour = parseInt(document.getElementById('unavailability-start-hour').value, 10);
+    const startMinute = parseInt(document.getElementById('unavailability-start-minute').value, 10);
+    const endHour = parseInt(document.getElementById('unavailability-end-hour').value, 10);
+    const endMinute = parseInt(document.getElementById('unavailability-end-minute').value, 10);
 
-    // Ensure that the required fields are filled
-    if (!selectedDate || !startHour || !endHour) {
+    if (!selectedDate || isNaN(startHour) || isNaN(startMinute) || isNaN(endHour) || isNaN(endMinute)) {
         alert("Please fill out all fields.");
         return;
     }
 
-    // Create a new Date object for the start and end date-time
     const startDatetime = new Date(selectedDate);
     const endDatetime = new Date(selectedDate);
-    startDatetime.setUTCHours(startHour, 0, 0, 0);
-    endDatetime.setUTCHours(endHour, 0, 0, 0);
+    startDatetime.setUTCHours(startHour, startMinute, 0, 0);
+    endDatetime.setUTCHours(endHour, endMinute, 0, 0);
     console.log(startHour)
     console.log(endHour)
 
@@ -232,6 +232,13 @@ function addUnavailability() {
     // Convert to ISO format w/o timezone info
     const startIso = startDatetime.toISOString().slice(0, -1);
     const endIso = endDatetime.toISOString().slice(0, -1);
+
+    if (startIso >= endIso) {
+        alert("Start time must be before end time.");
+        return;
+    }
+   
+
 
     fetch('/add_unavailability', {
         method: 'POST',

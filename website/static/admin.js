@@ -303,8 +303,8 @@ function displaySchedule(schedule) {
                 const hourSlots = slotsByHour[hour];
                 hourSlots.sort((a, b) => parseInt(a.minute, 10) - parseInt(b.minute, 10));
 
-                cell.style.backgroundColor = '#6F4E37';
-                cell.style.color = 'white';
+                cell.style.backgroundColor = 'white';
+                cell.style.color = '#6F4E37';
                 cell.style.textAlign = 'center';
                 cell.style.display = 'flex';
                 cell.style.flexDirection = 'column'; 

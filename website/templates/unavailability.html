@@ -167,33 +167,50 @@
 
                                             <!-- Start Hour Selection -->
                                             <label for="unavailability-start-hour">Select Start Hour:</label>
-                                            <select id="unavailability-start-hour" class="form-select mb-3">
-                                                <option value="07">7 AM</option>
-                                                <option value="08">8 AM</option>
-                                                <option value="09">9 AM</option>
-                                                <option value="10">10 AM</option>
-                                                <option value="11">11 AM</option>
-                                                <option value="12">12 PM</option>
-                                                <option value="13">1 PM</option>
-                                                <option value="14">2 PM</option>
-                                                <option value="15">3 PM</option>
-                                                <option value="16">4 PM</option>
-                                            </select>
+                                            <div class="d-flex gap-2 mb-3">
+                                                <select id="unavailability-start-hour" class="form-select">
+                                                    <option value="07">7 AM</option>
+                                                    <option value="08">8 AM</option>
+                                                    <option value="09">9 AM</option>
+                                                    <option value="10">10 AM</option>
+                                                    <option value="11">11 AM</option>
+                                                    <option value="12">12 PM</option>
+                                                    <option value="13">1 PM</option>
+                                                    <option value="14">2 PM</option>
+                                                    <option value="15">3 PM</option>
+                                                    <option value="16">4 PM</option>
+                                                </select>
+                            
+                                                <!-- Start Minutes Dropdown -->
+                                                <select id="unavailability-start-minute" class="form-select">
+                                                    <option value="00">00</option>
+                                                    <option value="30">30</option>
+                                                </select>
+                                            </div>
+                                            
 
                                             <!-- End Hour Selection -->
                                             <label for="unavailability-end-hour">Select End Hour:</label>
-                                            <select id="unavailability-end-hour" class="form-select mb-3">
-                                                <option value="08">8 AM</option>
-                                                <option value="09">9 AM</option>
-                                                <option value="10">10 AM</option>
-                                                <option value="11">11 AM</option>
-                                                <option value="12">12 PM</option>
-                                                <option value="13">1 PM</option>
-                                                <option value="14">2 PM</option>
-                                                <option value="15">3 PM</option>
-                                                <option value="16">4 PM</option>
-                                                <option value="17">5 PM</option>
-                                            </select>
+                                            <div class="d-flex gap-2 mb-3">
+                                                <select id="unavailability-end-hour" class="form-select">
+                                                    <option value="08">8 AM</option>
+                                                    <option value="09">9 AM</option>
+                                                    <option value="10">10 AM</option>
+                                                    <option value="11">11 AM</option>
+                                                    <option value="12">12 PM</option>
+                                                    <option value="13">1 PM</option>
+                                                    <option value="14">2 PM</option>
+                                                    <option value="15">3 PM</option>
+                                                    <option value="16">4 PM</option>
+                                                    <option value="17">5 PM</option>
+                                                </select>
+                            
+                                                <!-- End Minutes Dropdown -->
+                                                <select id="unavailability-end-minute" class="form-select">
+                                                    <option value="00">00</option>
+                                                    <option value="30">30</option>
+                                                </select>
+                                            </div>
 
                                             <p id="error-message" style="color: red; display: none;">Please select a
                                                 valid
