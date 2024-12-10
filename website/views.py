@@ -478,8 +478,6 @@ def delete_event():
             return jsonify({'success': False, 'error': 'Server error'}), 500
     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
     
-    
-
 @main_blueprint.route('/clear_events', methods=['POST'])
 @login_required
 def clear_events():
@@ -512,6 +510,110 @@ def clear_events():
             return jsonify({'success': False, 'error': 'Server error'}), 500
     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
+@main_blueprint.route('/claim_event', methods=['POST'])
+@login_required
+def claim_event():
+    event_id = request.form.get('eventID')
+    try:
+        event_workers = (EventAssignment.query.filter_by(eventID=event_id).all())
+        matched_workers = EventAssignment.query.filter_by(eventID=event_id, employeeID=current_user.employeeID).all()
+        
+        print("length of mworks is ", len(matched_workers))
+        if len(matched_workers) > 0:
+            print("About to return error")
+            return jsonify({'success': False, 'error': 'Employee is already assigned to event'}), 404
+            
+        if len(event_workers) < 2:
+            new_event_assignment = EventAssignment(
+                eventID = event_id, 
+                employeeID = current_user.employeeID
+            )
+            db.session.add(new_event_assignment)
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': 'Event successfully claimed!'})
+        else:
+            return jsonify({'success': False, 'error': 'Too many employees already working this event'}), 404
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error claiming event: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+@main_blueprint.route('/admin', methods=['GET'])
+@login_required
+def admin():
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    if curr_employee.isAdmin:
+        admin_status = curr_employee.isAdmin
+        if admin_status == True:
+            admin_status = "Admin"
+        else:
+            admin_status = "Employee"  
+
+        return render_template('admin.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage, gyear = curr_employee.gradYear, email=current_user.email, admin=admin_status, maxHours = curr_employee.maxHours, minHours=curr_employee.minHours)
+    return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+@main_blueprint.route('/get_admin_schedule', methods=['POST'])
+@login_required
+def get_admin_schedule():
+    # Fetch the current logged-in employee
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    
+    if curr_employee and curr_employee.isAdmin:
+        # Get the admin date from the form
+        admin_date = request.form.get('adminDate')
+        
+        try:
+            # Assuming get_week_bounds returns a tuple with start and end dates
+            week_start_date, week_end_date = get_week_bounds(admin_date)
+            print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
+
+            # Fetch shifts for the given week
+            shifts_for_week = (
+                db.session.query(Shift)
+                .join(ShiftAssignment, Shift.shiftID == ShiftAssignment.shiftID)
+                .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
+                .all()
+            )
+
+            # Initialize an empty dictionary to hold the schedule grouped by day
+            schedule_by_day = {}
+
+            # Group shifts by day of the week (Monday, Tuesday, etc.)
+            for shift in shifts_for_week:
+                shift_start = shift.shiftStartTime
+
+                # Determine the day of the week
+                day_of_week = shift_start.strftime('%A')  # 'Monday', 'Tuesday', etc.
+                shift_date = shift_start.date().strftime('%Y-%m-%d')
+
+                # Initialize the day in the schedule if it doesn't exist
+                if day_of_week not in schedule_by_day:
+                    schedule_by_day[day_of_week] = {"date": shift_date, "slots": []}
+
+                # Fetch employee details for each shift assignment
+                assigned_employees = [
+                    {"id": assignment.employee.employeeID, 
+                     "name": f"{assignment.employee.firstName} {assignment.employee.lastName[:1]}"} 
+                    for assignment in shift.assignments
+                ]
+
+                # Add shift time and employees to the respective day
+                time_str = f"{shift_start.strftime('%H:%M')}"
+                schedule_by_day[day_of_week]["slots"].append({
+                    "time": time_str,
+                    "employees": assigned_employees
+                })
+            
+            # Return the response in the correct format
+            return jsonify({"success": True, "schedule": schedule_by_day}), 200
+        except Exception as e:
+            print(f"Error retrieving schedule: {e}")
+            return jsonify({'success': False, 'error': 'Server error'}), 500
+
+    # If the user is not an admin
+    return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
 @main_blueprint.route('/generate_schedule', methods=['POST'])
 @login_required
 def generate_schedule():
@@ -657,24 +759,6 @@ def approve_schedule():
             return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
-    
-@main_blueprint.route('/admin', methods=['GET'])
-@login_required
-def admin_page():
-    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
-    if curr_employee.isAdmin:
-    #will update this logic with emails as we approach demo
-    # allowed_admin_emails = []
-    # if current_user.email not in allowed_admin_emails:
-    #     return "Access denied", 403
-        date = next_week_start_date()
-        print("This is date", date)
-        return render_template('admin.html', current_week = date)
-    return jsonify({'success': False, 'error': 'Unauthorized'}), 401
-
-def next_week_start_date():
-    return (datetime.today() + timedelta(days=7 - datetime.today().weekday())).date()
-
 def days_to_dates(target_monday):
     day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     day_name_to_date = {}
@@ -684,32 +768,3 @@ def days_to_dates(target_monday):
         day_name_to_date[day_name] = day_date
     
     return day_name_to_date
-    
-@main_blueprint.route('/claim_event', methods=['POST'])
-@login_required
-def claim_event():
-    event_id = request.form.get('eventID')
-    try:
-        event_workers = (EventAssignment.query.filter_by(eventID=event_id).all())
-        matched_workers = EventAssignment.query.filter_by(eventID=event_id, employeeID=current_user.employeeID).all()
-        
-        print("length of mworks is ", len(matched_workers))
-        if len(matched_workers) > 0:
-            print("About to return error")
-            return jsonify({'success': False, 'error': 'Employee is already assigned to event'}), 404
-            
-        if len(event_workers) < 2:
-            new_event_assignment = EventAssignment(
-                eventID = event_id, 
-                employeeID = current_user.employeeID
-            )
-            db.session.add(new_event_assignment)
-            db.session.commit()
-            
-            return jsonify({'success': True, 'message': 'Event successfully claimed!'})
-        else:
-            return jsonify({'success': False, 'error': 'Too many employees already working this event'}), 404
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error claiming event: {e}")
-        return jsonify({'success': False, 'error': 'Server error'}), 500
