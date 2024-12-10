@@ -130,7 +130,115 @@ def export_schedule():
             status=500, 
             mimetype="text/plain"
         )
-   
+      
+@main_blueprint.route('/trade_shift', methods=['POST'])
+@login_required
+def trade_shift():
+    data = request.json  # Retrieve JSON data from the request
+
+    # Ensure data is valid
+    if not data:
+        return jsonify({'success': False, 'message': 'No data provided.'}), 400
+
+    shift_id = data.get('shift_id')  # Extract shiftID from the request
+    if not shift_id:
+        return jsonify({'success': False, 'message': 'Shift ID is required.'}), 400
+
+    # Verify the shift exists
+    shift = Shift.query.filter_by(shiftID=shift_id).first()
+    if not shift:
+        return jsonify({'success': False, 'message': 'Invalid shift ID.'}), 404
+
+    # Verify no existing trade for the same shift
+    existing_trade = ShiftTrades.query.filter_by(shiftID=shift_id).first()
+    if existing_trade:
+        return jsonify({'success': False, 'message': 'Trade for this shift already exists.'}), 400
+
+    # Create the trade
+    try:
+        trade = ShiftTrades(shiftID=shift_id)
+        db.session.add(trade)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Shift trade created successfully.', 'trade_id': trade.shiftTradeID}), 201
+    except Exception as e:
+        db.session.rollback()  # Roll back the transaction on error
+        return jsonify({'success': False, 'message': f'Error creating trade: {str(e)}'}), 500
+
+@main_blueprint.route('/available_shifts', methods=['POST'])
+@login_required
+def available_shifts():
+    data = request.json
+    if not data or not data.get('week'):
+        return jsonify({'success': False, 'error': 'Invalid data'}), 400
+    
+    week = data.get('week')
+    week_start_date, week_end_date = get_week_bounds(week)
+    print("This is week start for shifts", week_start_date)
+    open_shifts_for_week = (
+        db.session.query(Shift)
+        .join(ShiftTrades, Shift.shiftID == ShiftTrades.shiftID)
+        .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
+        .all()
+    )
+
+    try:
+        # Serialize the Shift objects
+        shifts = [
+            {
+                'shiftID': shift.shiftID,
+                'shiftStartTime': shift.shiftStartTime.isoformat(),
+                'shiftEndTime': shift.shiftEndTime.isoformat(),
+            }
+            for shift in open_shifts_for_week
+        ]
+        print("This is the list of avail shifts: ", shifts)
+        return jsonify({'success': True, 'shifts': shifts})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error: {str(e)}'}), 500
+
+@main_blueprint.route('/claim_shift', methods=['POST'])
+@login_required
+def claim_shift():
+    shift_id = request.json.get('shift_id')
+    try:
+        #get info associated with shift
+        traded_shift = Shift.query.filter_by(shiftID=shift_id).first()
+        traded_shift_assignment = ShiftAssignment.query.filter_by(shiftID=shift_id).first()
+        if not traded_shift or not traded_shift_assignment:
+            return jsonify({'success': False, 'error': 'Shift not found.'}), 404
+        
+        shiftStart = traded_shift.shiftStartTime
+        shiftEnd = traded_shift.shiftEndTime
+        
+        #delete old shift and shift assignment
+        db.session.delete(traded_shift)
+        db.session.delete(traded_shift_assignment)
+        
+        
+        #write shift and shift assignment for claimed employee
+        new_shift = Shift(
+            shiftStartTime = shiftStart,
+            shiftEndTime = shiftEnd
+        )
+        
+        db.session.add(new_shift)
+        db.session.commit()
+        
+        employee_id = current_user.employeeID
+        new_shift_assignment = ShiftAssignment(
+            shiftID=new_shift.shiftID,
+            employeeID=employee_id
+        )
+        
+        db.session.add(new_shift_assignment)
+        db.session.commit()
+            
+        return jsonify({'success': True, 'message': 'Shift successfully claimed!'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error claiming event: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
 
 @main_blueprint.route('/get_notifications', methods=['GET'])
 @login_required
@@ -478,8 +586,6 @@ def delete_event():
             return jsonify({'success': False, 'error': 'Server error'}), 500
     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
     
-    
-
 @main_blueprint.route('/clear_events', methods=['POST'])
 @login_required
 def clear_events():
@@ -512,6 +618,110 @@ def clear_events():
             return jsonify({'success': False, 'error': 'Server error'}), 500
     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
+@main_blueprint.route('/claim_event', methods=['POST'])
+@login_required
+def claim_event():
+    event_id = request.form.get('eventID')
+    try:
+        event_workers = (EventAssignment.query.filter_by(eventID=event_id).all())
+        matched_workers = EventAssignment.query.filter_by(eventID=event_id, employeeID=current_user.employeeID).all()
+        
+        print("length of mworks is ", len(matched_workers))
+        if len(matched_workers) > 0:
+            print("About to return error")
+            return jsonify({'success': False, 'error': 'Employee is already assigned to event'}), 404
+            
+        if len(event_workers) < 2:
+            new_event_assignment = EventAssignment(
+                eventID = event_id, 
+                employeeID = current_user.employeeID
+            )
+            db.session.add(new_event_assignment)
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': 'Event successfully claimed!'})
+        else:
+            return jsonify({'success': False, 'error': 'Too many employees already working this event'}), 404
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error claiming event: {e}")
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+
+@main_blueprint.route('/admin', methods=['GET'])
+@login_required
+def admin():
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    if curr_employee.isAdmin:
+        admin_status = curr_employee.isAdmin
+        if admin_status == True:
+            admin_status = "Admin"
+        else:
+            admin_status = "Employee"  
+
+        return render_template('admin.html', fname=curr_employee.firstName, lname=curr_employee.lastName, wage=curr_employee.wage, gyear = curr_employee.gradYear, email=current_user.email, admin=admin_status, maxHours = curr_employee.maxHours, minHours=curr_employee.minHours)
+    return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+@main_blueprint.route('/get_admin_schedule', methods=['POST'])
+@login_required
+def get_admin_schedule():
+    # Fetch the current logged-in employee
+    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
+    
+    if curr_employee and curr_employee.isAdmin:
+        # Get the admin date from the form
+        admin_date = request.form.get('adminDate')
+        
+        try:
+            # Assuming get_week_bounds returns a tuple with start and end dates
+            week_start_date, week_end_date = get_week_bounds(admin_date)
+            print(f"Week Start: {week_start_date}, Week End: {week_end_date}")
+
+            # Fetch shifts for the given week
+            shifts_for_week = (
+                db.session.query(Shift)
+                .join(ShiftAssignment, Shift.shiftID == ShiftAssignment.shiftID)
+                .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
+                .all()
+            )
+
+            # Initialize an empty dictionary to hold the schedule grouped by day
+            schedule_by_day = {}
+
+            # Group shifts by day of the week (Monday, Tuesday, etc.)
+            for shift in shifts_for_week:
+                shift_start = shift.shiftStartTime
+
+                # Determine the day of the week
+                day_of_week = shift_start.strftime('%A')  # 'Monday', 'Tuesday', etc.
+                shift_date = shift_start.date().strftime('%Y-%m-%d')
+
+                # Initialize the day in the schedule if it doesn't exist
+                if day_of_week not in schedule_by_day:
+                    schedule_by_day[day_of_week] = {"date": shift_date, "slots": []}
+
+                # Fetch employee details for each shift assignment
+                assigned_employees = [
+                    {"id": assignment.employee.employeeID, 
+                     "name": f"{assignment.employee.firstName} {assignment.employee.lastName[:1]}"} 
+                    for assignment in shift.assignments
+                ]
+
+                # Add shift time and employees to the respective day
+                time_str = f"{shift_start.strftime('%H:%M')}"
+                schedule_by_day[day_of_week]["slots"].append({
+                    "time": time_str,
+                    "employees": assigned_employees
+                })
+            
+            # Return the response in the correct format
+            return jsonify({"success": True, "schedule": schedule_by_day}), 200
+        except Exception as e:
+            print(f"Error retrieving schedule: {e}")
+            return jsonify({'success': False, 'error': 'Server error'}), 500
+
+    # If the user is not an admin
+    return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
 @main_blueprint.route('/generate_schedule', methods=['POST'])
 @login_required
 def generate_schedule():
@@ -657,24 +867,6 @@ def approve_schedule():
             return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
-    
-@main_blueprint.route('/admin', methods=['GET'])
-@login_required
-def admin_page():
-    curr_employee = Employee.query.where(Employee.employeeID == current_user.employeeID).first()
-    if curr_employee.isAdmin:
-    #will update this logic with emails as we approach demo
-    # allowed_admin_emails = []
-    # if current_user.email not in allowed_admin_emails:
-    #     return "Access denied", 403
-        date = next_week_start_date()
-        print("This is date", date)
-        return render_template('admin.html', current_week = date)
-    return jsonify({'success': False, 'error': 'Unauthorized'}), 401
-
-def next_week_start_date():
-    return (datetime.today() + timedelta(days=7 - datetime.today().weekday())).date()
-
 def days_to_dates(target_monday):
     day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     day_name_to_date = {}
@@ -684,152 +876,4 @@ def days_to_dates(target_monday):
         day_name_to_date[day_name] = day_date
     
     return day_name_to_date
-    
-@main_blueprint.route('/claim_event', methods=['POST'])
-@login_required
-def claim_event():
-    event_id = request.form.get('eventID')
-    try:
-        event_workers = (EventAssignment.query.filter_by(eventID=event_id).all())
-        matched_workers = EventAssignment.query.filter_by(eventID=event_id, employeeID=current_user.employeeID).all()
-        
-        print("length of mworks is ", len(matched_workers))
-        if len(matched_workers) > 0:
-            print("About to return error")
-            return jsonify({'success': False, 'error': 'Employee is already assigned to event'}), 404
-            
-        if len(event_workers) < 2:
-            new_event_assignment = EventAssignment(
-                eventID = event_id, 
-                employeeID = current_user.employeeID
-            )
-            db.session.add(new_event_assignment)
-            db.session.commit()
-            
-            return jsonify({'success': True, 'message': 'Event successfully claimed!'})
-        else:
-            return jsonify({'success': False, 'error': 'Too many employees already working this event'}), 404
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error claiming event: {e}")
-        return jsonify({'success': False, 'error': 'Server error'}), 500
 
-
-@main_blueprint.route('/trade_shift', methods=['POST'])
-@login_required
-def trade_shift():
-    data = request.json  # Retrieve JSON data from the request
-
-    # Ensure data is valid
-    if not data:
-        return jsonify({'success': False, 'message': 'No data provided.'}), 400
-
-    shift_id = data.get('shift_id')  # Extract shiftID from the request
-    if not shift_id:
-        return jsonify({'success': False, 'message': 'Shift ID is required.'}), 400
-
-    # Verify the shift exists
-    shift = Shift.query.filter_by(shiftID=shift_id).first()
-    if not shift:
-        return jsonify({'success': False, 'message': 'Invalid shift ID.'}), 404
-
-    # Verify no existing trade for the same shift
-    existing_trade = ShiftTrades.query.filter_by(shiftID=shift_id).first()
-    if existing_trade:
-        return jsonify({'success': False, 'message': 'Trade for this shift already exists.'}), 400
-
-    # Create the trade
-    try:
-        trade = ShiftTrades(shiftID=shift_id)
-        db.session.add(trade)
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'Shift trade created successfully.', 'trade_id': trade.shiftTradeID}), 201
-    except Exception as e:
-        db.session.rollback()  # Roll back the transaction on error
-        return jsonify({'success': False, 'message': f'Error creating trade: {str(e)}'}), 500
-
-    
-
-@main_blueprint.route('/available_shifts', methods=['POST'])
-@login_required
-def available_shifts():
-    data = request.json
-    if not data or not data.get('week'):
-        return jsonify({'success': False, 'error': 'Invalid data'}), 400
-    
-    week = data.get('week')
-    week_start_date, week_end_date = get_week_bounds(week)
-    print("This is week start for shifts", week_start_date)
-    open_shifts_for_week = (
-        db.session.query(Shift)
-        .join(ShiftTrades, Shift.shiftID == ShiftTrades.shiftID)
-        .filter(Shift.shiftStartTime >= week_start_date, Shift.shiftEndTime <= week_end_date)
-        .all()
-    )
-
-    try:
-        # Serialize the Shift objects
-        shifts = [
-            {
-                'shiftID': shift.shiftID,
-                'shiftStartTime': shift.shiftStartTime.isoformat(),
-                'shiftEndTime': shift.shiftEndTime.isoformat(),
-            }
-            for shift in open_shifts_for_week
-        ]
-        print("This is the list of avail shifts: ", shifts)
-        return jsonify({'success': True, 'shifts': shifts})
-    except Exception as e:
-        return jsonify({'success': False, 'error': f'Error: {str(e)}'}), 500
-    
-    
-
-
-
-@main_blueprint.route('/claim_shift', methods=['POST'])
-@login_required
-def claim_shift():
-    shift_id = request.json.get('shift_id')
-    try:
-        #get info associated with shift
-        traded_shift = Shift.query.filter_by(shiftID=shift_id).first()
-        traded_shift_assignment = ShiftAssignment.query.filter_by(shiftID=shift_id).first()
-        if not traded_shift or not traded_shift_assignment:
-            return jsonify({'success': False, 'error': 'Shift not found.'}), 404
-        
-        shiftStart = traded_shift.shiftStartTime
-        shiftEnd = traded_shift.shiftEndTime
-        
-        #delete old shift and shift assignment
-        db.session.delete(traded_shift)
-        db.session.delete(traded_shift_assignment)
-        
-        
-        #write shift and shift assignment for claimed employee
-        new_shift = Shift(
-            shiftStartTime = shiftStart,
-            shiftEndTime = shiftEnd
-        )
-        
-        db.session.add(new_shift)
-        db.session.commit()
-        
-        employee_id = current_user.employeeID
-        new_shift_assignment = ShiftAssignment(
-            shiftID=new_shift.shiftID,
-            employeeID=employee_id
-        )
-        
-        db.session.add(new_shift_assignment)
-        db.session.commit()
-            
-        return jsonify({'success': True, 'message': 'Shift successfully claimed!'})
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error claiming event: {e}")
-        return jsonify({'success': False, 'error': 'Server error'}), 500
-
-    
-    
-    

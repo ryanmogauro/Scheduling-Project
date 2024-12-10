@@ -20,7 +20,7 @@
     <div class="container">
         <header class="d-flex align-items-center justify-content-between py-2 mb-3 border-bottom"
             style="box-shadow: 0 8px 4px -4px rgba(0, 0, 0, 0.05);">
-            <div class="d-flex align-items-center col-md-6">
+            <div class="d-flex align-items-center col-md-6" id="header-links">
                 <a href="/" class="d-flex align-items-center text-dark text-decoration-none me-3">
                     <img src="{{ url_for('static', filename='SmallLogo.png') }}" alt="Logo" width="50" height="50">
                 </a>
@@ -45,7 +45,14 @@
                             Events
                         </a>
                     </li>
-
+                    {% if admin == "Admin" %}
+                    <li>
+                        <a href="{{ url_for('main.admin') }}" class="nav-link px-2 text-secondary">
+                            <i class="bi bi-person-gear"></i>
+                            Admin
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
             <!-- Dropdown Section -->
@@ -55,7 +62,7 @@
                     <button class="btn p-0 border-0 bg-transparent shadow-none" type="button" id="notificationsDropdown"
                         data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="position-relative">
-                            <i class="bi bi-bell-fill"></i>
+                            <i class="bi bi-bell-fill" id="header-notif"></i>
                             <!-- Notification Dot -->
                             <span class="notification-dot"></span>
                         </span>
@@ -80,7 +87,7 @@
                 <li class="nav-item dropdown">
                     <button class="btn p-0 border-0 bg-transparent shadow-none" type="button" id="profileDropdown"
                         data-bs-toggle="dropdown" aria-expanded="false">
-                        <span>
+                        <span id="header-profile">
                             Welcome, {{ fname }}
                             <i class="bi bi-person-fill"></i>
                         </span>
@@ -249,7 +256,7 @@
             </main>
         </div>
     </div>
-    <div class="container">
+    <div class="container" id="footer">
         <footer class="d-flex flex-wrap justify-content-between align-items-center py-2 mt-5 border-top"
             style="box-shadow: 0 -8px 4px -4px rgba(0, 0, 0, 0.05);">
             <ul class="nav col-md-4 justify-content-start">

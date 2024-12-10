@@ -62,7 +62,6 @@ class EventAssignment(db.Model):
     employee = db.relationship('Employee', backref='events')
     event = db.relationship('Event', backref='events')
 
-
 class Notification(db.Model):
     notificationID = db.Column(db.Integer, primary_key=True)
     employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'), nullable=False)
