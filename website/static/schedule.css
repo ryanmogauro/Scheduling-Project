@@ -122,6 +122,12 @@ body h5 {
     .insight-text {
         font-size: 0.85rem;
     }
+    .notification-dot {
+        right: -1px;
+        top: 5px;
+        size: 6;
+    }
+    
 }
 
 @media (max-width: 950px) {
