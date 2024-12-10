@@ -186,7 +186,12 @@ function updateNotificationDot() {
 }
 
 document.getElementById('adminDate').addEventListener('change', function () {
+    const approveButton = document.getElementById('approve-schedule-button');
+    if (approveButton) {
+        approveButton.classList.add("d-none"); // Hide the button
+    }
     loadAdminSchedule();
+
 });
 
 function loadAdminSchedule() {
@@ -299,8 +304,19 @@ function openGenerateScheduleModal() {
 
     const modalMessage = document.getElementById("modalMessage");
     modalMessage.textContent = `Are you sure you want to generate a schedule for the week starting on ${formattedDate}?`;
-    const generateScheduleModal = new bootstrap.Modal(document.getElementById('generateScheduleModal'));
+    const generateScheduleModal = new bootstrap.Modal(document.getElementById('generateScheduleModal'), {
+        backdrop: 'static', // Prevent closing by clicking outside the modal
+        keyboard: false     // Disable closing the modal with the escape key
+    });
     generateScheduleModal.show();
+
+    const approveButton = document.getElementById('approve-schedule-button');
+    if (approveButton) {
+        console.log("Setting Approve Schedule button to visible");
+        approveButton.style.display = 'show'; // Make the button visible
+    } else {
+        console.log("Approve Schedule button not found");
+    }
 }
 
 function closeGenerateScheduleModal() {
@@ -334,7 +350,8 @@ function confirmGenerateSchedule() {
                 console.log("This is schedule: ", data.schedule)
                 updateAdminGrid(data.schedule); 
                 currentSchedule = data.schedule
-                document.getElementById('approve-schedule-button').style.display = 'inline-block';
+                approveButton = document.getElementById('approve-schedule-button');
+                approveButton.classList.remove("d-none")
                 alert('Schedule generated successfully!');
             } else {
                 alert(data.message || 'Failed to generate schedule.');
@@ -370,7 +387,9 @@ document.getElementById('approve-schedule-button').addEventListener('click', fun
             .then((data) => {
                 if (data.success) {
                     alert('Schedule approved successfully!');
-                    document.getElementById('approve-schedule-button').style.display = 'none';
+                    approveButton = document.getElementById('approve-schedule-button');
+                    approveButton.classList.add("d-none");
+
                     document.getElementById('generate-schedule-button').disabled = true;
                 } else {
                     alert(data.message || 'Failed to approve schedule.');
@@ -401,7 +420,8 @@ function approveSchedule() {
         .then((data) => {
             if (data.success) {
                 alert('Schedule approved successfully!');
-                document.getElementById('approve-schedule-button').style.display = 'none';
+                approveButton = document.getElementById('approve-schedule-button');
+                approveButton.classList.add("d-none");
                 document.getElementById('generate-schedule-button').disabled = true;
             } else {
                 alert(data.message || 'Failed to approve schedule.');
@@ -432,6 +452,8 @@ function updateWeek(offset) {
 
     const formattedWeek = `${yearNumber}-W${weekNumber.toString().padStart(2, '0')}`;
     scheduleDateInput.value = formattedWeek;
+    
+
     loadAdminSchedule();
 }
 
