@@ -423,6 +423,27 @@ function populateShiftTradeModal(shifts) {
 
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+    const dayOrder = {
+        Sunday: 6,
+        Monday: 0,
+        Tuesday: 1,
+        Wednesday: 2,
+        Thursday: 3,
+        Friday: 4,
+        Saturday: 5
+    };
+
+    // Sort shifts based on their day of the week
+    const sortedShifts = shifts.sort((a, b) => {
+        const dayA = dayOrder[daysOfWeek[new Date(a.start).getDay()]];
+        const dayB = dayOrder[daysOfWeek[new Date(b.start).getDay()]];
+        if (dayA === dayB) {
+            // If the day is the same, sort by start time
+            return new Date(a.start) - new Date(b.start);
+        }
+        return dayA - dayB;
+    });
+
     console.log("This is shifts ", shifts)
     shifts.forEach(shift => {
         const startDate = new Date(shift.start);
