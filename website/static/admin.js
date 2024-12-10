@@ -24,7 +24,7 @@ window.onload = function() {
     const days = Math.floor((today - startOfYear) / (24 * 60 * 60 * 1000));
     
     let weekNumber = Math.ceil((days + 1) / 7); // use let instead of const here
-    weekNumber += 1; // now this is allowed since weekNumber is declared with let
+    // weekNumber += 1; // now this is allowed since weekNumber is declared with let
 
     let nextWeekYear = year;
     if (weekNumber > 52) {
