@@ -500,35 +500,44 @@ function updateTradeList(shifts) {
     const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     list.innerHTML = ''; // Clear the list
 
-    shifts.forEach(shift => {
-        const startDate = new Date(shift.shiftStartTime);
-        const endDate = new Date(shift.shiftEndTime);
-        const day = dayNames[startDate.getDay()];
+    if (shifts.length == 0) {
+        // Display a message when no notifications are available
+        const noShifts = document.createElement('p');
+        noShifts.textContent = "Nothing to see here...";
+        noShifts.classList.add('text-muted', 'text-center', 'py-2');
+        list.appendChild(noShifts);
+    } else {
+        shifts.forEach(shift => {
+            const startDate = new Date(shift.shiftStartTime);
+            const endDate = new Date(shift.shiftEndTime);
+            const day = dayNames[startDate.getDay()];
 
-        const listItem = document.createElement("a");
-        listItem.className = "d-flex align-items-center justify-content-start p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
-        listItem.href = "#";
+            const listItem = document.createElement("a");
+            listItem.className = "d-flex align-items-center justify-content-start p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
+            listItem.href = "#";
 
-        // Store the shift ID as a data attribute on the list item
-        listItem.dataset.shiftId = shift.shiftID;
+            // Store the shift ID as a data attribute on the list item
+            listItem.dataset.shiftId = shift.shiftID;
 
-        // Add a click event to handle claiming the shift
-        listItem.onclick = function (e) {
-            e.preventDefault();
-            console.log(`Claiming shift ID: ${listItem.dataset.shiftId}`);
-            claimShift(listItem.dataset.shiftId);
-        };
+            // Add a click event to handle claiming the shift
+            listItem.onclick = function (e) {
+                e.preventDefault();
+                console.log(`Claiming shift ID: ${listItem.dataset.shiftId}`);
+                claimShift(listItem.dataset.shiftId);
+            };
 
-        // Populate the inner HTML of the list item
-        listItem.innerHTML = `
-            <div class="d-flex flex-column align-items-center w-100">
-                <span class="text-center">${day}</span>
-                <span class="fw-bold text-center">${formatTime(startDate)} <span>to</span> ${formatTime(endDate)}</span>
-            </div>
-        `;
+            // Populate the inner HTML of the list item
+            listItem.innerHTML = `
+                <i class="bi bi-plus-circle me-2 d-flex align-items-center"></i>
+                <div class="d-flex flex-column align-items-center w-100">
+                    <span class="text-center">${day}</span>
+                    <span class="fw-bold text-center">${formatTime(startDate)} <span>to</span> ${formatTime(endDate)}</span>
+                </div>
+            `;
 
-        list.appendChild(listItem);
-    });
+            list.appendChild(listItem);
+        });
+    }
 }
 
 function claimShift(shiftId) {

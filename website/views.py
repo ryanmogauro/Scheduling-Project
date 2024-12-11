@@ -238,7 +238,6 @@ def claim_shift():
             return jsonify({'success': True, 'message': 'Shift successfully claimed!'})
             
         
-        
         #delete old shift and shift assignment
         db.session.delete(traded_shift)
         db.session.delete(traded_shift_assignment)
@@ -883,7 +882,8 @@ def approve_schedule():
                 new_notification = Notification(
                     message=f"A new schedule has been published for the week of {start_date.strftime('%B %d, %Y')}",
                     hasRead=False,
-                    employeeID=employee
+                    employeeID=employee,
+                    sendTime=datetime.now()
                 )
                 db.session.add(new_notification)
 

@@ -176,3 +176,7 @@ body h5 {
 .bg-brown:hover {
     background-color: #593E2C;
 }
+
+.bg-green {
+    background-color: #008000;
+}
