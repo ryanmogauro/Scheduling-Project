@@ -391,6 +391,7 @@ document.getElementById('approve-schedule-button').addEventListener('click', fun
                     approveButton.classList.add("d-none");
 
                     document.getElementById('generate-schedule-button').disabled = true;
+                    loadNotifications();
                 } else {
                     alert(data.message || 'Failed to approve schedule.');
                 }
@@ -437,6 +438,11 @@ function approveSchedule() {
 }
 
 function updateWeek(offset) {
+    const approveButton = document.getElementById('approve-schedule-button');
+    if (approveButton) {
+        approveButton.classList.add("d-none"); // Hide the button
+    }
+
     const scheduleDateInput = document.getElementById('adminDate');
     const [year, weekString] = scheduleDateInput.value.split('-W');
     let yearNumber = parseInt(year, 10);

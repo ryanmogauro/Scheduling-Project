@@ -79,7 +79,8 @@
                         </li>
                         <li class="dropdown-divider"></li>
                         <li class="d-flex justify-content-end px-2">
-                            <button class="btn btn-sm btn-light hover-dark-bg border border-dark" id="clear-notifications" onclick=clearNotifications()>
+                            <button class="btn btn-sm btn-light hover-dark-bg border border-dark"
+                                id="clear-notifications" onclick=clearNotifications()>
                                 <i class="bi bi-arrow-counterclockwise me-1"></i>Clear</button>
                         </li>
                     </ul>
@@ -128,7 +129,8 @@
                         <li class="dropdown-divider"></li>
                         <!-- Logout Button -->
                         <li class="d-flex justify-content-end px-2">
-                            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-light hover-dark-bg border border-dark" id="logout-link">
+                            <a href="{{ url_for('auth.logout') }}"
+                                class="btn btn-sm btn-light hover-dark-bg border border-dark" id="logout-link">
                                 <i class="bi bi-door-open"></i>
                                 Sign out
                             </a>
@@ -152,23 +154,24 @@
                     <hr>
                     <ul class="nav nav-pills flex-column mb-auto">
                         <li>
-                            <a href="#" 
-                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none border border-dark" onclick="exportSchedule()">
+                            <a href="#"
+                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none border border-dark"
+                                onclick="exportSchedule()">
                                 <i class="bi bi-download me-2"></i>
                                 Export
-                        </a>
+                            </a>
                         </li>
                         <li>
                             <a href="#"
-                            class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none border border-dark"
-                            data-bs-toggle="modal" data-bs-target="#shiftTradeModal">
-                            <i class="bi bi-pencil-fill me-2"></i>
-                            Request Change
-                         </a>
+                                class="d-flex align-items-center p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none border border-dark"
+                                data-bs-toggle="modal" data-bs-target="#shiftTradeModal">
+                                <i class="bi bi-pencil-fill me-2"></i>
+                                Request Change
+                            </a>
                         </li>
                     </ul>
                 </div>
-                <div class="p-3 bg-light border rounded shadow-sm">
+                <div class="p-3 bg-light border rounded shadow-sm mb-2">
                     <h5>
                         <i class="bi bi-graph-up-arrow me-1"></i>
                         Insights
@@ -196,7 +199,8 @@
                         Assign
                     </h5>
                     <hr>
-                    <div id="assignList" class="overflow-auto border rounded p-2 bg-light" style = "max-height: 300px;"> </div>
+                    <div id="assignList" class="overflow-auto border rounded p-2 bg-light" style="max-height: 300px;">
+                    </div>
                 </div>
             </aside>
 
@@ -241,18 +245,20 @@
                         <!-- Header Row for Time Labels -->
                         <div class="empty-cell"></div>
                         {% for hour in range(7, 18) %}
-                        <div class="time-label">{{ hour if hour < 13 else (hour % 12) }}{{ 'AM' if hour < 12 else 'PM' }}</div>
-                        {% endfor %}
-                        
-                        <!-- Rows for Days -->
-                        {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
-                        <div class="day-label">{{ day }}</div>
-                        {% for hour in range(7, 18) %}
-                        <div class="cell" id="cell-{{ day }}-{{ hour }}"></div>
-                        {% endfor %}
-                        {% endfor %}
+                        <div class="time-label">{{ hour if hour < 13 else (hour % 12) }}{{ 'AM' if hour < 12 else 'PM'
+                                }}</div>
+                                {% endfor %}
+
+                                <!-- Rows for Days -->
+                                {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+                                "Sunday"] %}
+                                <div class="day-label">{{ day }}</div>
+                                {% for hour in range(7, 18) %}
+                                <div class="cell" id="cell-{{ day }}-{{ hour }}"></div>
+                                {% endfor %}
+                                {% endfor %}
+                        </div>
                     </div>
-                </div>
             </main>
         </div>
     </div>
@@ -260,7 +266,8 @@
         <footer class="d-flex flex-wrap justify-content-between align-items-center py-2 mt-5 border-top"
             style="box-shadow: 0 -8px 4px -4px rgba(0, 0, 0, 0.05);">
             <ul class="nav col-md-4 justify-content-start">
-                <li class="nav-item"><a href="#" class="nav-link px-2 text-secondary">© 2024 Mary Low Coffeehouse</a></li>
+                <li class="nav-item"><a href="#" class="nav-link px-2 text-secondary">© 2024 Mary Low Coffeehouse</a>
+                </li>
             </ul>
 
             <a href="/"
@@ -269,7 +276,8 @@
             </a>
 
             <ul class="nav col-md-4 justify-content-end">
-                <li class="nav-item"><a href="https://github.com/ryanmogauro/Scheduling-Project" class="nav-link px-2 text-secondary" target="_blank" rel="noopener noreferrer">About Us</a></li>
+                <li class="nav-item"><a href="https://github.com/ryanmogauro/Scheduling-Project"
+                        class="nav-link px-2 text-secondary" target="_blank" rel="noopener noreferrer">About Us</a></li>
             </ul>
         </footer>
     </div>
@@ -280,25 +288,41 @@
 
 
 
-        <div class="modal fade" id="shiftTradeModal" tabindex="-1" aria-labelledby="shiftTradeModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="shiftTradeModalLabel">Request Shift Trade</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <ul id="shiftList" class="list-group">
-                            <!-- Shifts will be dynamically populated -->
-                        </ul>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" onclick="submitTradeRequest()">Submit</button>
-                    </div>
+    <div class="modal fade" id="shiftTradeModal" tabindex="-1" aria-labelledby="shiftTradeModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="shiftTradeModalLabel">Request Shift Trade</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p> Are you sure you want to request a shift trade? Please ensure the details below are correct before
+                        proceeding.
+                    </p>
+                    <ul id="shiftList" class="list-group">
+                        <!-- Shifts will be dynamically populated -->
+                    </ul>
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                    <!-- Cancel Button -->
+                    <a href="#"
+                        class="d-flex align-items-center p-2 bg-secondary text-white rounded text-decoration-none hover-gray border border-dark"
+                        data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Cancel
+                    </a>
+                    <!-- Add Button -->
+                    <a href="#"
+                        class="d-flex align-items-center p-2 bg-brown text-white rounded text-decoration-none border border-dark"
+                        onclick="submitTradeRequest()" data-bs-dismiss="modal">
+                        <i class="bi bi-pencil-fill me-2"></i>
+                        Confirm
+                    </a>
                 </div>
             </div>
-        </div>  
+        </div>
+    </div>
 </body>
 
 </html>
