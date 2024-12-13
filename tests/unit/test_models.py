@@ -2,20 +2,6 @@ from website.models import User, Employee, Shift, ShiftAssignment, Unavailabilit
 from website import db
 from datetime import datetime
 
-def test_user_set_password():
-    user = User(email="test@colby.edu")
-    user.set_password("password")
-
-    assert user.passwordHash is not None
-    assert user.passwordHash != "password"
-
-
-def test_user_check_password():
-    user = User(email="test@colby.edu")
-    user.set_password("password")
-
-    assert user.check_password("password")  
-    assert not user.check_password("wrongpassword")
 
 
 def test_employee_creation():

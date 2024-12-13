@@ -3,11 +3,10 @@ from website import create_app
 from website.models import db, User, Employee
 from website.scheduleGenerator import getEmployees, getUnavailability, isAvailable, validRolloverShift, generateSchedule
 from flask_login import current_user, login_user
+import datetime
+import conftest
 
-def test_getEmployees():
-    os.environ['CONFIG_TYPE'] = 'config.TestingConfig'
-    flask_app = create_app()
-    with flask_app.test_client() as test_client:
+def test_getEmployees(test_client):
         response = test_client.post('/login', data={
             'email': 'flast@colby.edu',
             'password': 'longerPass'
@@ -17,27 +16,23 @@ def test_getEmployees():
         assert len(employees) > 0
     
     
-def test_getUnavailability():
-    os.environ['CONFIG_TYPE'] = 'config.TestingConfig'
-    flask_app = create_app()
-
-    with flask_app.test_client() as test_client:
+def test_getUnavailability(test_client):
         response = test_client.post('/login', data={
             'email': 'flast@colby.edu',
             'password': 'longerPass'
         }, follow_redirects=True)
         assert response.status_code == 200
-        response = test_client.post('/add_availability', json={'day' : 'Monday', 'startTime': "09:00", "endTime" : "11:00"})
+        response = test_client.post('/add_unavailability', data={'unavailableStartTime' : "2024-12-08T07:00:00.000", "unavailableEndTime" : "2024-12-08T08:00:00.000"})
+        #response = test_client.post('/add_unavailability', json = {'success': True, 'message': 'Unavailability added successfully'})
         assert response.status_code == 200
-        with flask_app.app_context():
-            user = User.query.filter_by(email="flast@colby.edu").first()
-            assert user is not None
+        user = User.query.filter_by(email="flast@colby.edu").first()
+        assert user is not None
 
-            # Test getUnavailability function
-            unavailability = getUnavailability(user.employeeID)
-            assert len(unavailability) > 0
-            assert unavailability[0].unavailableStartTime.strftime('%H:%M') == "09:00"
-            assert unavailability[0].unavailableEndTime.strftime('%H:%M') == "11:00"
+        # Test getUnavailability function
+        unavailability = getUnavailability(user.employeeID,datetime.datetime(2024,12,8,7,00,00,000))
+        assert len(unavailability) > 0
+        assert unavailability[0].unavailableStartTime.strftime('%H:%M') == "07:00"
+        assert unavailability[0].unavailableEndTime.strftime('%H:%M') == "08:00"
             
             
 
@@ -64,22 +59,44 @@ def test_validRolloverShift():
     assert validRolloverShift(schedule, 0, 25, 1) is False
     
     
-    
-    
+
+
+
 def test_generateSchedule():
-
-    availability = {
-        1: [[1 for _ in range(48)] for _ in range(7)], 
-        2: [[1 for _ in range(48)] for _ in range(7)]
-    }
-    availability[1][0][18] = 0
-    availability[2][0][19] = 0
+    os.environ['CONFIG_TYPE'] = 'config.TestingConfig'
+    flask_app = create_app()
+    flask_app_context = flask_app.app_context()
     
-    schedule = generateSchedule(availability)
+    flask_app_context.push()
 
-    assert len(schedule) == 7 
-    assert len(schedule[0]) == 48  
+    db.create_all()
+    
+    employee1 = Employee(firstName = "test",lastName = "1", employeeID=2, minHours=4, maxHours=12)
+    employee2 = Employee(firstName = "test",lastName = "2", employeeID=3, minHours=4, maxHours=12)
+    db.session.add(employee1)
+    db.session.add(employee2)
+    db.session.commit()
+    with flask_app.test_client() as test_client:
+        
 
-    assert 1 not in schedule[0][18] 
-    assert 2 not in schedule[0][19]
-    assert len(schedule[0][20]) > 0
+        availability = {
+            2: [[1 for _ in range(48)] for _ in range(7)], 
+            3: [[1 for _ in range(48)] for _ in range(7)]
+        }
+        availability[2][0][18] = 0
+        availability[3][0][19] = 0
+        startDate = datetime.date(2024,12,2)
+        
+        schedule = generateSchedule(availability,startDate)
+
+        assert len(schedule) == 7 
+        assert len(schedule[0]) == 48  
+
+        assert 2 not in schedule[0][18] 
+        assert 3 not in schedule[0][19]
+        assert len(schedule[0][20]) > 0
+   
+    db.session.rollback()
+    db.drop_all()
+    flask_app_context.pop()
+    

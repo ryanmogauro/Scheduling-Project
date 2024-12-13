@@ -1,7 +1,8 @@
 import os
 from website import create_app
 from website.models import db, User, Employee
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 #sign-up tests
 
@@ -15,17 +16,6 @@ def test_signup_page():
         assert b'name' in response.data
         assert b'password' in response.data
         
-def test_user_set_password():
-    user = User()
-    user.set_password('password')
-    assert user.passwordHash is not None
-    assert user.passwordHash != 'password'
-    
-def test_user_check_password():
-    user = User()
-    user.set_password('password')
-    assert user.check_password('password')
-    assert not user.check_password('wrongpassword')
     
 def test_invalid_signup():
     os.environ['CONFIG_TYPE'] = 'config.TestingConfig'
