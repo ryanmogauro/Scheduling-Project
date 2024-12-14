@@ -341,7 +341,7 @@ def unavailability():
 
 @main_blueprint.route('/get_unavailability', methods=['POST'])
 @login_required
-def get_availability(): 
+def get_availability():
     unavailability_date = request.form.get('unavailabilityDate')
     try:
         week_start_date, week_end_date = get_week_bounds(unavailability_date)
@@ -369,7 +369,6 @@ def get_availability():
 def add_unavailability():
     unavailable_start = request.form.get('unavailableStartTime')
     unavailable_end = request.form.get('unavailableEndTime')
-    
     try:
         print(f"unavailable_start: {unavailable_start}, unavailable_end: {unavailable_end}")
         unavailable_start_date = datetime.fromisoformat(unavailable_start)

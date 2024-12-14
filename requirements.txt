@@ -25,3 +25,5 @@ TatSu==5.12.2
 types-python-dateutil==2.9.0.20241206
 typing_extensions==4.12.2
 Werkzeug==3.1.2
+pytest
+pytest-cov

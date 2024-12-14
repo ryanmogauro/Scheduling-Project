@@ -3,7 +3,7 @@ import sys, os
 #couldn't find website module before adding this line
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import pytest
-from website.__init__ import create_app
+from website import create_app
 
 
 @pytest.fixture()
