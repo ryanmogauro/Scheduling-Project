@@ -21,7 +21,7 @@ pytz==2024.2
 setuptools==75.6.0
 six==1.17.0
 SQLAlchemy==2.0.36
-TatSu==5.12.2
+TatSu==5.8.3
 types-python-dateutil==2.9.0.20241206
 typing_extensions==4.12.2
 Werkzeug==3.1.2
