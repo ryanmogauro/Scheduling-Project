@@ -108,11 +108,14 @@ body h5 {
     box-sizing: border-box;
 }
 
+.cell:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+
 /* Responsive Layout */
 @media (max-width: 1200px) {
-    #header-links, #header-notif, #header-profile, #footer {
-        font-size: 0.75rem !important;
-    }
     body h5 {
         font-size: 1rem;
     }
@@ -122,12 +125,6 @@ body h5 {
     .insight-text {
         font-size: 0.85rem;
     }
-    .notification-dot {
-        right: -1px;
-        top: 5px;
-        size: 6;
-    }
-    
 }
 
 @media (max-width: 950px) {
@@ -156,10 +153,6 @@ body h5 {
         font-size: 0.5rem; 
     }
 
-    .bubble {
-        font-size: 0.5rem; 
-    }
-
     .shift-cell {
         font-size: 0.5rem;
     }
@@ -175,8 +168,4 @@ body h5 {
 
 .bg-brown:hover {
     background-color: #593E2C;
-}
-
-.bg-green {
-    background-color: #008000;
 }

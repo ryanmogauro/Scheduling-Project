@@ -15,6 +15,12 @@ window.onload = function () {
     loadNotifications()
 };
 
+let eventsSlots = [];
+
+window.addEventListener('resize', () => {
+    updateEventsGrid(eventsSlots);
+});
+
 function printPage() {
     window.print();
 }
@@ -161,6 +167,11 @@ function updateNotificationDot() {
     }
 }
 
+/// Loading schedule -- ISO Format!
+document.getElementById('eventsDate').addEventListener('change', function () {
+    loadEvents();
+});
+
 function closeModal() {
     const modal = bootstrap.Modal.getInstance(document.getElementById('eventsModal'));
     if (modal) modal.hide();
@@ -172,6 +183,7 @@ function loadEvents() {
         console.log("No events date selected.");
         return; // Don't proceed if no date is selected
     }
+    
     fetch('/get_events', {
         method: 'POST',
         headers: {
@@ -179,25 +191,44 @@ function loadEvents() {
         },
         body: new URLSearchParams({ eventsDate })
     })
-        .then(response => response.json())
-        .then(data => {
-            eventsSlots = data.events;
-            if (eventsSlots.length == 0) {
-                // Display a message when there is no unavailability
-                const list = document.getElementById("eventsList");
-                list.innerHTML = '';
-                const noEvent = document.createElement('p');
-                noEvent.id = 'no-event-message';
-                noEvent.textContent = "Nothing to see here...";
-                noEvent.classList.add('text-muted', 'text-center', 'py-2');
-                list.appendChild(noEvent);
-            } else {
+    .then(response => response.json())
+    .then(data => {
+        eventsSlots = data.events;
+
+        if (eventsSlots.length === 0) {
+            // Display a message when there are no events
+            showNoEventMessage("eventsList");
+            showNoEventMessage("assignList");
+        } else {
+            const eventsList = document.getElementById("eventsList");
+            if (eventsList) {
                 updateEventsList(eventsSlots);
             }
-            updateEventsGrid(eventsSlots);
-        })
-        .catch(error => console.error("Error loading events:", error));
+            updateAssignList(eventsSlots);
+        }
+
+        updateEventsGrid(eventsSlots);
+    })
+    .catch(error => console.error("Error loading events:", error));
 }
+
+// Helper function to display the "no events" message
+function showNoEventMessage(listId) {
+    const list = document.getElementById(listId);
+    
+    // Check if the list exists before attempting to update it
+    if (list) {
+        list.innerHTML = ''; // Clear existing content
+        const noEventMessage = document.createElement('p');
+        noEventMessage.id = 'no-event-message';
+        noEventMessage.textContent = "Nothing to see here...";
+        noEventMessage.classList.add('text-muted', 'text-center', 'py-2');
+        list.appendChild(noEventMessage);
+    } else {
+        console.warn(`Element with ID '${listId}' not found.`);
+    }
+}
+
 
 function addEvent(){
     const selectedDate = document.getElementById('unavailability-date').value;
@@ -287,7 +318,7 @@ function deleteEvent(eventID) {
 }
 
 function clearEvents() {
-    const eventsDate = document.getElementById('eventDate').value;
+    const eventsDate = document.getElementById('eventsDate').value;
     if (!eventsDate) {
         return; 
     }
@@ -317,12 +348,13 @@ function updateEventsGrid(eventsSlots) {
     // Clear all cells to default styles
     const cells = document.querySelectorAll('.cell');
     cells.forEach(cell => {
-        cell.style.background = 'white'
-        cell.style.color = 'white'
-        cell.innerHTML = '';
+        cell.style.background = 'white';
+        cell.style.color = 'white';
+        cell.innerHTML = ''; // Ensure no content is left behind
     });
 
     const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
     eventsSlots.forEach(slot => {
         const startDate = new Date(slot.start);
         const endDate = new Date(slot.end);
@@ -331,32 +363,78 @@ function updateEventsGrid(eventsSlots) {
         const day = dayNames[startDate.getDay()];
         const startHour = startDate.getHours();
         const endHour = endDate.getHours();
-        // Iterate over the hours in the shift and update the grid
-        for (let hour = startHour; hour < endHour; hour++) {
-            if (hour >= 17 && hour <= 24) {
-                const cellId = `cell-${day}-${hour}`;
-                const cell = document.getElementById(cellId);
-                if (cell) {                
-                    cell.style.background = 'linear-gradient(135deg, #7A5E47, #6F4E37)';
-                    cell.style.textAlign = 'center';
-                    cell.style.display = 'flex';
-                    cell.style.alignItems = 'center';
-                    cell.style.justifyContent = 'center';
-                    
-                    // Add time range as styled content
-                    cell.innerHTML = `
-                        <div style="text-align: center; font-size: 12px;">
-                            <span style="font-weight: bold;">${formatTime(startDate)}</span>
-                            <br />
-                            <span>to</span>
-                            <br />
-                            <span style="font-weight: bold;">${formatTime(endDate)}</span>
-                        </div>
-                    `;
 
-                    // Optionally add a tooltip for detailed information
-                    cell.setAttribute('title', `Events from ${formatTime(startDate)} to ${formatTime(endDate)}`);
-                }
+        // Get the cell ID for the start hour
+        const cellId = `cell-${day}-${startHour}`;
+        const cell = document.getElementById(cellId);
+
+        if (cell) {
+            // Set cell's background style
+            cell.style.textAlign = 'center';
+            cell.style.display = 'flex';
+            cell.style.alignItems = 'center';
+            cell.style.justifyContent = 'center';
+
+            // Create a list inside the cell to hold time bubbles if it's the first time we add time slots
+            let list = cell.querySelector('.time-list');
+            if (!list) {
+                list = document.createElement('div');
+                list.className = 'time-list';
+                list.style.textAlign = 'center';
+                list.style.fontSize = '10px';
+                cell.appendChild(list);
+            }
+
+            // Create the bubble for the current time slot
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.style.display = 'flex';
+            bubble.style.alignItems = 'center';
+            bubble.style.borderRadius = '5px';
+            bubble.style.position = 'absolute'; // Position it absolutely for spanning
+
+            // Icon inside the bubble
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-dot';
+            icon.style.fontSize = '14px';
+
+            // Apply different styles based on whether it's the top of the hour or 30 minutes
+            if (startDate.getMinutes() === 0) {
+                // Style for top of the hour
+                bubble.style.backgroundColor = 'white';
+                bubble.style.color = '#6F4E37';
+                icon.style.color = '#6F4E37';
+                bubble.style.borderColor = '#6F4E37';
+                bubble.style.borderWidth = '1px';
+                bubble.style.borderStyle = 'solid';
+            } else {
+                // Style for 30 minutes past the hour
+                bubble.style.backgroundColor = '#6F4E37';
+                bubble.style.color = 'white';
+                icon.style.color = 'white';
+                bubble.classList.add('border', 'border-dark');
+            }
+
+            // Set the bubble text and append the icon
+            bubble.appendChild(icon);
+            bubble.appendChild(document.createTextNode(`${formatTime(startDate)}-${formatTime(endDate)}`));
+            list.appendChild(bubble);
+
+            // Calculate how much space the bubble should span horizontally
+            const startCell = document.getElementById(`cell-${day}-${startHour}`);
+            const endCell = document.getElementById(`cell-${day}-${endHour}`);
+
+            if (startCell && endCell) {
+                const startOffset = startCell.offsetLeft + 4; //handle padding
+                const endOffset = endCell.offsetLeft + endCell.offsetWidth - 4;
+
+                bubble.style.left = `${startOffset}px`;  // Start at the start hour
+                bubble.style.width = `${endOffset - startOffset}px`; // Span across the cells
+
+                const cellHeight = startCell.offsetHeight; // Get the height of the cell
+                const bubbleHeight = bubble.offsetHeight; // Get the height of the bubble
+                const verticalOffset = (cellHeight - bubbleHeight) / 2; // Calculate how much to offset for centering
+                bubble.style.top = `${startCell.offsetTop + verticalOffset}px`;
             }
         }
     });
@@ -398,6 +476,42 @@ function updateEventsList(eventsSlots) {
     });
 }
 
+function updateAssignList(eventsSlots) {
+    const list = document.getElementById("assignList");
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    list.innerHTML = '';
+
+    eventsSlots.forEach(slot => {
+        const startDate = new Date(slot.start);
+        const endDate = new Date(slot.end);
+        const day = dayNames[startDate.getDay()];
+
+        const listItem = document.createElement("a");
+        listItem.className = "d-flex align-items-center justify-content-start p-2 mb-2 bg-brown text-white rounded small-font text-decoration-none";
+        listItem.href = "#";
+
+        // Store the event ID as a data attribute on the list item
+        listItem.dataset.eventId = slot.eventID;
+
+        listItem.onclick = function (e) {
+            e.preventDefault();
+            claimEvent(listItem.dataset.eventId);
+        };
+
+        // HTML structure with a wrapper for the day and time
+        listItem.innerHTML = `
+        <i class="bi bi-plus-circle me-2"></i>
+        <div class="d-flex flex-column align-items-center w-100">
+            <span class="text-center">${day}</span>
+            <span class="fw-bold text-center">${formatTime(startDate)} <span>to</span> ${formatTime(endDate)}</span>
+        </div>
+        `;
+    
+
+        list.appendChild(listItem);
+    });
+}
+
 /// Increment / Decrement Week
 function updateWeek(offset) {
     const scheduleDateInput = document.getElementById('eventsDate');
@@ -425,4 +539,29 @@ function formatTime(date) {
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${hours}:${minutes}`;
+}
+
+function claimEvent(eventID){
+    fetch('/claim_event', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            eventID: eventID,
+        }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadEvents();
+                closeModal();
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
 }

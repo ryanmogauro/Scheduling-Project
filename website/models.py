@@ -4,6 +4,7 @@ from website import db
 from datetime import datetime
 
 
+
 class User(db.Model, UserMixin):
     userID  = db.Column(db.Integer, primary_key=True)
     employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'))
@@ -53,10 +54,23 @@ class Event(db.Model):
     eventStartTime = db.Column(db.DateTime, nullable=False)
     eventEndTime = db.Column(db.DateTime, nullable=False)
     eventDescription = db.Column(db.String(255), nullable=True)
+    
+class EventAssignment(db.Model):
+    eventAssignmentID = db.Column(db.Integer, primary_key=True)
+    eventID = db.Column(db.Integer, db.ForeignKey('event.eventID'))
+    employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'))
+    employee = db.relationship('Employee', backref='events')
+    event = db.relationship('Event', backref='events')
 
 class Notification(db.Model):
     notificationID = db.Column(db.Integer, primary_key=True)
     employeeID = db.Column(db.Integer, db.ForeignKey('employee.employeeID'), nullable=False)
     message = db.Column(db.String(255), nullable=False)
     hasRead = db.Column(db.Boolean, default=False)
-    sendTime = db.Column(db.DateTime, default=datetime.utcnow)
+    sendTime = db.Column(db.DateTime, nullable=True)
+    
+    
+class ShiftTrades(db.Model):
+    shiftTradeID = db.Column(db.Integer, primary_key=True)
+    shiftID = db.Column(db.Integer, db.ForeignKey('shift.shiftID'), nullable=False)
+    shift = db.relationship('Shift', backref='trades')

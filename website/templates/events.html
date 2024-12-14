@@ -20,7 +20,7 @@
     <div class="container">
         <header class="d-flex align-items-center justify-content-between py-2 mb-3 border-bottom"
             style="box-shadow: 0 8px 4px -4px rgba(0, 0, 0, 0.05);">
-            <div class="d-flex align-items-center col-md-6">
+            <div class="d-flex align-items-center col-md-6" id="header-links">
                 <a href="/" class="d-flex align-items-center text-dark text-decoration-none me-3">
                     <img src="{{ url_for('static', filename='SmallLogo.png') }}" alt="Logo" width="50" height="50">
                 </a>
@@ -45,6 +45,14 @@
                             <i class="bi bi-dot dot-icon"></i>
                         </a>
                     </li>
+                    {% if admin == "Admin" %}
+                    <li>
+                        <a href="{{ url_for('main.admin') }}" class="nav-link px-2 text-secondary">
+                            <i class="bi bi-person-gear"></i>
+                            Admin
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
             <!-- Dropdown Section -->
@@ -54,7 +62,7 @@
                     <button class="btn p-0 border-0 bg-transparent shadow-none" type="button" id="notificationsDropdown"
                         data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="position-relative">
-                            <i class="bi bi-bell-fill"></i>
+                            <i class="bi bi-bell-fill" id="header-notif"></i>
                             <!-- Notification Dot -->
                             <span class="notification-dot"></span>
                         </span>
@@ -71,8 +79,8 @@
                         </li>
                         <li class="dropdown-divider"></li>
                         <li class="d-flex justify-content-end px-2">
-                            <button class="btn btn-sm btn-light hover-dark-bg border border-dark" id="clear-notifications"
-                                onclick=clearNotifications()>
+                            <button class="btn btn-sm btn-light hover-dark-bg border border-dark"
+                                id="clear-notifications" onclick=clearNotifications()>
                                 <i class="bi bi-arrow-counterclockwise me-1"></i>Clear</button>
                         </li>
                     </ul>
@@ -81,26 +89,47 @@
                 <li class="nav-item dropdown">
                     <button class="btn p-0 border-0 bg-transparent shadow-none" type="button" id="profileDropdown"
                         data-bs-toggle="dropdown" aria-expanded="false">
-                        <span>
+                        <span id="header-profile">
                             Welcome, {{ fname }}
                             <i class="bi bi-person-fill"></i>
                         </span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profileDropdown"
-                        style="min-width: 200px;">
+                        style="min-width: 350px;">
                         <li class="dropdown-header d-flex align-items-center">
                             <i class="bi bi-person-fill me-2"></i> Profile Info
                         </li>
                         <li class="dropdown-divider mt-0"></li>
                         <!-- Employee Info Section -->
-                        <li class="px-3">
-                            <p class="mb-1"><strong>Name:</strong> {{fname}} {{lname}}</p>
-                            <p class="mb-1"><strong>Hourly:</strong> ${{ '{:.2f}'.format(wage) }}</p>
-                        </li>
+                        <table class="table table-borderless text-dark">
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Email:</th>
+                                    <td>{{ email }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Hourly Wage:</th>
+                                    <td>${{ wage }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Minimum Hours:</th>
+                                    <td>{{ minHours }} hrs</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Maximum Hours:</th>
+                                    <td>{{ maxHours }} hrs</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Role:</th>
+                                    <td>{{ admin }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                         <li class="dropdown-divider"></li>
                         <!-- Logout Button -->
                         <li class="d-flex justify-content-end px-2">
-                            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-light hover-dark-bg border border-dark" id="logout-link">
+                            <a href="{{ url_for('auth.logout') }}"
+                                class="btn btn-sm btn-light hover-dark-bg border border-dark" id="logout-link">
                                 <i class="bi bi-door-open"></i>
                                 Sign out
                             </a>
@@ -114,6 +143,7 @@
     <div class="container">
         <div class="row">
             <aside class="col-md-2 d-flex flex-column">
+                {% if admin == "Admin" %}
                 <div class="p-3 bg-light border rounded mb-2 shadow-sm">
                     <h5>
                         <i class="bi bi-list"></i>
@@ -130,8 +160,8 @@
                             </a>
 
                             <!-- Confirmation Modal -->
-                            <div class="modal fade" id="eventsModal" tabindex="-1"
-                                aria-labelledby="eventsModalLabel" aria-hidden="true">
+                            <div class="modal fade" id="eventsModal" tabindex="-1" aria-labelledby="eventsModalLabel"
+                                aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
@@ -141,11 +171,11 @@
                                                 aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            
+
                                             <!-- Host Name -->
                                             <label for="event-host">Event Host:</label>
                                             <input type="text" id="event-host" class="form-control mb-3">
-                                            
+
                                             <!-- Event Name -->
                                             <label for="event-name">Event Name:</label>
                                             <input type="text" id="event-name" class="form-control mb-3">
@@ -154,7 +184,7 @@
                                             <!-- Day Selection -->
                                             <label for="unavailability-date">Select Day:</label>
                                             <input type="date" id="unavailability-date" class="form-control mb-3">
-                                            
+
                                             <!-- Start Hour Selection -->
                                             <label for="unavailability-start-hour">Select Start Hour:</label>
                                             <select id="unavailability-start-hour" class="form-select mb-3">
@@ -238,7 +268,7 @@
                                             <!-- Add Button -->
                                             <a href="#"
                                                 class="d-flex align-items-center p-2 bg-brown text-white rounded text-decoration-none border border-dark"
-                                                onclick="clearUnavailability()" data-bs-dismiss="modal">
+                                                onclick="clearEvents()" data-bs-dismiss="modal">
                                                 <i class="bi bi-arrow-counterclockwise me-2"></i>
                                                 Confirm
                                             </a>
@@ -247,19 +277,29 @@
                                 </div>
                             </div>
                         </li>
-                        <li>
-            
-                        </li>
                     </ul>
                 </div>
+                {% endif %}
 
                 <!--Selections-->
-                <div class="p-3 bg-light border rounded shadow-sm">
+                {% if admin == "Admin" %}
+                <div class="p-3 bg-light border rounded mb-2 shadow-sm">
                     <h5><i class="bi bi-card-checklist me-1"></i>
                         Selections
                     </h5>
                     <hr>
-                    <div id="eventsList" class="overflow-auto border rounded p-2 bg-light" style = "max-height: 300px;"> </div>
+                    <div id="eventsList" class="overflow-auto border rounded p-2 bg-light" style="max-height: 300px;">
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="p-3 bg-light border rounded mb-2 shadow-sm">
+                    <h5><i class="bi bi-person-check me-1"></i>
+                        Assign
+                    </h5>
+                    <hr>
+                    <div id="assignList" class="overflow-auto border rounded p-2 bg-light" style="max-height: 300px;">
+                    </div>
                 </div>
             </aside>
 
@@ -305,19 +345,19 @@
                             {{ (hour - 12) }}PM
                         </div>
                         {% endfor %}
-                        
+
                         <!-- Days and Hours -->
                         {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
                         <div class="day-label">{{ day }}</div>
-                            {% for hour in range(17, 24) %}
-                            <div class="cell" id="cell-{{ day }}-{{ hour }}"></div>
-                            {% endfor %}
-                        {% endfor %}                        
-                </div>
+                        {% for hour in range(17, 24) %}
+                        <div class="cell" id="cell-{{ day }}-{{ hour }}"></div>
+                        {% endfor %}
+                        {% endfor %}
+                    </div>
             </main>
         </div>
     </div>
-    <div class="container">
+    <div class="container" id="footer">
         <footer class="d-flex flex-wrap justify-content-between align-items-center py-2 mt-5 border-top"
             style="box-shadow: 0 -8px 4px -4px rgba(0, 0, 0, 0.05);">
             <ul class="nav col-md-4 justify-content-start">
